@@ -1,0 +1,57 @@
+name: 更新水庫資料並部署
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # 每小時第 17 分（UTC）
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: 抓水利署資料
+        if: github.event_name != 'push'
+        run: python3 scripts/fetch_reservoirs.py
+
+      - name: 存回 repo（保留每日快照）
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "資料更新 $(TZ=Asia/Taipei date '+%Y-%m-%d %H:%M')"
+          git push
+
+      - name: 準備網站檔案
+        run: |
+          mkdir _site
+          cp index.html _site/
+          cp -r data _site/
+          [ -f CNAME ] && cp CNAME _site/ || true
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
