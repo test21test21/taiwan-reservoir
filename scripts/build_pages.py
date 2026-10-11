@@ -8,6 +8,7 @@
 - _site/index.html、_site/reservoir/index.html：放進 <!--SITE_ICONS-->、<!--SITE_NAV-->（scripts/site_nav.py）
 - _site/reservoir/index.html：把 <!--RESERVOIR_LINKS--> 換成全部水庫頁的連結
 - _site/about/index.html：關於本站
+- _site/births/：出生與死亡，全台＋各縣市一頁（scripts/build_births.py）
 - _site/sitemap.xml、_site/robots.txt
 """
 import csv
@@ -18,6 +19,7 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+import build_births
 import site_nav
 
 SITE = "https://taiwandata.info"
@@ -408,6 +410,9 @@ def main(out):
         page = reservoir_page(r, info.get(r["id"]), hist.get(r["id"], []), alert, by_region[r["region"]], updated)
         (d / "index.html").write_text(page, encoding="utf-8")
         urls.append(f"{SITE}/reservoir/{r['id']}/")
+
+    urls += build_births.build(out, head, lambda prefix: site_nav.nav(
+        "births", '<a class="sitesection" href="/births/">出生與死亡</a>' if prefix else '<h1 class="sitesection">出生與死亡</h1>'))
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
