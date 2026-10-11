@@ -76,6 +76,9 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw
 #map .county { fill: var(--land); stroke: var(--border); stroke-width: var(--border-w); stroke-linejoin: round; }
 #map .county.lit { fill-opacity: .72; }
 #map .dot { fill-opacity: var(--dot-op); }
+#map .maplegend text { font-family: var(--f-body); fill: #e8ebee; dominant-baseline: central; }
+#map .maplegend .lgt { font-size: 24px; font-weight: 700; dominant-baseline: hanging; }
+#map .maplegend .lgi { font-size: 24px; font-weight: 500; }
 #map .dot { cursor: pointer; }
 #map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #e8ebee; paint-order: stroke; stroke: rgba(27,29,32,.85); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; align-items: center; }
@@ -183,11 +186,11 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
   // 官方水情燈號（顯示的就是官方燈號本身，所以照官方用色）。fill 是地圖上縣市的底色。
   var LIGHTS = {
-    N: { name: "藍燈", label: "水情正常", color: "#2f6fd6", fill: "#ffffff", desc: "水情正常" },
-    G: { name: "綠燈", label: "水情提醒", color: "#2e9d4f", fill: "#c6e8cd", desc: "水情提醒：加強水源調度" },
-    Y: { name: "黃燈", label: "減壓供水", color: "#e2b000", fill: "#f8e7a1", desc: "減壓供水：離峰時段降低水壓" },
-    O: { name: "橙燈", label: "減量供水", color: "#ef7d1a", fill: "#f9cfa3", desc: "減量供水：大用水戶、游泳池、洗車等減供" },
-    R: { name: "紅燈", label: "分區供水", color: "#d93a2f", fill: "#f3b9b2", desc: "分區輪流停水或定點供水" }
+    N: { short: "正常", name: "藍燈", label: "水情正常", color: "#2f6fd6", fill: "#ffffff", desc: "水情正常" },
+    G: { short: "提醒", name: "綠燈", label: "水情提醒", color: "#2e9d4f", fill: "#c6e8cd", desc: "水情提醒：加強水源調度" },
+    Y: { short: "減壓", name: "黃燈", label: "減壓供水", color: "#e2b000", fill: "#f8e7a1", desc: "減壓供水：離峰時段降低水壓" },
+    O: { short: "減量", name: "橙燈", label: "減量供水", color: "#ef7d1a", fill: "#f9cfa3", desc: "減量供水：大用水戶、游泳池、洗車等減供" },
+    R: { short: "分區", name: "紅燈", label: "分區供水", color: "#d93a2f", fill: "#f3b9b2", desc: "分區輪流停水或定點供水" }
   };
   var RANK = { N: 0, G: 1, Y: 2, O: 3, R: 4 };
 
@@ -312,14 +315,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   }
 
   function renderLegend() {
-    // 五種燈號都列出來，即使目前沒有縣市亮該燈
-    $("legend").innerHTML = Object.keys(LIGHTS).map(function (k) {
-      return '<span><i style="background:#2b2f33' + (k === "N" ? "" : " linear-gradient(" + LIGHTS[k].color + "b8," + LIGHTS[k].color + "b8)") + ';box-shadow:inset 0 0 0 1.5px ' + LIGHTS[k].color + '"></i>' + LIGHTS[k].name + " " + LIGHTS[k].label + '</span>';
-    }).join("");
+    // 縣市燈號的圖例畫在地圖右下角海面（renderMap）；這裡只列蓄水率
     $("legend").innerHTML = '<div class="row"><b>水庫蓄水率</b>' + BINS.map(function (b) {
         return '<span><i class="bin" style="background:' + b.color + '"></i>' + b.label + '</span>';
-      }).join("") + '</div>' +
-      '<div class="row"><b>縣市底色</b>' + $("legend").innerHTML + '</div>';
+      }).join("") + '</div>';
     $("light-list").innerHTML = Object.keys(LIGHTS).map(function (k) {
       return '<li><i style="background:' + LIGHTS[k].color + '"></i><b>' + LIGHTS[k].name + '</b>　' + LIGHTS[k].desc + '</li>';
     }).join("");
@@ -355,6 +354,18 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       g.appendChild(el("path", attrs));
     });
     svg.appendChild(g);
+
+    // 縣市燈號圖例：放在東部外海（花蓮、臺東外海，避開綠島、蘭嶼），五種燈號都列，對齊直排
+    var lg = el("g", { "class": "maplegend", transform: "translate(566 828)" });
+    lg.appendChild(el("text", { "class": "lgt", x: 0, y: 0 }, "水情燈號"));
+    Object.keys(LIGHTS).forEach(function (k, i) {
+      var y = 42 + i * 38;
+      var sw = el("rect", { x: 0, y: y, width: 24, height: 24, rx: 5, "class": k === "N" ? "county" : "county lit", "stroke-width": 2 });
+      sw.setAttribute("style", "stroke:" + LIGHTS[k].color + (k === "N" ? "" : ";fill:" + LIGHTS[k].color));
+      lg.appendChild(sw);
+      lg.appendChild(el("text", { "class": "lgi", x: 34, y: y + 12 }, LIGHTS[k].name + " " + LIGHTS[k].short));
+    });
+    svg.appendChild(lg);
 
     var list = state.data.filter(function (r) { return COORDS[r.id] && r.capacity; })
       .sort(function (a, b) { return b.capacity - a.capacity; });
