@@ -1,0 +1,47 @@
+name: 備份資料到 Cloudflare R2
+
+# 每週把 data/ 整包壓縮，上傳到 Cloudflare R2 的 taiwandata-backup 儲存桶。
+# 需要在 GitHub 專案設定三個 Secrets：R2_ACCESS_KEY_ID、R2_SECRET_ACCESS_KEY、R2_ENDPOINT。
+on:
+  schedule:
+    - cron: "40 18 * * 0"   # 每週一台灣時間 02:40（UTC 週日 18:40）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 檢查 Secrets
+        env:
+          KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          if [ -z "$KEY" ] || [ -z "$SECRET" ] || [ -z "$ENDPOINT" ]; then
+            echo "::error::還沒設定 R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_ENDPOINT 這三個 Secrets"
+            exit 1
+          fi
+
+      - name: 壓縮 data/
+        run: |
+          NAME="reservoir-data-$(TZ=Asia/Taipei date +%F).zip"
+          zip -qr "$NAME" data
+          ls -lh "$NAME"
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+
+      - name: 上傳到 R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          aws s3 cp "$NAME" "s3://taiwandata-backup/reservoir/$NAME" --endpoint-url "$ENDPOINT"
+          aws s3 ls "s3://taiwandata-backup/reservoir/" --endpoint-url "$ENDPOINT" | tail -5
