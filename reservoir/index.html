@@ -71,9 +71,11 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw
 
 .mapbox { padding: 12px; }
 .mapbox h2 { font-size: 15px; margin: 0 0 8px; }
-.mapframe { background: #1b1d20; border-radius: 12px; padding: 6px; } /* 地圖固定深灰底，淺色深色主題都一樣 */
+.mapframe { --sea: #1b1d20; --land: #2b2f33; --border: rgba(255,255,255,.7); --border-w: 1; --dot-op: .6; background: var(--sea); border-radius: 12px; padding: 6px; } /* 地圖固定深灰底，淺色深色主題都一樣 */
 #map { width: 100%; height: auto; display: block; }
-#map .county { stroke: #4b5158; stroke-width: 1; stroke-linejoin: round; }
+#map .county { fill: var(--land); stroke: var(--border); stroke-width: var(--border-w); stroke-linejoin: round; }
+#map .county.lit { fill-opacity: .72; }
+#map .dot { fill-opacity: var(--dot-op); }
 #map .dot { cursor: pointer; }
 #map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #e8ebee; paint-order: stroke; stroke: rgba(27,29,32,.85); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; align-items: center; }
@@ -312,7 +314,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function renderLegend() {
     // 五種燈號都列出來，即使目前沒有縣市亮該燈
     $("legend").innerHTML = Object.keys(LIGHTS).map(function (k) {
-      return '<span><i style="background:' + (k === "N" ? "#2b2f33" : LIGHTS[k].color + "99") + ';box-shadow:inset 0 0 0 1.5px ' + LIGHTS[k].color + '"></i>' + LIGHTS[k].name + " " + LIGHTS[k].label + '</span>';
+      return '<span><i style="background:#2b2f33' + (k === "N" ? "" : " linear-gradient(" + LIGHTS[k].color + "b8," + LIGHTS[k].color + "b8)") + ';box-shadow:inset 0 0 0 1.5px ' + LIGHTS[k].color + '"></i>' + LIGHTS[k].name + " " + LIGHTS[k].label + '</span>';
     }).join("");
     $("legend").innerHTML = '<div class="row"><b>水庫蓄水率</b>' + BINS.map(function (b) {
         return '<span><i class="bin" style="background:' + b.color + '"></i>' + b.label + '</span>';
@@ -348,7 +350,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       var l = countyLight(name);
       // 藍燈（正常）維持深灰；其他燈號用官方顏色半透明疊上去
       var lit = l && l !== "N" && LIGHTS[l];
-      g.appendChild(el("path", { "class": "county", d: MAP.counties[name], fill: lit ? LIGHTS[l].color : "#2b2f33", "fill-opacity": lit ? 0.4 : 1 }));
+      var attrs = { "class": lit ? "county lit" : "county", d: MAP.counties[name] };
+      if (lit) attrs.style = "fill:" + LIGHTS[l].color;
+      g.appendChild(el("path", attrs));
     });
     svg.appendChild(g);
 
@@ -361,8 +365,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     dots.forEach(function (d) {
       var sel = state.sel === d.r.id;
       var c = el("circle", { "class": "dot", cx: d.x.toFixed(1), cy: d.y.toFixed(1), r: d.rad.toFixed(1),
-        fill: ok(d.r) ? binOf(d.r.percent).color : "#8a9299", "fill-opacity": 0.55,
-        stroke: sel ? "#ffffff" : (ok(d.r) ? binOf(d.r.percent).color : "#8a9299"),
+        fill: ok(d.r) ? binOf(d.r.percent).color : "#8a9299",         stroke: sel ? "#ffffff" : (ok(d.r) ? binOf(d.r.percent).color : "#8a9299"),
         "stroke-width": sel ? 4 : 1.5, "data-id": d.r.id });
       c.appendChild(el("title", {}, d.r.name + (ok(d.r) ? " " + fmt(d.r.percent, 1) + "%" : "")));
       svg.appendChild(c);
