@@ -21,8 +21,8 @@ from pathlib import Path
 import site_nav
 
 SITE = "https://taiwandata.info"
-# 關於本站頁上的自我介紹與聯絡方式
-ABOUT_ME = "（這段請換成你的自我介紹）"
+# 關於本站頁上的自我介紹（空白就不顯示）與聯絡方式
+ABOUT_ME = ""  # 空白就不顯示「關於我」那一段
 CONTACT = "有建議或發現數字有誤，歡迎來信：<a href=\"mailto:contact@taiwandata.info\">contact@taiwandata.info</a>"
 ROOT = Path(__file__).resolve().parent.parent
 LOW = 40
@@ -292,10 +292,7 @@ def about_page():
     <h2>資料從哪裡來</h2>
     <p>所有數字都直接取自政府開放資料，例如水庫資料來自經濟部水利署，每小時自動更新一次。本站不自行推估或預測，只整理官方公布的數字；若和官方公告不同，以官方公告為準。</p>
   </section>
-  <section class="box">
-    <h2>關於我</h2>
-    <p>{ABOUT_ME}</p>
-  </section>
+  {f'<section class="box"><h2>關於我</h2><p>{ABOUT_ME}</p></section>' if ABOUT_ME else ""}
   <section class="box">
     <h2>聯絡我</h2>
     <p>{CONTACT}</p>
