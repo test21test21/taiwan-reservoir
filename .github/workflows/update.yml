@@ -45,10 +45,11 @@ jobs:
       - name: 準備網站檔案
         run: |
           mkdir _site
-          cp index.html _site/
+          cp index.html og.png _site/
           cp -r reservoir _site/
           cp -r data _site/
           [ -f CNAME ] && cp CNAME _site/ || true
+          python3 scripts/build_pages.py _site
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
