@@ -145,7 +145,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .ad { display: none !important; }
 .card { position: relative; }
 .card h3 a { color: inherit; text-decoration: none; }
-.card h3 a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; } /* 整張卡片都可以點 */
+.card h3 a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 2; } /* 整張卡片都可以點 */
 .card:hover { border-color: var(--fg); }
 .card:hover h3 a { text-decoration: underline; }
 .card:has(a:focus-visible) { outline: 2px solid var(--water); outline-offset: 2px; }
@@ -253,6 +253,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   var state = { region: "全部", sort: "cap", sel: null, data: [], hist: {}, alert: null, dots: [] };
   var $ = function (id) { return document.getElementById(id); };
   function setUpdated(t) { document.querySelectorAll(".updated").forEach(function (el) { el.textContent = t; }); }
+  function pf(n) { return n == null ? "–" : n.toLocaleString("zh-TW", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); } // 百分比一律一位小數
   function fmt(n, d) { return n == null ? "–" : n.toLocaleString("zh-TW", { maximumFractionDigits: d == null ? 0 : d }); }
   function ok(r) { return r.percent != null && !r.suspect; }
   function short(name) { return name.replace(/水庫$/, "").replace(/第二$/, "二"); }
@@ -313,7 +314,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
   function mini(name, pct, low, none) {
     return '<span class="mini' + (low ? " low" : "") + (none ? " none" : "") + '"><span class="n">' + name + '</span>' +
-      '<span class="p">' + (none ? "無資料" : fmt(pct, pct >= 99.95 ? 0 : 1) + "<small>%</small>") + '</span>' +
+      '<span class="p">' + (none ? "無資料" : pf(pct) + "<small>%</small>") + '</span>' +
       (none ? "" : '<span class="bar"><i style="width:' + Math.min(100, pct) + '%;background:' + binOf(pct).color + '"></i></span>') + '</span>';
   }
 
@@ -411,7 +412,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       var c = el("circle", { "class": "dot", cx: d.x.toFixed(1), cy: d.y.toFixed(1), r: d.rad.toFixed(1),
         fill: ok(d.r) ? binOf(d.r.percent).color : "#8a9299",         stroke: sel ? "#ffffff" : (ok(d.r) ? binOf(d.r.percent).color : "#8a9299"),
         "stroke-width": sel ? 4 : 1.5, "data-id": d.r.id });
-      c.appendChild(el("title", {}, d.r.name + (ok(d.r) ? " " + fmt(d.r.percent, 1) + "%" : "")));
+      c.appendChild(el("title", {}, d.r.name + (ok(d.r) ? " " + pf(d.r.percent) + "%" : "")));
       svg.appendChild(c);
     });
 
@@ -468,13 +469,13 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     if (!h.length) return "";
     var d = Math.round((r.percent - h[h.length - 1][1]) * 10) / 10;
     var cls = d > 0 ? "up" : d < 0 ? "down" : "flat";
-    return '<span class="delta">比昨天 <b class="' + cls + '">' + (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + fmt(Math.abs(d), 1) + '%</b></span>';
+    return '<span class="delta">比昨天 <b class="' + cls + '">' + (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + pf(Math.abs(d)) + '%</b></span>';
   }
 
   function lastYear(r) {
     if (r.last_year_percent == null) return "";
     var diff = r.percent - r.last_year_percent;
-    return '<div class="est"><span>去年同期 <b>' + fmt(r.last_year_percent, 1) + '%</b>（' + (diff >= 0 ? "多 " : "少 ") + fmt(Math.abs(diff), 1) + ' 個百分點）</span></div>';
+    return '<div class="est"><span>去年同期 <b>' + pf(r.last_year_percent) + '%</b>（' + (diff >= 0 ? "多 " : "少 ") + pf(Math.abs(diff)) + ' 個百分點）</span></div>';
   }
 
   function renderCards() {
@@ -486,7 +487,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     });
     $("cards").innerHTML = list.map(function (r, i) {
       var good = ok(r);
-      var right = good ? fmt(r.percent, 1) + "<small>%</small>" : (r.suspect ? "資料異常" : "無蓄水率");
+      var right = good ? pf(r.percent) + "<small>%</small>" : (r.suspect ? "資料異常" : "無蓄水率");
       var chips = "";
       if (good && r.percent < LOW) chips += '<span class="chip low">偏低</span> ';
       if (r.suspect) chips += '<span class="chip">官方數字疑似有誤</span> ';
