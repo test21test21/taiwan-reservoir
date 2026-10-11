@@ -71,17 +71,17 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw
 
 .mapbox { padding: 12px; }
 .mapbox h2 { font-size: 15px; margin: 0 0 8px; }
-.mapframe { background: var(--paper); border-radius: 12px; padding: 6px; }
+.mapframe { background: #1b1d20; border-radius: 12px; padding: 6px; } /* 地圖固定深灰底，淺色深色主題都一樣 */
 #map { width: 100%; height: auto; display: block; }
-#map .county { stroke: #a9b0b6; stroke-width: 1.2; stroke-linejoin: round; }
+#map .county { stroke: #4b5158; stroke-width: 1; stroke-linejoin: round; }
 #map .dot { cursor: pointer; }
-#map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #1d2125; paint-order: stroke; stroke: rgba(255,255,255,.92); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
+#map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #e8ebee; paint-order: stroke; stroke: rgba(27,29,32,.85); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; align-items: center; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
 .legend { display: grid; gap: 6px; }
 .legend .row { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
 .legend .row b { font-weight: 700; color: var(--fg); min-width: 4.5em; }
-.legend .bin { width: 14px; height: 14px; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); }
+.legend .bin { width: 14px; height: 14px; }
 .legend .size { display: inline-flex; align-items: center; gap: 4px; }
 .legend .size i { background: #8a9aa8; margin: 0; }
 .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
@@ -228,10 +228,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function dateText(d) { var p = d.split("-"); return Number(p[1]) + "/" + Number(p[2]); }
   // 蓄水率分四級（避開官方燈號用的綠黃橙紅）
   var BINS = [
-    { min: 80, label: "80% 以上", color: "#0b3d7a" },
-    { min: 60, label: "60–80%", color: "#2f7fd0" },
-    { min: 40, label: "40–60%", color: "#8cc4f0" },
-    { min: -1, label: "40% 以下", color: "#8a4fd0" }
+    { min: 80, label: "80% 以上", color: "#2a86e8" },
+    { min: 60, label: "60–80%", color: "#5fc3f0" },
+    { min: 40, label: "40–60%", color: "#a9dcf2" },
+    { min: -1, label: "40% 以下", color: "#a274e8" }
   ];
   function binOf(p) { for (var i = 0; i < BINS.length; i++) if (p >= BINS[i].min) return BINS[i]; return BINS[BINS.length - 1]; }
 
@@ -312,7 +312,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function renderLegend() {
     // 五種燈號都列出來，即使目前沒有縣市亮該燈
     $("legend").innerHTML = Object.keys(LIGHTS).map(function (k) {
-      return '<span><i style="background:' + LIGHTS[k].fill + ';box-shadow:inset 0 0 0 1.5px ' + LIGHTS[k].color + '"></i>' + LIGHTS[k].name + " " + LIGHTS[k].label + '</span>';
+      return '<span><i style="background:' + (k === "N" ? "#2b2f33" : LIGHTS[k].color + "99") + ';box-shadow:inset 0 0 0 1.5px ' + LIGHTS[k].color + '"></i>' + LIGHTS[k].name + " " + LIGHTS[k].label + '</span>';
     }).join("");
     $("legend").innerHTML = '<div class="row"><b>水庫蓄水率</b>' + BINS.map(function (b) {
         return '<span><i class="bin" style="background:' + b.color + '"></i>' + b.label + '</span>';
@@ -346,7 +346,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var g = el("g", {});
     Object.keys(MAP.counties).forEach(function (name) {
       var l = countyLight(name);
-      g.appendChild(el("path", { "class": "county", d: MAP.counties[name], fill: l && LIGHTS[l] ? LIGHTS[l].fill : "#ffffff" }));
+      // 藍燈（正常）維持深灰；其他燈號用官方顏色半透明疊上去
+      var lit = l && l !== "N" && LIGHTS[l];
+      g.appendChild(el("path", { "class": "county", d: MAP.counties[name], fill: lit ? LIGHTS[l].color : "#2b2f33", "fill-opacity": lit ? 0.4 : 1 }));
     });
     svg.appendChild(g);
 
@@ -359,8 +361,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     dots.forEach(function (d) {
       var sel = state.sel === d.r.id;
       var c = el("circle", { "class": "dot", cx: d.x.toFixed(1), cy: d.y.toFixed(1), r: d.rad.toFixed(1),
-        fill: ok(d.r) ? binOf(d.r.percent).color : "#c9d3dc", stroke: sel ? "#1d2125" : "#ffffff",
-        "stroke-width": sel ? 5 : Math.min(3, d.rad * 0.5).toFixed(1), "data-id": d.r.id });
+        fill: ok(d.r) ? binOf(d.r.percent).color : "#8a9299", "fill-opacity": 0.55,
+        stroke: sel ? "#ffffff" : (ok(d.r) ? binOf(d.r.percent).color : "#8a9299"),
+        "stroke-width": sel ? 4 : 1.5, "data-id": d.r.id });
       c.appendChild(el("title", {}, d.r.name + (ok(d.r) ? " " + fmt(d.r.percent, 1) + "%" : "")));
       svg.appendChild(c);
     });
