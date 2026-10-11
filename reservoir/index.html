@@ -33,7 +33,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; }
 a { color: var(--fg); text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
 .box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
@@ -44,7 +44,7 @@ h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(24px, 6vw
 
 /* 第一面：各區 */
 .hero { margin-top: 12px; display: grid; gap: 12px; }
-@media (min-width: 860px) { .hero { grid-template-columns: minmax(0, 420px) 1fr; grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: span 2; } }
+@media (min-width: 860px) { .hero { grid-template-columns: minmax(0, 420px) 1fr; grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: 1 / span 2; position: sticky; top: 12px; } .hero .list { grid-column: 2; margin-top: 12px; } }
 .hero > * { min-width: 0; }
 .regions { padding: 6px 0; }
 .regions-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; padding: 8px 16px 4px; }
@@ -151,7 +151,6 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     </section>
     <section class="box regions" id="regions" aria-label="各區水情"></section>
     <aside class="ad ad-box" aria-label="廣告"><b>廣告</b>廣告位置 1（300×250）</aside>
-  </div>
 
   <section class="list" aria-label="水庫列表">
     <div class="listhead" id="listhead">
@@ -164,6 +163,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     </div>
     <ul class="cards" id="cards"></ul>
   </section>
+  </div>
 
   <footer>
     <div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料）與水利署官網水情燈號，每小時更新。蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>
