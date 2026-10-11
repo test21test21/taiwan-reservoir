@@ -24,7 +24,7 @@ body { margin: 0; }
 .menu-btn:hover { background: var(--chip); }
 .menu-btn svg { width: 24px; height: 24px; }
 .sitename { display: flex; align-items: center; gap: 8px; color: var(--fg); text-decoration: none; font-weight: 700; font-size: 17px; letter-spacing: .02em; white-space: nowrap; min-width: 0; }
-.sitename img { width: 28px; height: 28px; border-radius: 7px; flex: none; }
+.sitename img { width: 28px; height: 28px; flex: none; }
 .sitemenu { position: absolute; top: 100%; left: 0; width: min(300px, 100vw); max-height: calc(100vh - 52px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 0; box-shadow: 0 8px 24px rgba(12,30,46,.14); padding: 8px; }
 .sitemenu ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .sitemenu a, .sitemenu span { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 10px; color: var(--fg); text-decoration: none; font-size: 16px; }
