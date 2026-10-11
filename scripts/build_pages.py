@@ -5,6 +5,7 @@
     python3 scripts/build_pages.py _site
 
 - _site/reservoir/<水庫代碼>/index.html：數字直接寫進 HTML（Google 不用跑 JavaScript 就看得到）
+- _site/index.html、_site/reservoir/index.html：放進 <!--SITE_ICONS-->、<!--SITE_NAV-->（scripts/site_nav.py）
 - _site/reservoir/index.html：把 <!--RESERVOIR_LINKS--> 換成全部水庫頁的連結
 - _site/sitemap.xml、_site/robots.txt
 """
@@ -15,6 +16,8 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+
+import site_nav
 
 SITE = "https://taiwandata.info"
 ROOT = Path(__file__).resolve().parent.parent
@@ -156,7 +159,7 @@ def head(title, desc, url, image):
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="data:,">
+{site_nav.ICONS}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -235,6 +238,7 @@ def reservoir_page(r, info, hist, alert, peers, updated):
     image = "reservoir/og.png"
     return f"""{head(title, desc, url, image)}
 <body>
+{site_nav.nav("reservoir")}
 <div class="wrap">
   <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">台灣水庫水情</a> › {e(r["region"])}</nav>
   <h1>{e(name)}即時蓄水率</h1>
@@ -276,6 +280,13 @@ def main(out):
         page = reservoir_page(r, info.get(r["id"]), hist.get(r["id"], []), alert, by_region[r["region"]], updated)
         (d / "index.html").write_text(page, encoding="utf-8")
         urls.append(f"{SITE}/reservoir/{r['id']}/")
+
+    # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
+    for f, key in [("index.html", "home"), ("reservoir/index.html", "reservoir")]:
+        if (out / f).exists():
+            t = (out / f).read_text(encoding="utf-8")
+            t = t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", site_nav.nav(key))
+            (out / f).write_text(t, encoding="utf-8")
 
     # 水庫總覽頁底部：全部水庫頁的連結（不靠 JavaScript，搜尋引擎找得到）
     idx = out / "reservoir/index.html"

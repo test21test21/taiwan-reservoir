@@ -16,6 +16,7 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<!--SITE_ICONS-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -57,7 +58,7 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw
 
 /* 第一面：各區 */
 .hero { margin-top: 12px; display: grid; gap: 12px; }
-@media (min-width: 860px) { .hero { grid-template-columns: clamp(340px, 32vw, 560px) minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: 1 / span 2; position: sticky; top: 12px; } .hero .list { grid-column: 2; margin-top: 12px; } }
+@media (min-width: 860px) { .hero { grid-template-columns: clamp(340px, 32vw, 560px) minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: 1 / span 2; position: sticky; top: 64px; } .hero .list { grid-column: 2; margin-top: 12px; } }
 .hero > * { min-width: 0; }
 .regions { padding: 6px 0; }
 .regions-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; padding: 8px 16px 4px; }
@@ -110,7 +111,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 
 /* 水庫列表 */
 .list { margin-top: 24px; }
-.listhead { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; scroll-margin-top: 12px; }
+.listhead { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; scroll-margin-top: 64px; }
 .listhead > * { min-width: 0; }
 .listhead h2 { font-size: 17px; margin: 0; width: 100%; }
 .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -118,7 +119,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .tabs button[aria-pressed="true"], .sort button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .sort { display: flex; flex-wrap: wrap; white-space: nowrap; gap: 6px; font-size: 13px; align-items: center; color: var(--muted); }
 .cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
-.card { padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; min-width: 0; scroll-margin-top: 16px; }
+.card { padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; min-width: 0; scroll-margin-top: 68px; }
 .card.sel { border-color: var(--water); box-shadow: 0 0 0 1px var(--water); }
 .card h3 { margin: 0; font-size: 17px; font-weight: 700; min-width: 0; }
 .card .reg { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 6px; }
@@ -151,16 +152,15 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .allres h2 { font-size: 15px; margin: 0; }
 .allres b { font-size: 13px; color: var(--muted); font-weight: 500; }
 .allres ul { list-style: none; padding: 0; margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 2px 14px; }
-.brand { display: inline-block; font-size: 13px; color: var(--muted); text-decoration: none; padding-block: 6px; }
-.brand:hover { color: var(--fg); }
 footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 70ch; }
 .err { padding: 16px; margin-top: 12px; }
 @media (prefers-reduced-motion: no-preference) { .gauge i, .mini .bar i { transition: width .6s ease; } }
 </style>
 
+<!--SITE_NAV-->
 <div class="wrap">
   <header class="top">
-    <div><a class="brand" href="../">Taiwan Data 台灣數據</a><h1>台灣水庫水情</h1></div>
+    <h1>台灣水庫水情</h1>
     <span class="updated" id="updated">讀取資料中…</span>
   </header>
 
