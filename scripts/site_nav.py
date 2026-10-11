@@ -14,6 +14,7 @@ MENU = [
     ("reservoir", "台灣水庫水情", "/reservoir/"),
     ("births", "出生人口", ""),
     ("travel", "出入境人次", ""),
+    ("about", "關於本站", "/about/"),
 ]
 
 CSS = """
