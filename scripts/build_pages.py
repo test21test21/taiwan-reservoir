@@ -30,6 +30,7 @@ REGIONS = ["北部", "中部", "南部", "東部", "澎湖", "金門", "馬祖"]
 ISLAND_COUNTY = {"澎湖": "澎湖縣", "金門": "金門縣", "馬祖": "連江縣"}
 # 和 reservoir/index.html 同一份
 BINS = [(80, "#2a86e8"), (60, "#5fc3f0"), (40, "#a9dcf2"), (-1, "#a274e8")]
+TANK = [(80, "#0b4a8f"), (60, "#1f7ad6"), (40, "#5aaee8"), (-1, "#8a55dd")]  # 跟總覽頁卡片的水杯同色
 LIGHTS = {
     "N": ("藍燈", "水情正常", "#2f6fd6"),
     "G": ("綠燈", "水情提醒", "#2e9d4f"),
@@ -123,9 +124,20 @@ h2 { font-size:17px; margin:0 0 8px; }
 .delta .up { color:#1f8a4c; }
 .delta .down { color:#d13c3c; }
 .pct.none { font-size:22px; color:var(--muted); font-weight:500; }
-.gauge { height:12px; border-radius:6px; background:var(--water-soft); overflow:hidden; margin-top:12px; }
-.gauge i { display:block; height:100%; border-radius:6px; }
-.stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin:16px 0 0; }
+.hero.has-tank { display:grid; grid-template-columns:1fr 150px; padding:0; overflow:hidden; }
+.hero.has-tank .info { padding:16px; min-width:0; }
+.hero .big .lead { margin:0; }
+.tank { display:grid; place-content:center; justify-items:center; gap:6px; border-left:1px solid var(--line); min-height:220px;
+  background:linear-gradient(to top, var(--wc) var(--p), transparent var(--p)); text-align:center; padding:0 6px; }
+.tank .pct { font-size:clamp(36px,9vw,56px); }
+.tank .pct small { color:inherit; }
+.tank.deep .pct { color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.25); }
+.tank.deep .delta { color:rgba(255,255,255,.85); }
+.tank.deep .delta .up { color:#8ff0b4; }
+.tank.deep .delta .down { color:#ffb0b0; }
+.tank.deep .delta .flat { color:#fff; }
+@media (min-width:640px) { .hero.has-tank { grid-template-columns:1fr 240px; } }
+.stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; margin:16px 0 0; }
 .stats div { min-width:0; }
 .stats dt { font-size:12px; color:var(--muted); }
 .stats dd { margin:0; font-size:18px; font-weight:700; }
@@ -208,15 +220,17 @@ def reservoir_page(r, info, hist, alert, peers, updated):
             d = round(p - float(prev[-1]["percent"]), 1)
             cls, arrow = ("up", "▲") if d > 0 else ("down", "▼") if d < 0 else ("flat", "▶")
             change = f'<span class="delta">比昨天 <b class="{cls}">{arrow} {abs(d):.1f}%</b></span>'
-        big = (f'<div class="pct{" low" if p < LOW else ""}">{p:.1f}<small>%</small></div>{change}'
-               f'<div class="lead">有效蓄水量 {vol(r.get("storage"))} / {vol(r.get("capacity"))} 萬立方公尺</div>')
-        gauge = f'<div class="gauge"><i style="width:{min(100, p):.1f}%;background:{color(p)}"></i></div>'
+        lvl = max(0, min(100, p))
+        wc = next(c for m, c in TANK if p >= m)
+        tank = (f'<div class="tank{" deep" if p >= 58 else ""}" style="--p:{lvl:.1f}%;--wc:{wc}">'
+                f'<div class="pct">{p:.1f}<small>%</small></div>{change}</div>')
+        big = f'<div class="lead">有效蓄水量 {vol(r.get("storage"))} / {vol(r.get("capacity"))} 萬立方公尺</div>'
     else:
         title = f"{name}即時水情｜台灣水庫水情"
         desc = f"{name}的水位、進出水量與基本資料，每小時更新，資料來自經濟部水利署。"
         msg = "官方數字疑似有誤，暫不顯示蓄水率" if r.get("suspect") else "水利署目前沒有提供這座水庫的蓄水率"
         big = f'<div class="pct none">{msg}</div>'
-        gauge = ""
+        tank = ""
 
     stats = []
     for key, label, unit, d in [
@@ -258,11 +272,13 @@ def reservoir_page(r, info, hist, alert, peers, updated):
   <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">台灣水庫水情</a> › {e(r["region"])}</nav>
   <h1>{e(name)}即時蓄水率</h1>
   <p class="lead">{e(r["region"])}・{e(when)} 觀測・資料更新 {e(updated)}</p>
-  <section class="box">
-    <div class="big">{big}</div>
-    {gauge}
-    <dl class="stats">{"".join(stats)}</dl>
-    <a class="cta" href="../">看全台水庫地圖</a>
+  <section class="box hero{" has-tank" if tank else ""}">
+    <div class="info">
+      <div class="big">{big}</div>
+      <dl class="stats">{"".join(stats)}</dl>
+      <a class="cta" href="../">看全台水庫地圖</a>
+    </div>
+    {tank}
   </section>
   {light}
   {history_table(hist)}
