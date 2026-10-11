@@ -146,7 +146,6 @@ h2 { font-size:17px; margin:0 0 8px; }
 .chart text { font-size:13px; fill:var(--muted); font-family:var(--f-body); }
 @media (min-width:640px) { .chart text { font-size:9px; } }
 .chart .g { stroke:var(--line); stroke-width:1; }
-.chart .area { fill:var(--water); opacity:.12; }
 .chart .line { fill:none; stroke:var(--water); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
 .chart .ly { fill:none; stroke:var(--muted); stroke-width:2; stroke-dasharray:5 4; }
 .chart .dot { fill:var(--water); stroke:var(--surface); stroke-width:2; }
@@ -252,14 +251,13 @@ def history_chart(rows):
     xlab = "".join(
         f'<text x="{X(days[i]):.1f}" y="{H - 8}" text-anchor="{"start" if i == 0 else "end" if i == len(days) - 1 else "middle"}">'
         f'{days[i].month}/{days[i].day}</text>' for i in ticks)
-    area = f'{path(now)} L{X(days[-1]):.1f},{Y(lo):.1f} L{X(days[0]):.1f},{Y(lo):.1f} Z'
     ly_line = f'<path d="{path(last)}" class="ly"/>' if has_last else ""
     dot = f'<circle cx="{X(days[-1]):.1f}" cy="{Y(now[-1]):.1f}" r="4" class="dot"/>'
     legend = ('<p class="legend"><span class="k now"></span>今年<span class="k ly"></span>去年同期</p>'
               if has_last else "")
     return (f'<section class="box"><h2>過去 {len(days)} 天蓄水率</h2>{legend}'
             f'<svg class="chart" viewBox="0 0 {W} {H}" role="img" aria-label="過去 {len(days)} 天蓄水率折線圖">'
-            f'{grid}<path d="{area}" class="area"/>{ly_line}<path d="{path(now)}" class="line"/>{dot}{xlab}</svg></section>')
+            f'{grid}{ly_line}<path d="{path(now)}" class="line"/>{dot}{xlab}</svg></section>')
 
 
 def history_table(rows):
