@@ -15,7 +15,7 @@ import html
 import json
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import site_nav
@@ -142,6 +142,20 @@ h2 { font-size:17px; margin:0 0 8px; }
 .stats dt { font-size:12px; color:var(--muted); }
 .stats dd { margin:0; font-size:18px; font-weight:700; }
 .stats dd small { font-size:12px; color:var(--muted); font-weight:400; margin-left:2px; }
+.chart { display:block; width:100%; height:auto; max-height:340px; margin-top:4px; }
+.chart text { font-size:13px; fill:var(--muted); font-family:var(--f-body); }
+@media (min-width:640px) { .chart text { font-size:9px; } }
+.chart .g { stroke:var(--line); stroke-width:1; }
+.chart .area { fill:var(--water); opacity:.12; }
+.chart .line { fill:none; stroke:var(--water); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+.chart .ly { fill:none; stroke:var(--muted); stroke-width:2; stroke-dasharray:5 4; }
+.chart .dot { fill:var(--water); stroke:var(--surface); stroke-width:2; }
+.legend { margin:0; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.legend .k { display:inline-block; width:18px; height:0; border-top:2.5px solid var(--water); margin-left:8px; }
+.legend .k:first-child { margin-left:0; }
+.legend .k.ly { border-top:2px dashed var(--muted); }
+details summary { cursor:pointer; font-weight:700; font-size:17px; }
+details table { margin-top:8px; }
 .light { display:flex; align-items:center; gap:10px; }
 .lamp { width:16px; height:16px; border-radius:50%; flex:none; }
 table { width:100%; border-collapse:collapse; font-size:14px; }
@@ -187,6 +201,67 @@ def head(title, desc, url, image):
 </head>"""
 
 
+CHART_MIN_DAYS = 7  # 資料滿 7 天才畫折線圖，不然只有幾個點不好看
+
+
+def history_chart(rows):
+    """過去 30 天蓄水率折線圖（SVG，直接寫進 HTML）。有一年前的資料時，多畫一條灰色虛線「去年同期」。"""
+    all_rows = [r for r in rows if r.get("percent")]
+    rows = all_rows[-30:]
+    if len(rows) < CHART_MIN_DAYS:
+        return ""
+    by_date = {r["date"]: float(r["percent"]) for r in all_rows}
+    days = [date.fromisoformat(r["date"]) for r in rows]
+    now = [float(r["percent"]) for r in rows]
+    last = []
+    for d in days:
+        try:
+            ly = d.replace(year=d.year - 1)
+        except ValueError:  # 2/29
+            ly = d - timedelta(days=365)
+        last.append(by_date.get(ly.isoformat()))
+    has_last = sum(v is not None for v in last) >= CHART_MIN_DAYS
+
+    vals = now + ([v for v in last if v is not None] if has_last else [])
+    lo, hi = min(vals), max(vals)
+    lo, hi = max(0, (int(lo) // 10) * 10), min(110, -(-int(hi + 0.999) // 10) * 10)
+    if hi - lo < 20:  # 至少 20 個百分點高，小波動才不會被放大成大起伏
+        lo = max(0, hi - 20)
+        hi = lo + 20
+    W, H, L, R, T, B = 420, 220, 46, 12, 12, 26
+    t0, span = days[0], max(1, (days[-1] - days[0]).days)
+    X = lambda d: L + (W - L - R) * (d - t0).days / span
+    Y = lambda v: T + (H - T - B) * (hi - v) / (hi - lo)
+
+    def path(series):
+        out, pen = [], "M"
+        for d, v in zip(days, series):
+            if v is None:
+                pen = "M"
+                continue
+            out.append(f"{pen}{X(d):.1f},{Y(v):.1f}")
+            pen = "L"
+        return " ".join(out)
+
+    step = 10 if hi - lo <= 40 else 20
+    grid = "".join(
+        f'<line x1="{L}" x2="{W - R}" y1="{Y(g):.1f}" y2="{Y(g):.1f}" class="g"/>'
+        f'<text x="{L - 5}" y="{Y(g) + 4:.1f}" text-anchor="end">{g}%</text>'
+        for g in range(lo, hi + 1, step))
+    ticks = sorted({0, len(days) // 2, len(days) - 1})
+    xlab = "".join(
+        f'<text x="{X(days[i]):.1f}" y="{H - 8}" text-anchor="{"start" if i == 0 else "end" if i == len(days) - 1 else "middle"}">'
+        f'{days[i].month}/{days[i].day}</text>' for i in ticks)
+    area = f'{path(now)} L{X(days[-1]):.1f},{Y(lo):.1f} L{X(days[0]):.1f},{Y(lo):.1f} Z'
+    ly_line = f'<path d="{path(last)}" class="ly"/>' if has_last else ""
+    dot = f'<circle cx="{X(days[-1]):.1f}" cy="{Y(now[-1]):.1f}" r="4" class="dot"/>'
+    legend = ('<p class="legend"><span class="k now"></span>今年<span class="k ly"></span>去年同期</p>'
+              if has_last else "")
+    return (f'<section class="box"><h2>過去 {len(days)} 天蓄水率</h2>{legend}'
+            f'<svg class="chart" viewBox="0 0 {W} {H}" role="img" aria-label="過去 {len(days)} 天蓄水率折線圖">'
+            f'{grid}<path d="{area}" class="area"/>{ly_line}<path d="{path(now)}" class="line"/>{dot}{xlab}</svg></section>')
+
+
 def history_table(rows):
     rows = [r for r in rows if r.get("percent")][-30:]
     if len(rows) < 2:
@@ -198,9 +273,11 @@ def history_table(rows):
         f'<td class="n">{fmt(float(r["inflow_daily"]), 1) if r.get("inflow_daily") else "–"}</td></tr>'
         for r in reversed(rows)
     )
-    return (f'<section class="box"><h2>最近 {len(rows)} 天蓄水率</h2><table>'
-            '<tr><th>日期</th><th class="n">蓄水率</th><th class="n">蓄水量</th><th class="n">進水量</th></tr>'
-            f'{body}</table><p class="lead">蓄水量、進水量單位：萬立方公尺（約萬噸）</p></section>')
+    table = ('<table><tr><th>日期</th><th class="n">蓄水率</th><th class="n">蓄水量</th><th class="n">進水量</th></tr>'
+             f'{body}</table><p class="lead">蓄水量、進水量單位：萬立方公尺（約萬噸）</p>')
+    if len(rows) >= CHART_MIN_DAYS:  # 上面已有折線圖，表格收起來
+        return f'<section class="box"><details><summary>看每日數字</summary>{table}</details></section>'
+    return f'<section class="box"><h2>最近 {len(rows)} 天蓄水率</h2>{table}</section>'
 
 
 def reservoir_page(r, info, hist, alert, peers, updated):
@@ -281,6 +358,7 @@ def reservoir_page(r, info, hist, alert, peers, updated):
     {tank}
   </section>
   {light}
+  {history_chart(hist)}
   {history_table(hist)}
   {facts}
   {others}
