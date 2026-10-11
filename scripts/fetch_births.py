@@ -27,6 +27,8 @@ OUT = ROOT / "data/births/monthly.csv"
 API = "https://www.ris.gov.tw/rs-opendata/api/v1/datastore"
 FIELDS = ["month", "county", "births_m", "births_f", "deaths_m", "deaths_f", "population"]
 FIRST = (2018, 1)
+ZH = {"區域別": "site_id", "出生數_合計_男": "birth_total_m", "出生數_合計_女": "birth_total_f",
+      "死亡人數_男": "death_m", "死亡人數_女": "death_f", "人口數_合計": "people_total"}
 
 
 def table_for(y, m):
@@ -73,6 +75,7 @@ def fetch_month(y, m):
             return None if page == 1 else agg
         pages = n(d.get("totalPage")) or 1
         for r in rows:
+            r = {ZH.get(k, k): v for k, v in r.items()}  # 有些月份欄位名稱是中文
             county = (r.get("site_id") or "").strip()[:3]
             if not county:
                 continue
@@ -120,7 +123,7 @@ def main():
         if key in have:
             continue
         agg = fetch_month(y, m)
-        if agg is None:
+        if not agg:
             print(f"{key}：查無資料")
             misses += 1
             continue
