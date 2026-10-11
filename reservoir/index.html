@@ -25,7 +25,7 @@
 :root {
   --bg: #f6f6f4; --surface: #ffffff; --fg: #1d2125; --muted: #676d73; --line: #e4e4e0;
   --water: #0a6cc2; --water-soft: #e3eef8; --water-lite: #7fbfec;
-  --low: #7a4fc4; --chip: #efefec;
+  --low: #7a4fc4; --chip: #efefec; --rise: #1f8a4c; --fall: #d13c3c;
   --paper: #f1f1ee; /* 地圖底，兩種主題都用淺色，讓官方縣市線看得清楚 */
   --shadow: 0 1px 2px rgba(12,30,46,.06), 0 4px 16px rgba(12,30,46,.05);
   --f-display: var(--f-body);
@@ -36,13 +36,13 @@
   :root:not([data-theme="light"]) {
     --bg: #121416; --surface: #1b1e21; --fg: #ececea; --muted: #9a9fa4; --line: #2c3035;
     --water: #4fb0f0; --water-soft: #16304a; --water-lite: #2b6fa3;
-    --low: #bba2f0; --chip: #24282c; --paper: #ecece9; --shadow: none; color-scheme: dark;
+    --low: #bba2f0; --chip: #24282c; --rise: #4cc47e; --fall: #ff7a7a; --paper: #ecece9; --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121416; --surface: #1b1e21; --fg: #ececea; --muted: #9a9fa4; --line: #2c3035;
   --water: #4fb0f0; --water-soft: #16304a; --water-lite: #2b6fa3;
-  --low: #bba2f0; --chip: #24282c; --paper: #ecece9; --shadow: none; color-scheme: dark;
+  --low: #bba2f0; --chip: #24282c; --rise: #4cc47e; --fall: #ff7a7a; --paper: #ecece9; --shadow: none; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -117,23 +117,22 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .tabs button[aria-pressed="true"], .sort button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .sort { display: flex; flex-wrap: wrap; white-space: nowrap; gap: 6px; font-size: 13px; align-items: center; color: var(--muted); }
 .cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
-.card { padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; min-width: 0; scroll-margin-top: 68px; }
+.card { padding: 0; overflow: hidden; display: grid; grid-template-columns: 1fr 112px; min-width: 0; scroll-margin-top: 68px; }
 .card.sel { border-color: var(--water); box-shadow: 0 0 0 1px var(--water); }
 .card h3 { margin: 0; font-size: 17px; font-weight: 700; min-width: 0; }
 .card .reg { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 6px; }
-.card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 700; font-size: 30px; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; }
-.card .pct small { font-size: 14px; color: var(--muted); }
+.card .info { min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
+/* 右邊一格當水杯：從底部填到蓄水率的高度，大數字放在杯子中間 */
+.card .tank { position: relative; display: grid; place-items: center; border-left: 1px solid var(--line); min-height: 112px; }
+.card .tank[style] { background: linear-gradient(to top, var(--wc) var(--p), transparent var(--p)); }
+.card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 700; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; padding: 0 6px; }
+.card .pct small { font-size: 14px; color: inherit; }
 .card .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.card.nodata .pct { font-size: 15px; color: var(--muted); font-family: var(--f-body); font-weight: 500; }
-.gauge { grid-column: 1 / -1; height: 10px; border-radius: 5px; background: var(--water-soft); overflow: hidden; margin-top: 8px; }
-.gauge i { display: block; height: 100%; background: var(--water); border-radius: 5px; }
-.meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.card.nodata .pct { font-size: 13px; color: var(--muted); font-family: var(--f-body); font-weight: 500; }
+.meta { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); margin-top: auto; padding-top: 6px; }
 .chip { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); }
 .chip.low { background: transparent; border: 1px solid var(--low); color: var(--low); }
-.spark { grid-column: 1 / -1; margin-top: 6px; }
-.spark svg { width: 100%; height: 36px; display: block; }
-.spark .hint { font-size: 12px; color: var(--muted); }
-.est { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; font-size: 13px; }
+.est { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 4px; font-size: 13px; }
 .est b { font-family: var(--f-num); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
 
 /* 廣告位置：先固定高度，廣告載入時版面才不會跳動 */
@@ -151,15 +150,17 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .card:hover h3 a { text-decoration: underline; }
 .card:has(a:focus-visible) { outline: 2px solid var(--water); outline-offset: 2px; }
 .card h3 a:focus-visible { outline: none; }
-.card .delta { display: block; margin-top: 6px; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-.card .delta.up { color: var(--water); }
+.card .delta { display: block; margin-top: 4px; font-family: var(--f-body); font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.card .delta b { font-weight: 700; }
+.card .delta .up { color: var(--rise); }
+.card .delta .down { color: var(--fall); }
 .allres { margin-top: 24px; padding: 12px 16px; display: grid; gap: 8px; font-size: 14px; }
 .allres h2 { font-size: 15px; margin: 0; }
 .allres b { font-size: 13px; color: var(--muted); font-weight: 500; }
 .allres ul { list-style: none; padding: 0; margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 2px 14px; }
 footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 70ch; }
 .err { padding: 16px; margin-top: 12px; }
-@media (prefers-reduced-motion: no-preference) { .gauge i, .mini .bar i { transition: width .6s ease; } }
+@media (prefers-reduced-motion: no-preference) { .mini .bar i { transition: width .6s ease; } }
 </style>
 
 <!--SITE_NAV-->
@@ -361,9 +362,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     return e;
   }
 
-  // 圓圈面積和有效容量成正比（半徑 ∝ √容量）。只有太小看不見的才放大到最小 2.5。
-  var R_SCALE = 0.16;
-  function radius(cap) { return Math.max(2.5, R_SCALE * Math.sqrt(cap)); }
+  // 圓圈面積和有效容量成正比（半徑 ∝ √容量），大小比照圖地 TODE 那張水庫圖。太小的放大到最小 7，才看得到也點得到。
+  var R_SCALE = 0.33;
+  function radius(cap) { return Math.max(7, R_SCALE * Math.sqrt(cap)); }
 
   function renderMap() {
     var svg = $("map");
@@ -426,7 +427,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       });
       return n;
     }
-    dots.slice(0, 6).forEach(function (d) {
+    dots.slice(0, 8).forEach(function (d) { // 容量前 8 大（到南化、烏山頭）才標名字
       var name = short(d.r.name), w = name.length * FS + 4, h = FS + 6, gap = 6, R = d.rad;
       var tries = [
         [d.x + R + gap, d.y - h / 2], [d.x - R - gap - w, d.y - h / 2],
@@ -447,17 +448,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     svg.removeAttribute("hidden"); // SVG 元素沒有 .hidden 屬性
   }
 
-  function sparkline(id) {
-    var h = state.hist[id] || [];
-    if (h.length < 2) return '<div class="spark"><span class="hint">趨勢圖從 10/10 開始累積，明天起會出現</span></div>';
-    var pts = h.slice(-30), n = pts.length, W = 300, H = 36;
-    var xy = pts.map(function (p, i) { return [(i / (n - 1)) * (W - 4) + 2, H - 3 - (p[1] / 100) * (H - 6)]; });
-    var line = xy.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ");
-    var last = xy[n - 1];
-    return '<div class="spark"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-label="近 ' + n + ' 天蓄水率">' +
-      '<polygon points="2,' + H + ' ' + line + ' ' + (W - 2) + ',' + H + '" fill="var(--water-soft)"/>' +
-      '<polyline points="' + line + '" fill="none" stroke="var(--water)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>' +
-      '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.5" fill="var(--water)"/></svg></div>';
+  // 右邊的水杯：從底部填到蓄水率的高度，顏色同地圖的四級
+  function water(p) {
+    var h = binOf(p).color.replace("#", ""), rgb = [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }).join(",");
+    return ' style="--p:' + Math.min(100, Math.max(0, p)).toFixed(1) + '%;--wc:rgba(' + rgb + ',.6)"';
   }
 
   // 和昨天比：目前蓄水率 − 昨天最後一筆紀錄的蓄水率（都是官方數字）
@@ -465,8 +459,8 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var h = (state.hist[r.id] || []).filter(function (p) { return p[0] < state.today; });
     if (!h.length) return "";
     var d = Math.round((r.percent - h[h.length - 1][1]) * 10) / 10;
-    var cls = d > 0 ? "up" : d < 0 ? "down" : "";
-    return '<span class="delta ' + cls + '">比昨天 ' + (d > 0 ? "▲ " + fmt(d, 1) + "%" : d < 0 ? "▼ " + fmt(-d, 1) + "%" : "持平") + '</span>';
+    var cls = d > 0 ? "up" : d < 0 ? "down" : "flat";
+    return '<span class="delta">比昨天 <b class="' + cls + '">' + (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + fmt(Math.abs(d), 1) + '%</b></span>';
   }
 
   function lastYear(r) {
@@ -489,13 +483,12 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       if (good && r.percent < LOW) chips += '<span class="chip low">偏低</span> ';
       if (r.suspect) chips += '<span class="chip">官方數字疑似有誤</span> ';
       return '<li class="box card' + (good ? "" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '">' +
-        '<h3><a href="' + r.id + '/">' + r.name + '</a><span class="reg">' + r.region + '</span></h3>' +
-        '<div class="pct">' + right + (good ? delta(r) : "") + '</div>' +
+        '<div class="info"><h3><a href="' + r.id + '/">' + r.name + '</a><span class="reg">' + r.region + '</span></h3>' +
         '<div class="sub">' + (r.storage != null ? fmt(r.storage, r.storage < 100 ? 1 : 0) + " / " : "") + (r.capacity != null ? fmt(r.capacity, r.capacity < 100 ? 1 : 0) + " 萬噸" : "") + '</div>' +
-        (good ? '<div class="gauge"><i style="width:' + Math.min(100, r.percent) + '%;background:' + binOf(r.percent).color + '"></i></div>' : "") +
-        (good ? lastYear(r) + sparkline(r.id) : "") +
+        (good ? lastYear(r) : "") +
         '<div class="meta"><span>' + chips + (r.observed_at ? "觀測 " + timeText(r.observed_at) : (r.daily_date ? "日報 " + r.daily_date.slice(5).replace("-", "/") : "")) + '</span>' +
-        '<span>' + [r.inflow_daily != null ? "昨日進水 " + fmt(r.inflow_daily, 1) : "", r.outflow_daily != null ? "取用 " + fmt(r.outflow_daily, 1) : ""].filter(Boolean).join("・") + (r.inflow_daily != null || r.outflow_daily != null ? " 萬噸" : "") + '</span></div>' +
+        '</div></div>' +
+        '<div class="tank"' + (good ? water(r.percent) : "") + '><div class="pct">' + right + (good ? delta(r) : "") + '</div></div>' +
         '</li>' + (i === 5 ? '<li class="ad ad-row" aria-label="廣告"><b>廣告</b>廣告位置 2（手機 300×250／電腦 728×90）</li>' : '');
     }).join("");
   }
