@@ -362,9 +362,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     return e;
   }
 
-  // 圓圈面積和有效容量成正比（半徑 ∝ √容量）。只有太小看不見的才放大到最小 2.5。
-  var R_SCALE = 0.16;
-  function radius(cap) { return Math.max(2.5, R_SCALE * Math.sqrt(cap)); }
+  // 圓圈面積和有效容量成正比（半徑 ∝ √容量），大小比照圖地 TODE 那張水庫圖。太小的放大到最小 7，才看得到也點得到。
+  var R_SCALE = 0.33;
+  function radius(cap) { return Math.max(7, R_SCALE * Math.sqrt(cap)); }
 
   function renderMap() {
     var svg = $("map");
