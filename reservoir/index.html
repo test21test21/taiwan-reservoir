@@ -150,7 +150,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .card:hover h3 a { text-decoration: underline; }
 .card:has(a:focus-visible) { outline: 2px solid var(--water); outline-offset: 2px; }
 .card h3 a:focus-visible { outline: none; }
-.card .delta { font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.card .delta { display: block; margin-top: 4px; font-family: var(--f-body); font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
 .card .delta.up { color: var(--water); }
 .allres { margin-top: 24px; padding: 12px 16px; display: grid; gap: 8px; font-size: 14px; }
 .allres h2 { font-size: 15px; margin: 0; }
@@ -489,10 +489,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       return '<li class="box card' + (good ? "" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '">' +
         '<div class="info"><h3><a href="' + r.id + '/">' + r.name + '</a><span class="reg">' + r.region + '</span></h3>' +
         '<div class="sub">' + (r.storage != null ? fmt(r.storage, r.storage < 100 ? 1 : 0) + " / " : "") + (r.capacity != null ? fmt(r.capacity, r.capacity < 100 ? 1 : 0) + " 萬噸" : "") + '</div>' +
-        (good ? delta(r) + lastYear(r) : "") +
+        (good ? lastYear(r) : "") +
         '<div class="meta"><span>' + chips + (r.observed_at ? "觀測 " + timeText(r.observed_at) : (r.daily_date ? "日報 " + r.daily_date.slice(5).replace("-", "/") : "")) + '</span>' +
-        '<span>' + [r.inflow_daily != null ? "昨日進水 " + fmt(r.inflow_daily, 1) : "", r.outflow_daily != null ? "取用 " + fmt(r.outflow_daily, 1) : ""].filter(Boolean).join("・") + (r.inflow_daily != null || r.outflow_daily != null ? " 萬噸" : "") + '</span></div></div>' +
-        '<div class="tank"' + (good ? water(r.percent) : "") + '><div class="pct"' + (good ? numPos(r.percent) : "") + '>' + right + '</div></div>' +
+        '</div></div>' +
+        '<div class="tank"' + (good ? water(r.percent) : "") + '><div class="pct"' + (good ? numPos(r.percent) : "") + '>' + right + (good ? delta(r) : "") + '</div></div>' +
         '</li>' + (i === 5 ? '<li class="ad ad-row" aria-label="廣告"><b>廣告</b>廣告位置 2（手機 300×250／電腦 728×90）</li>' : '');
     }).join("");
   }
