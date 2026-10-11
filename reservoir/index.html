@@ -5,7 +5,7 @@
 <link rel="canonical" href="https://taiwandata.info/reservoir/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 /* Layout: phone first — 各區燈號與主要水庫（第一面）→ 燈號地圖 → 水庫列表；桌機上地圖在左、各區在右 */
 :root {
@@ -14,9 +14,9 @@
   --low: #7a4fc4; --chip: #efefec;
   --paper: #f1f1ee; /* 地圖底，兩種主題都用淺色，讓官方縣市線看得清楚 */
   --shadow: 0 1px 2px rgba(12,30,46,.06), 0 4px 16px rgba(12,30,46,.05);
-  --f-display: "Noto Serif TC", "Songti TC", serif;
+  --f-display: var(--f-body);
   --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --f-num: "IBM Plex Sans Condensed", "Noto Sans TC", system-ui, sans-serif;
+  --f-num: var(--f-body);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -39,7 +39,7 @@ a { color: var(--fg); text-underline-offset: 3px; }
 .box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
 
 header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; }
-h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(24px, 6vw, 34px); margin: 0; letter-spacing: .02em; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw, 34px); margin: 0; letter-spacing: .02em; }
 .updated { color: var(--muted); font-size: 13px; }
 
 /* 第一面：各區 */
@@ -61,7 +61,7 @@ h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(24px, 6vw
 .mini, .mini .p, .mini .bar { display: block; }
 .mini { min-width: 0; }
 .mini .n { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-.mini .p { font-family: var(--f-num); font-weight: 600; font-size: 19px; line-height: 1.1; color: var(--fg); font-variant-numeric: tabular-nums; }
+.mini .p { font-family: var(--f-num); font-weight: 700; font-size: 19px; line-height: 1.1; color: var(--fg); font-variant-numeric: tabular-nums; }
 .mini .p small { font-size: 11px; color: var(--muted); margin-left: 1px; }
 .mini .bar { height: 4px; border-radius: 2px; background: var(--water-soft); margin-top: 3px; overflow: hidden; }
 .mini .bar i { display: block; height: 100%; background: var(--water); }
@@ -102,7 +102,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .card.sel { border-color: var(--water); box-shadow: 0 0 0 1px var(--water); }
 .card h3 { margin: 0; font-size: 17px; font-weight: 700; min-width: 0; }
 .card .reg { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 6px; }
-.card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 600; font-size: 30px; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; }
+.card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 700; font-size: 30px; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; }
 .card .pct small { font-size: 14px; color: var(--muted); }
 .card .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .card.nodata .pct { font-size: 15px; color: var(--muted); font-family: var(--f-body); font-weight: 500; }
@@ -115,7 +115,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .spark svg { width: 100%; height: 36px; display: block; }
 .spark .hint { font-size: 12px; color: var(--muted); }
 .est { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; font-size: 13px; }
-.est b { font-family: var(--f-num); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
+.est b { font-family: var(--f-num); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
 
 /* 廣告位置：先固定高度，廣告載入時版面才不會跳動 */
 .ad { display: grid; place-items: center; align-content: center; gap: 2px; border: 1.5px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 13px; text-align: center; min-width: 0; }

@@ -8,15 +8,15 @@
 <link rel="canonical" href="https://taiwandata.info/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 :root {
   --bg: #f6f6f4; --surface: #ffffff; --fg: #1d2125; --muted: #676d73; --line: #e4e4e0;
   --water: #0a6cc2; --chip: #efefec;
   --shadow: 0 1px 2px rgba(12,30,46,.06), 0 4px 16px rgba(12,30,46,.05);
-  --f-display: "Noto Serif TC", "Songti TC", serif;
+  --f-display: var(--f-body);
   --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --f-num: "IBM Plex Sans Condensed", "Noto Sans TC", system-ui, sans-serif;
+  --f-num: var(--f-body);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -31,14 +31,14 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
 .wrap { max-width: 880px; margin: 0 auto; padding: 32px 16px 48px; }
-h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(28px, 7vw, 40px); margin: 0; letter-spacing: .02em; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 7vw, 40px); margin: 0; letter-spacing: .02em; }
 .lead { color: var(--muted); margin: 6px 0 28px; }
 .tools { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .tool { display: block; height: 100%; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; padding: 18px; color: var(--fg); text-decoration: none; }
 a.tool:hover { border-color: var(--fg); }
 .tool h2 { font-size: 18px; margin: 0 0 4px; }
 .tool p { margin: 0; color: var(--muted); font-size: 14px; }
-.tool .num { font-family: var(--f-num); font-size: 13px; color: var(--water); margin-top: 10px; }
+.tool .num { font-family: var(--f-num); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--water); margin-top: 10px; }
 .tool.soon { background: transparent; box-shadow: none; border-style: dashed; }
 .tool.soon h2 { color: var(--muted); }
 footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
