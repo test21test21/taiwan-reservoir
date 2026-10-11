@@ -45,7 +45,7 @@ jobs:
       - name: 準備網站檔案
         run: |
           mkdir _site
-          cp index.html og.png _site/
+          cp index.html og.png favicon.ico favicon-32.png apple-touch-icon.png icon-192.png _site/
           cp -r reservoir _site/
           cp -r data _site/
           [ -f CNAME ] && cp CNAME _site/ || true
