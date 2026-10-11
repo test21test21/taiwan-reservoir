@@ -29,7 +29,14 @@ CSS = """
 :root { --birth:#1f7ad6; --death:#cf6526; --male:#2a7fd4; --female:#d4508f; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; } }
 :root[data-theme="dark"] { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; }
-.pick { display:flex; align-items:center; gap:8px; margin-top:12px; font-size:15px; }
+.wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+.top, .grid { display:grid; gap:12px; align-items:start; }
+.top > .box, .grid > .box { margin-top:12px; }
+.top { margin-top:0; }
+@media (min-width:860px) { .top { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr 1fr; } .top, .grid { column-gap:16px; row-gap:0; } }
+@media (min-width:1360px) { .grid { grid-template-columns:1fr 1fr 1fr; } }
+.chart.bd { max-height:none; }
+.pick { display:flex; align-items:center; gap:8px; margin:4px 0 0; height:44px; font-size:15px; }
 .pick select { font:inherit; font-size:16px; padding:6px 10px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
 .duo { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
 .duo .k { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
@@ -62,6 +69,7 @@ CSS = """
 .legend .sq:first-child { margin-left:0; }
 .tw .neg { color:var(--muted); }
 .tw a { font-weight:500; }
+.tw tr.me td { background:var(--chip); font-weight:700; }
 .note { font-size:13px; color:var(--muted); margin:8px 0 0; }
 .tip { font-size:13px; color:var(--muted); margin:2px 0 0; min-height:1.6em; }
 """
@@ -255,7 +263,7 @@ def page_body(name, d):
         return (f'<div class="duo">{one("出生", "birth", births(a), la and births(la), a[0:2])}'
                 f'{one("死亡", "death", deaths(a), la and deaths(la), a[2:4])}</div>')
 
-    where = "" if name == "全台" else name
+    where = "" if name == "全台" else name + " "
     out = [f'<section class="box"><h2>{where}{ym_label(last)}</h2>{duo(a, la, "去年同月")}'
            f'{gap_line(births(a), deaths(a), "這個月")}</section>']
     cy, ly = ytd(y), ytd(y - 1)
@@ -326,7 +334,7 @@ def page_body(name, d):
     return out, last, a, cy
 
 
-def county_table(data, last):
+def county_table(data, last, current="全台", prefix=""):
     y, m = int(last[:4]), int(last[5:])
     rows = []
     for c, slug in COUNTIES:
@@ -335,7 +343,7 @@ def county_table(data, last):
         rows.append((c, slug, births(t), deaths(t)))
     span = f"{y} 年 1～{m} 月" if m > 1 else ym_label(last)
     body = "".join(
-        f'<tr><td><a href="{slug}/">{e(c)}</a></td><td class="n">{n(b)}</td><td class="n">{n(dd)}</td>'
+        f'<tr{" class=\"me\"" if c == current else ""}><td><a href="{prefix}{slug}/">{e(c)}</a></td><td class="n">{n(b)}</td><td class="n">{n(dd)}</td>'
         f'<td class="n{" neg" if b < dd else ""}">{"+" if b >= dd else "−"}{n(abs(b - dd))}</td></tr>'
         for c, slug, b, dd in sorted(rows, key=lambda x: -x[2]))
     return (f'<section class="box"><h2>各縣市（{span}累計）</h2><table class="tw">'
@@ -366,19 +374,15 @@ def build(out, head, nav):
                 + "每月出生男女、跟前兩年比較、歷年趨勢。")
         url = f"{SITE}/births/{slug + '/' if slug else ''}"
         prefix = "" if not slug else "../"
-        crumb = "" if not slug else (f'<nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › '
-                                     f'<a href="../">出生與死亡</a> › {e(name)}</nav>')
-        h1 = f'<h1>{e(name)}出生與死亡人數</h1>' if slug else ""
-        extra = county_table(data, last) if not slug else ""
+        extra = county_table(data, last, name, prefix)
         page = f"""{head(title, desc, url, "og.png")}
 <body>
 <style>{CSS}</style>
 {nav(prefix)}
 <div class="wrap">
-  {crumb}{h1}
   {picker(name, prefix)}
-  {"".join(blocks)}
-  {extra}
+  <div class="top">{"".join(blocks[:2])}</div>
+  <div class="grid">{"".join(blocks[2:])}{extra}</div>
   <footer>
     <div>資料來源：內政部戶政司開放資料「動態資料統計表」（各村里每月出生、死亡數，本站加總成縣市與全台）。數字依戶籍登記月份計算，不是實際出生或死亡的月份；每天檢查一次，通常每月上旬公布上個月。</div>
     <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>

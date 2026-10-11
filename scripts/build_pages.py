@@ -411,8 +411,7 @@ def main(out):
         (d / "index.html").write_text(page, encoding="utf-8")
         urls.append(f"{SITE}/reservoir/{r['id']}/")
 
-    urls += build_births.build(out, head, lambda prefix: site_nav.nav(
-        "births", '<a class="sitesection" href="/births/">出生與死亡</a>' if prefix else '<h1 class="sitesection">出生與死亡</h1>'))
+    urls += build_births.build(out, head, lambda prefix: site_nav.nav("births", '<h1 class="sitesection">出生與死亡</h1>'))
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
