@@ -53,8 +53,6 @@ a { color: var(--fg); text-underline-offset: 3px; }
 .box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
 
 .updated { color: var(--muted); font-size: 13px; white-space: nowrap; }
-.page-updated { margin: 0; text-align: right; } /* 手機上放在選單列下面；電腦上在選單列最右邊 */
-@media (min-width: 700px) { .page-updated { display: none; } }
 
 /* 第一面：各區 */
 .hero { margin-top: 12px; display: grid; gap: 12px; }
@@ -159,7 +157,6 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
 <!--SITE_NAV-->
 <div class="wrap">
-  <p class="updated page-updated">讀取資料中…</p>
 
   <div class="hero">
     <section class="box mapbox" aria-label="水情燈號地圖">
@@ -193,6 +190,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   </nav>
 
   <footer>
+    <div class="updated">讀取資料中…</div>
     <div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料）與水利署官網水情燈號，每小時更新；縣市界線取自內政部村里界圖（經 taiwan-atlas 整理）。蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>
     <div>水情燈號以 <a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">經濟部水利署公告</a> 為準。水庫圓點的藍色深淺只代表蓄水率，和燈號無關。</div>
     <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>

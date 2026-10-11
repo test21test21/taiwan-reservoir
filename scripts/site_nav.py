@@ -26,13 +26,11 @@ body { margin: 0; }
 .sitename { display: flex; align-items: center; gap: 8px; color: var(--fg); text-decoration: none; white-space: nowrap; min-width: 0; flex: none; }
 .sitename img { width: 28px; height: 28px; flex: none; }
 .sitename b { display: block; font-weight: 700; font-size: 17px; line-height: 1.15; letter-spacing: .02em; }
-.sitename small { display: block; font-size: 11px; line-height: 1.2; color: var(--muted); letter-spacing: .04em; }
+.sitename small { display: block; text-align: center; font-size: 11px; line-height: 1.2; color: var(--muted); letter-spacing: .04em; }
 .sitesection { margin: 0 0 0 4px; padding-left: 12px; border-left: 1.5px solid var(--line-strong, #c9ccd0); font-size: 17px; font-weight: 700; line-height: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--fg); text-decoration: none; }
 a.sitesection:hover { text-decoration: underline; }
-.sitebar-right { margin-left: auto; padding-left: 12px; flex: none; }
 @media (max-width: 420px) { .sitename b, .sitesection { font-size: 15px; } .sitename small { font-size: 10px; } .sitename img { width: 24px; height: 24px; } .sitebar-in { gap: 4px; } .sitesection { padding-left: 10px; } }
 @media (max-width: 380px) { .sitename b, .sitesection { font-size: 14px; } .menu-btn { width: 38px; } .sitename img { width: 22px; height: 22px; } .sitename { gap: 6px; } .sitesection { padding-left: 8px; } }
-@media (max-width: 699px) { .sitebar-right { display: none; } }
 .sitemenu { position: absolute; top: 100%; left: 0; width: min(300px, 100vw); max-height: calc(100vh - 52px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 14px 0; box-shadow: 0 8px 24px rgba(12,30,46,.14); padding: 8px; }
 .sitemenu ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .sitemenu a, .sitemenu span { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 10px; color: var(--fg); text-decoration: none; font-size: 16px; }
@@ -53,8 +51,8 @@ JS = """<script>
 </script>"""
 
 
-def nav(current, section="", right=""):
-    """section：網站名稱右邊、豎線後面的頁面名稱（HTML，例如 <h1 class="sitesection">…</h1>）；right：最右邊（電腦上才顯示）。"""
+def nav(current, section=""):
+    """section：網站名稱右邊、豎線後面的頁面名稱（HTML，例如 <h1 class="sitesection">…</h1>）。"""
     items = "".join(
         (f'<li><a href="{url}"{" aria-current=\"page\"" if key == current else ""}>{name}</a></li>' if url
          else f"<li><span>{name}<small>即將推出</small></span></li>")
@@ -67,7 +65,6 @@ def nav(current, section="", right=""):
     </button>
     <a class="sitename" href="/"><img src="/icon-192.png" alt="" width="28" height="28"><span><b>Taiwan Data 台灣數據</b><small>taiwandata.info</small></span></a>
     {section}
-    {f'<div class="sitebar-right">{right}</div>' if right else ""}
   </div>
   <nav class="sitemenu" id="sitemenu" aria-label="網站選單" hidden><ul>{items}</ul></nav>
 </header>

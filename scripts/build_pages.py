@@ -284,8 +284,7 @@ def main(out):
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
         ("index.html", site_nav.nav("home")),
-        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">台灣水庫水情</h1>',
-                                              '<span class="updated">讀取資料中…</span>')),
+        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">台灣水庫水情</h1>')),
     ]
     for f, bar in pages:
         if (out / f).exists():
