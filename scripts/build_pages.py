@@ -238,7 +238,7 @@ def reservoir_page(r, info, hist, alert, peers, updated):
     image = "reservoir/og.png"
     return f"""{head(title, desc, url, image)}
 <body>
-{site_nav.nav("reservoir")}
+{site_nav.nav("reservoir", '<a class="sitesection" href="../">台灣水庫水情</a>')}
 <div class="wrap">
   <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">台灣水庫水情</a> › {e(r["region"])}</nav>
   <h1>{e(name)}即時蓄水率</h1>
@@ -282,10 +282,15 @@ def main(out):
         urls.append(f"{SITE}/reservoir/{r['id']}/")
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
-    for f, key in [("index.html", "home"), ("reservoir/index.html", "reservoir")]:
+    pages = [
+        ("index.html", site_nav.nav("home")),
+        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">台灣水庫水情</h1>',
+                                              '<span class="updated">讀取資料中…</span>')),
+    ]
+    for f, bar in pages:
         if (out / f).exists():
             t = (out / f).read_text(encoding="utf-8")
-            t = t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", site_nav.nav(key))
+            t = t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", bar)
             (out / f).write_text(t, encoding="utf-8")
 
     # 水庫總覽頁底部：全部水庫頁的連結（不靠 JavaScript，搜尋引擎找得到）

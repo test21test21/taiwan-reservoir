@@ -52,9 +52,9 @@ a { color: var(--fg); text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
 .box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
 
-header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; }
-h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw, 34px); margin: 0; letter-spacing: .02em; }
-.updated { color: var(--muted); font-size: 13px; }
+.updated { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.page-updated { margin: 0; text-align: right; } /* 手機上放在選單列下面；電腦上在選單列最右邊 */
+@media (min-width: 700px) { .page-updated { display: none; } }
 
 /* 第一面：各區 */
 .hero { margin-top: 12px; display: grid; gap: 12px; }
@@ -159,10 +159,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
 <!--SITE_NAV-->
 <div class="wrap">
-  <header class="top">
-    <h1>台灣水庫水情</h1>
-    <span class="updated" id="updated">讀取資料中…</span>
-  </header>
+  <p class="updated page-updated">讀取資料中…</p>
 
   <div class="hero">
     <section class="box mapbox" aria-label="水情燈號地圖">
@@ -244,6 +241,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
   var state = { region: "全部", sort: "cap", sel: null, data: [], hist: {}, alert: null, dots: [] };
   var $ = function (id) { return document.getElementById(id); };
+  function setUpdated(t) { document.querySelectorAll(".updated").forEach(function (el) { el.textContent = t; }); }
   function fmt(n, d) { return n == null ? "–" : n.toLocaleString("zh-TW", { maximumFractionDigits: d == null ? 0 : d }); }
   function ok(r) { return r.percent != null && !r.suspect; }
   function short(name) { return name.replace(/水庫$/, "").replace(/第二$/, "二"); }
@@ -537,10 +535,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     state.hist = parseHistory(res[1] || "");
     state.alert = res[2];
     MAP = res[3];
-    $("updated").textContent = "資料更新 " + timeText(doc.generated_at);
+    setUpdated("資料更新 " + timeText(doc.generated_at));
     renderRegions(); renderLegend(); renderMap(); renderTabs(); renderCards();
   }).catch(function () {
-    $("updated").textContent = "";
+    setUpdated("");
     $("regions").innerHTML = '<div class="err">目前讀不到水庫資料，請稍後再重新整理。</div>';
   });
 })();
