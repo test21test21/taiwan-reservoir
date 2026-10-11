@@ -52,9 +52,7 @@ a { color: var(--fg); text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
 .box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
 
-header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; }
-h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 6vw, 34px); margin: 0; letter-spacing: .02em; }
-.updated { color: var(--muted); font-size: 13px; }
+.updated { color: var(--muted); font-size: 13px; white-space: nowrap; }
 
 /* 第一面：各區 */
 .hero { margin-top: 12px; display: grid; gap: 12px; }
@@ -159,10 +157,6 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
 <!--SITE_NAV-->
 <div class="wrap">
-  <header class="top">
-    <h1>台灣水庫水情</h1>
-    <span class="updated" id="updated">讀取資料中…</span>
-  </header>
 
   <div class="hero">
     <section class="box mapbox" aria-label="水情燈號地圖">
@@ -196,6 +190,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   </nav>
 
   <footer>
+    <div class="updated">讀取資料中…</div>
     <div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料）與水利署官網水情燈號，每小時更新；縣市界線取自內政部村里界圖（經 taiwan-atlas 整理）。蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>
     <div>水情燈號以 <a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">經濟部水利署公告</a> 為準。水庫圓點的藍色深淺只代表蓄水率，和燈號無關。</div>
     <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>
@@ -244,6 +239,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 
   var state = { region: "全部", sort: "cap", sel: null, data: [], hist: {}, alert: null, dots: [] };
   var $ = function (id) { return document.getElementById(id); };
+  function setUpdated(t) { document.querySelectorAll(".updated").forEach(function (el) { el.textContent = t; }); }
   function fmt(n, d) { return n == null ? "–" : n.toLocaleString("zh-TW", { maximumFractionDigits: d == null ? 0 : d }); }
   function ok(r) { return r.percent != null && !r.suspect; }
   function short(name) { return name.replace(/水庫$/, "").replace(/第二$/, "二"); }
@@ -537,10 +533,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     state.hist = parseHistory(res[1] || "");
     state.alert = res[2];
     MAP = res[3];
-    $("updated").textContent = "資料更新 " + timeText(doc.generated_at);
+    setUpdated("資料更新 " + timeText(doc.generated_at));
     renderRegions(); renderLegend(); renderMap(); renderTabs(); renderCards();
   }).catch(function () {
-    $("updated").textContent = "";
+    setUpdated("");
     $("regions").innerHTML = '<div class="err">目前讀不到水庫資料，請稍後再重新整理。</div>';
   });
 })();
