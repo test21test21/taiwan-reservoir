@@ -123,6 +123,8 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .ad-box { min-height: 250px; }
 .ad-row { grid-column: 1 / -1; min-height: 250px; }
 @media (min-width: 860px) { .ad-row { min-height: 90px; } }
+/* 申請到 AdSense 前先隱藏廣告位；要開回來就刪掉這行 */
+.ad { display: none !important; }
 .brand { display: inline-block; font-size: 13px; color: var(--muted); text-decoration: none; margin-bottom: 2px; }
 .brand:hover { color: var(--fg); }
 footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 70ch; }
