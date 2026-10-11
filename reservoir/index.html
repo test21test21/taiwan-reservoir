@@ -25,7 +25,7 @@
 :root {
   --bg: #f6f6f4; --surface: #ffffff; --fg: #1d2125; --muted: #676d73; --line: #e4e4e0;
   --water: #0a6cc2; --water-soft: #e3eef8; --water-lite: #7fbfec;
-  --low: #7a4fc4; --chip: #efefec;
+  --low: #7a4fc4; --chip: #efefec; --rise: #1f8a4c; --fall: #d13c3c;
   --paper: #f1f1ee; /* 地圖底，兩種主題都用淺色，讓官方縣市線看得清楚 */
   --shadow: 0 1px 2px rgba(12,30,46,.06), 0 4px 16px rgba(12,30,46,.05);
   --f-display: var(--f-body);
@@ -36,13 +36,13 @@
   :root:not([data-theme="light"]) {
     --bg: #121416; --surface: #1b1e21; --fg: #ececea; --muted: #9a9fa4; --line: #2c3035;
     --water: #4fb0f0; --water-soft: #16304a; --water-lite: #2b6fa3;
-    --low: #bba2f0; --chip: #24282c; --paper: #ecece9; --shadow: none; color-scheme: dark;
+    --low: #bba2f0; --chip: #24282c; --rise: #4cc47e; --fall: #ff7a7a; --paper: #ecece9; --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121416; --surface: #1b1e21; --fg: #ececea; --muted: #9a9fa4; --line: #2c3035;
   --water: #4fb0f0; --water-soft: #16304a; --water-lite: #2b6fa3;
-  --low: #bba2f0; --chip: #24282c; --paper: #ecece9; --shadow: none; color-scheme: dark;
+  --low: #bba2f0; --chip: #24282c; --rise: #4cc47e; --fall: #ff7a7a; --paper: #ecece9; --shadow: none; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -151,7 +151,8 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .card:has(a:focus-visible) { outline: 2px solid var(--water); outline-offset: 2px; }
 .card h3 a:focus-visible { outline: none; }
 .card .delta { display: block; margin-top: 4px; font-family: var(--f-body); font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-.card .delta.up { color: var(--water); }
+.card .delta.up { color: var(--rise); }
+.card .delta.down { color: var(--fall); }
 .allres { margin-top: 24px; padding: 12px 16px; display: grid; gap: 8px; font-size: 14px; }
 .allres h2 { font-size: 15px; margin: 0; }
 .allres b { font-size: 13px; color: var(--muted); font-weight: 500; }
@@ -452,12 +453,6 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     return ' style="--p:' + Math.min(100, Math.max(0, p)).toFixed(1) + '%;--wc:rgba(' + rgb + ',.35);--wl:rgba(' + rgb + ',.9)"';
   }
 
-  // 數字貼著水面：水多放水面下，水少放水面上，才不會被水面線穿過
-  function numPos(p) {
-    p = Math.min(100, Math.max(0, p));
-    return ' style="position:absolute;left:0;right:0;' + (p >= 50 ? "top:calc(" + (100 - p).toFixed(1) + "% + 12px)" : "bottom:calc(" + p.toFixed(1) + "% + 12px)") + '"';
-  }
-
   // 和昨天比：目前蓄水率 − 昨天最後一筆紀錄的蓄水率（都是官方數字）
   function delta(r) {
     var h = (state.hist[r.id] || []).filter(function (p) { return p[0] < state.today; });
@@ -492,7 +487,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
         (good ? lastYear(r) : "") +
         '<div class="meta"><span>' + chips + (r.observed_at ? "觀測 " + timeText(r.observed_at) : (r.daily_date ? "日報 " + r.daily_date.slice(5).replace("-", "/") : "")) + '</span>' +
         '</div></div>' +
-        '<div class="tank"' + (good ? water(r.percent) : "") + '><div class="pct"' + (good ? numPos(r.percent) : "") + '>' + right + (good ? delta(r) : "") + '</div></div>' +
+        '<div class="tank"' + (good ? water(r.percent) : "") + '><div class="pct">' + right + (good ? delta(r) : "") + '</div></div>' +
         '</li>' + (i === 5 ? '<li class="ad ad-row" aria-label="廣告"><b>廣告</b>廣告位置 2（手機 300×250／電腦 728×90）</li>' : '');
     }).join("");
   }
