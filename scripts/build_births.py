@@ -5,6 +5,7 @@ build_pages.py 部署時呼叫 build(out, head, nav)。
 """
 import csv
 import html
+import json
 from collections import defaultdict
 from pathlib import Path
 
@@ -23,13 +24,22 @@ COUNTIES = [
     ("金門縣", "kinmen"), ("連江縣", "lienchiang"),
 ]
 SLUG = dict(COUNTIES)
+MAP = ROOT / "reservoir/taiwan-map.json"  # 本島縣市界（scripts/build_map.py 產生，和水庫地圖同一份）
+ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島畫成左上海面的小方塊（y 座標）
 
 # 出生藍、死亡橘；男藍、女粉（色盲也分得出來；深色模式另一組）
 CSS = """
 :root { --birth:#1f7ad6; --death:#cf6526; --male:#2a7fd4; --female:#d4508f; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; } }
 :root[data-theme="dark"] { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; }
-.pick { display:flex; align-items:center; gap:8px; margin-top:12px; font-size:15px; }
+.wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+.top, .grid { display:grid; gap:12px; align-items:start; }
+.top > .box, .grid > .box { margin-top:12px; }
+.top { margin-top:0; }
+@media (min-width:860px) { .top { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr 1fr; } .top, .grid { column-gap:16px; row-gap:0; } }
+@media (min-width:1360px) { .grid { grid-template-columns:1fr 1fr 1fr; } }
+.chart.bd { max-height:none; }
+.pick { display:flex; align-items:center; gap:8px; margin:4px 0 0; height:44px; font-size:15px; }
 .pick select { font:inherit; font-size:16px; padding:6px 10px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
 .duo { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
 .duo .k { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
@@ -62,20 +72,119 @@ CSS = """
 .legend .sq:first-child { margin-left:0; }
 .tw .neg { color:var(--muted); }
 .tw a { font-weight:500; }
+.tw tr.me td { background:var(--chip); font-weight:700; }
 .note { font-size:13px; color:var(--muted); margin:8px 0 0; }
+.mhead select { font:inherit; font-size:17px; font-weight:700; padding:2px 8px; margin-left:2px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:2px; gap:2px; margin:2px 0 4px; }
+.seg button { font:inherit; font-size:14px; border:0; background:none; color:var(--muted); padding:4px 12px; border-radius:999px; cursor:pointer; }
+.seg button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
+.tmap { display:block; width:100%; height:auto; max-height:780px; margin:4px auto 0; }
+.tmap path, .tmap rect.isl { stroke:var(--surface); stroke-width:1.5; cursor:pointer; fill:var(--chip); }
+.tmap .me { stroke:var(--fg); stroke-width:4; }
+.tmap [tabindex]:focus { outline:none; }
+.tmap path:hover, .tmap rect.isl:hover, .tmap .on { stroke:var(--fg); stroke-width:3; }
+.tmap text { font-size:22px; fill:var(--fg); font-family:var(--f-body); pointer-events:none; }
+.mleg { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:13px; color:var(--muted); margin:6px 0 0; }
+.mleg span { display:inline-flex; align-items:center; gap:4px; }
+.mleg i { width:14px; height:14px; border-radius:3px; display:inline-block; }
+@media (min-width:1360px) { .grid > .mapbox { grid-row:span 2; } .tmap { max-height:600px; } }
+.tip a { color:var(--fg); font-weight:500; }
 .tip { font-size:13px; color:var(--muted); margin:2px 0 0; min-height:1.6em; }
 """
 
 # 滑過／點圖上的長條或點，在圖上方顯示那一期的數字（每個 .hit 帶 data-tip）
 JS = """<script>
-document.querySelectorAll("svg.bd").forEach(function (svg) {
-  var tip = svg.previousElementSibling, def = tip.textContent;
-  svg.querySelectorAll(".hit").forEach(function (h) {
-    function on() { tip.textContent = h.getAttribute("data-tip"); }
-    h.addEventListener("mouseenter", on); h.addEventListener("focus", on); h.addEventListener("click", on);
-    h.addEventListener("mouseleave", function () { tip.textContent = def; });
+(function () {
+  // 圖表：滑過／點長條或點，在圖上方顯示那一期的數字（每個 .hit 帶 data-tip）
+  document.querySelectorAll("svg.bd").forEach(function (svg) {
+    var tip = svg.previousElementSibling, def = tip.textContent;
+    svg.querySelectorAll(".hit").forEach(function (h) {
+      function on() { tip.textContent = h.getAttribute("data-tip"); }
+      h.addEventListener("mouseenter", on); h.addEventListener("focus", on); h.addEventListener("click", on);
+      h.addEventListener("mouseleave", function () { tip.textContent = def; });
+    });
   });
-});
+
+  var D = JSON.parse(document.getElementById("bd-data").textContent);
+  var cur = D.m.length - 1, key = "b";
+  function f(x) { return x.toLocaleString("en-US"); }
+  function lab(ym) { return (+ym.slice(0, 4)) + " 年 " + (+ym.slice(5)) + " 月"; }
+  function B(a) { return a[0] + a[1]; }
+  function Dd(a) { return a[2] + a[3]; }
+  function pct(v, p) { if (!p) return ""; var d = (v - p) / p * 100; return (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + Math.abs(d).toFixed(1) + "%"; }
+  function gap(b, d) { var g = b - d; return g < 0 ? "死亡比出生多 <b>" + f(-g) + "</b> 人，人口自然減少" : "出生比死亡多 <b>" + f(g) + "</b> 人，人口自然增加"; }
+
+  // 單月：選過去 36 個月
+  var box = document.getElementById("mbox");
+  function setMonth(i) {
+    cur = i;
+    var a = D.t[i], p = i >= 12 ? D.t[i - 12] : null;
+    if (a) {
+      [["birth", 0, B], ["death", 2, Dd]].forEach(function (x) {
+        var el = box.querySelector(".j-" + x[0]);
+        el.querySelector(".j-v").textContent = f(x[2](a));
+        el.querySelector(".j-m").textContent = f(a[x[1]]);
+        el.querySelector(".j-f").textContent = f(a[x[1] + 1]);
+        var y = p ? pct(x[2](a), x[2](p)) : "";
+        el.querySelector(".j-yoy").textContent = y;
+        el.querySelector(".yoy").hidden = !y;
+      });
+      box.querySelector(".j-gap").innerHTML = gap(B(a), Dd(a));
+    }
+    document.querySelector(".j-mapmonth").textContent = lab(D.m[i]);
+    paint();
+  }
+  document.getElementById("mpick").addEventListener("change", function () { setMonth(D.m.indexOf(this.value)); });
+
+  // 各縣市地圖：依選的月份和「出生／死亡／出生減死亡」上色（分 5 級，每級縣市數差不多）
+  var RAMP = { b: ["#d6e6f7", "#a9cbef", "#6fa6e3", "#3a7fd0", "#1c5aa6"], d: ["#f8dcc8", "#f1b88f", "#e48e55", "#cf6526", "#9c4518"] };
+  var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
+  var tipDef = tip.textContent, picked = null;
+  function val(c) { var a = D.c[c] && D.c[c][cur]; if (!a) return null; return key === "b" ? B(a) : key === "d" ? Dd(a) : B(a) - Dd(a); }
+  function paint() {
+    var vals = [], ramp = RAMP[key === "b" ? "b" : "d"];
+    shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); if (v !== null) vals.push(key === "g" ? Math.max(0, -v) : v); });
+    vals.sort(function (a, b) { return a - b; });
+    var br = [1, 2, 3, 4].map(function (q) { return vals[Math.floor(vals.length * q / 5)]; });
+    function cls(v) { var k = 0; while (k < 4 && v >= br[k]) k++; return k; }
+    shapes.forEach(function (s) {
+      var v = val(s.getAttribute("data-c"));
+      s.style.fill = v === null ? "" : key === "g" && v > 0 ? "#6fa6e3" : ramp[cls(key === "g" ? -v : v)];
+    });
+    var edges = [vals[0]].concat(br, [vals[vals.length - 1]]);
+    function sg(v) { return (key === "g" && v ? "−" : "") + f(v); }
+    leg.innerHTML = ramp.map(function (c, k) {
+      return '<span><i style="background:' + c + '"></i>' + sg(edges[k]) + "～" + sg(edges[k + 1]) + "</span>";
+    }).join("") + (key === "g" ? '<span><i style="background:#6fa6e3"></i>出生比死亡多</span>' : "");
+    if (picked) show(picked);
+  }
+  function show(s) {
+    var c = s.getAttribute("data-c"), a = D.c[c] && D.c[c][cur];
+    if (!a) { tip.textContent = c + "：沒有資料"; return; }
+    var g = B(a) - Dd(a);
+    tip.innerHTML = "<b>" + c + "</b> " + lab(D.m[cur]) + "：出生 " + f(B(a)) + "、死亡 " + f(Dd(a)) +
+      "（" + (g < 0 ? "−" : "+") + f(Math.abs(g)) + "）　<a href='" + s.getAttribute("data-u") + "'>看" + c + " ›</a>";
+  }
+  shapes.forEach(function (s) {
+    s.addEventListener("mouseenter", function () { show(s); });
+    s.addEventListener("mouseleave", function () { if (picked) show(picked); else tip.textContent = tipDef; });
+    s.addEventListener("click", function () {
+      if (picked === s) { location.href = s.getAttribute("data-u"); return; }
+      if (picked) picked.classList.remove("on");
+      picked = s; s.classList.add("on"); show(s);
+    });
+    s.addEventListener("keydown", function (ev) { if (ev.key === "Enter") location.href = s.getAttribute("data-u"); });
+    s.addEventListener("focus", function () { show(s); });
+  });
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      key = b.getAttribute("data-k");
+      document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", x === b); });
+      paint();
+    });
+  });
+  paint();
+})();
 </script>"""
 
 
@@ -103,6 +212,14 @@ def pct(now, before):
     d = (now - before) / before * 100
     arrow = "▲" if d > 0 else "▼" if d < 0 else "▶"
     return f"{arrow} {abs(d):.1f}%"
+
+
+def gap_text(b, d):
+    """「死亡比出生多 N 人，人口自然減少」。網頁上選月份時，JS 的 gap() 產生同樣的字。"""
+    g = b - d
+    if g < 0:
+        return f"死亡比出生多 <b>{n(-g)}</b> 人，人口自然減少"
+    return f"出生比死亡多 <b>{n(g)}</b> 人，人口自然增加"
 
 
 def ym_label(ym):
@@ -240,24 +357,24 @@ def page_body(name, d):
         return [sum(r[j] for r in rows) for j in range(4)] if rows else None
 
     def gap_line(b, dd, lead):
-        g = b - dd
-        if g < 0:
-            return f'<p class="gap">{lead}死亡比出生多 <b>{n(-g)}</b> 人，人口自然減少</p>'
-        return f'<p class="gap">{lead}出生比死亡多 <b>{n(g)}</b> 人，人口自然增加</p>'
+        return f'<p class="gap">{lead}<span class="j-gap">{gap_text(b, dd)}</span></p>'
 
     def duo(a, la, cmp):
         def one(key, cls, v, before, sex):
-            yoy = f'<div class="yoy">比{cmp} <b>{pct(v, before)}</b></div>' if before else ""
-            return (f'<div><div class="k"><i style="background:var(--{cls})"></i>{key}</div>'
-                    f'<div class="v">{n(v)}<small>人</small></div>'
-                    f'<div class="sex"><span><i style="background:var(--male)"></i>男 {n(sex[0])}</span>'
-                    f'<span><i style="background:var(--female)"></i>女 {n(sex[1])}</span></div>{yoy}</div>')
+            yoy = f'<div class="yoy"{"" if before else " hidden"}>比{cmp} <b class="j-yoy">{pct(v, before)}</b></div>'
+            return (f'<div class="j-{cls}"><div class="k"><i style="background:var(--{cls})"></i>{key}</div>'
+                    f'<div class="v"><span class="j-v">{n(v)}</span><small>人</small></div>'
+                    f'<div class="sex"><span><i style="background:var(--male)"></i>男 <span class="j-m">{n(sex[0])}</span></span>'
+                    f'<span><i style="background:var(--female)"></i>女 <span class="j-f">{n(sex[1])}</span></span></div>{yoy}</div>')
         return (f'<div class="duo">{one("出生", "birth", births(a), la and births(la), a[0:2])}'
                 f'{one("死亡", "death", deaths(a), la and deaths(la), a[2:4])}</div>')
 
-    where = "" if name == "全台" else name
-    out = [f'<section class="box"><h2>{where}{ym_label(last)}</h2>{duo(a, la, "去年同月")}'
-           f'{gap_line(births(a), deaths(a), "這個月")}</section>']
+    where = "" if name == "全台" else name + " "
+    pick = [mm for mm in months[-36:]][::-1]
+    opts = "".join(f'<option value="{mm}"{" selected" if mm == last else ""}>{ym_label(mm)}</option>' for mm in pick)
+    hero = duo(a, la, "去年同月")
+    out = [f'<section class="box" id="mbox"><h2 class="mhead">{where}<select id="mpick" aria-label="選月份">{opts}</select></h2>'
+           f'{hero}{gap_line(births(a), deaths(a), "這個月")}</section>']
     cy, ly = ytd(y), ytd(y - 1)
     if m > 1 and cy:
         out.append(f'<section class="box"><h2>{where}{y} 年 1～{m} 月累計</h2>{duo(cy, ly, "去年同期")}'
@@ -298,35 +415,10 @@ def page_body(name, d):
                     end_labels={"b": "出生", "d": "死亡"}),
         f"{where}最近 {len(recent)} 個月每月出生與死亡人數折線圖", "滑過或點圖看每月數字"))
 
-    # 5. 每年合計：只算 12 個月都有資料的年份（官方開放資料缺 2022 年 3 月，那年留空）
-    years = sorted({mm[:4] for mm in months})
-    full = {yy for yy in years if all(f"{yy}-{i:02d}" in d for i in range(1, 13))}
-    span = [yy for yy in years if min(full, default="9") <= yy <= max(full, default="0")]
-    if len(full) >= 3:
-        tot = {yy: [sum(d[f"{yy}-{i:02d}"][j] for i in range(1, 13)) for j in range(4)] for yy in sorted(full)}
-        missing = [yy for yy in span if yy not in full]
-        table = "".join(
-            f'<tr><td>{yy}</td><td class="n">{n(births(t))}</td><td class="n">{n(deaths(t))}</td>'
-            f'<td class="n{" neg" if births(t) < deaths(t) else ""}">{"+" if births(t) >= deaths(t) else "−"}{n(abs(births(t) - deaths(t)))}</td></tr>'
-            for yy, t in reversed(tot.items()))
-        table = (f'<details><summary>看每年數字</summary><table class="tw"><tr><th>年份</th><th class="n">出生</th>'
-                 f'<th class="n">死亡</th><th class="n">出生減死亡</th></tr>{table}</table></details>')
-        if missing:
-            table = (f'<p class="note">{"、".join(missing)} 年官方開放資料缺少部分月份（例如 2022 年 3 月），'
-                     f'算不出全年合計，所以留空。</p>' + table)
-        out.append(box(
-            "每年出生與死亡", '<p class="legend"><span class="k b"></span>出生<span class="k d"></span>死亡</p>',
-            lines_chart(len(span), [("b", [births(tot[yy]) if yy in tot else None for yy in span]),
-                                    ("d", [deaths(tot[yy]) if yy in tot else None for yy in span])],
-                        [(i, yy if i in (0, len(span) - 1) else f"'{yy[2:]}") for i, yy in enumerate(span) if i != 1],
-                        [f"{yy} 年：出生 {n(births(tot[yy]))}、死亡 {n(deaths(tot[yy]))}" if yy in tot
-                         else f"{yy} 年：缺少部分月份" for yy in span],
-                        end_labels={"b": "出生", "d": "死亡"}),
-            f"{where}{span[0]}～{span[-1]} 年每年出生與死亡人數折線圖", "滑過或點圖看每年數字", table))
     return out, last, a, cy
 
 
-def county_table(data, last):
+def county_table(data, last, current="全台", prefix=""):
     y, m = int(last[:4]), int(last[5:])
     rows = []
     for c, slug in COUNTIES:
@@ -335,18 +427,45 @@ def county_table(data, last):
         rows.append((c, slug, births(t), deaths(t)))
     span = f"{y} 年 1～{m} 月" if m > 1 else ym_label(last)
     body = "".join(
-        f'<tr><td><a href="{slug}/">{e(c)}</a></td><td class="n">{n(b)}</td><td class="n">{n(dd)}</td>'
+        f'<tr{" class=\"me\"" if c == current else ""}><td><a href="{prefix}{slug}/">{e(c)}</a></td><td class="n">{n(b)}</td><td class="n">{n(dd)}</td>'
         f'<td class="n{" neg" if b < dd else ""}">{"+" if b >= dd else "−"}{n(abs(b - dd))}</td></tr>'
         for c, slug, b, dd in sorted(rows, key=lambda x: -x[2]))
-    return (f'<section class="box"><h2>各縣市（{span}累計）</h2><table class="tw">'
-            f'<tr><th>縣市</th><th class="n">出生</th><th class="n">死亡</th><th class="n">出生減死亡</th></tr>{body}</table>'
-            f'<p class="note">依出生人數排序，點縣市名稱看該縣市的圖。</p></section>')
+    return (f'<p class="note">{span}累計，依出生人數排序。</p><table class="tw">'
+            f'<tr><th>縣市</th><th class="n">出生</th><th class="n">死亡</th><th class="n">出生減死亡</th></tr>{body}</table>')
+
+
+def map_box(data, last, current, prefix):
+    shapes = json.loads(MAP.read_text(encoding="utf-8"))
+    paths = "".join(
+        f'<path d="{d}" data-c="{c}" data-u="{prefix}{SLUG[c]}/" tabindex="0"{" class=\"me\"" if c == current else ""}/>'
+        for c, d in shapes["counties"].items() if c in SLUG)
+    isl = "".join(
+        f'<rect x="24" y="{yy}" width="170" height="90" rx="12" class="isl{" me" if c == current else ""}" data-c="{c}" '
+        f'data-u="{prefix}{SLUG[c]}/" tabindex="0"/><text x="109" y="{yy + 53}" text-anchor="middle">{c[:2]}</text>'
+        for c, yy in ISLANDS)
+    seg = ('<div class="seg" role="group" aria-label="地圖顯示">'
+           '<button type="button" data-k="b" aria-pressed="true">出生</button>'
+           '<button type="button" data-k="d" aria-pressed="false">死亡</button>'
+           '<button type="button" data-k="g" aria-pressed="false">出生減死亡</button></div>')
+    return (f'<section class="box mapbox"><h2>各縣市地圖（<span class="j-mapmonth">{ym_label(last)}</span>）</h2>{seg}'
+            f'<p class="tip" id="maptip">滑過或點縣市看數字，再點一次進入該縣市</p>'
+            f'<svg class="tmap" viewBox="0 0 {shapes["width"]} {shapes["height"]}" role="img" aria-label="各縣市出生、死亡人數地圖">'
+            f'{paths}{isl}</svg><div class="mleg" id="mapleg"></div>'
+            f'<details><summary>看各縣市數字</summary>{county_table(data, last, current, prefix)}</details></section>')
 
 
 def picker(current, prefix):
     opts = f'<option value="{prefix}"{" selected" if current == "全台" else ""}>全台</option>' + "".join(
         f'<option value="{prefix}{slug}/"{" selected" if c == current else ""}>{c}</option>' for c, slug in COUNTIES)
     return (f'<label class="pick">看哪裡：<select onchange="location.href=this.value" aria-label="選縣市">{opts}</select></label>')
+
+
+def page_data(data, name):
+    """給網頁 JS 用：最近 48 個月（選月份要 36 個月＋去年同月），這一頁的數字和各縣市數字。"""
+    months = sorted(data["全台"])[-48:]
+    pack = lambda dd: [dd.get(mm) for mm in months]
+    return json.dumps({"m": months, "t": pack(data[name]), "c": {c: pack(data.get(c, {})) for c, _ in COUNTIES}},
+                      ensure_ascii=False, separators=(",", ":"))
 
 
 def build(out, head, nav):
@@ -363,27 +482,24 @@ def build(out, head, nav):
         title = f"{where}出生與死亡人數：{ym_label(last)}出生 {n(births(a))} 人、死亡 {n(deaths(a))} 人｜Taiwan Data 台灣數據"
         desc = (f"內政部戶政司最新統計：{ym_label(last)}{'全台' if name == '全台' else name}出生 {n(births(a))} 人、"
                 f"死亡 {n(deaths(a))} 人。" + (f"{y} 年 1～{m} 月累計出生 {n(births(cy))} 人、死亡 {n(deaths(cy))} 人。" if cy else "")
-                + "每月出生男女、跟前兩年比較、歷年趨勢。")
+                + "每月出生男女、跟前兩年比較、各縣市地圖。")
         url = f"{SITE}/births/{slug + '/' if slug else ''}"
         prefix = "" if not slug else "../"
-        crumb = "" if not slug else (f'<nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › '
-                                     f'<a href="../">出生與死亡</a> › {e(name)}</nav>')
-        h1 = f'<h1>{e(name)}出生與死亡人數</h1>' if slug else ""
-        extra = county_table(data, last) if not slug else ""
+        extra = map_box(data, last, name, prefix)
         page = f"""{head(title, desc, url, "og.png")}
 <body>
 <style>{CSS}</style>
 {nav(prefix)}
 <div class="wrap">
-  {crumb}{h1}
   {picker(name, prefix)}
-  {"".join(blocks)}
-  {extra}
+  <div class="top">{"".join(blocks[:2])}</div>
+  <div class="grid">{extra}{"".join(blocks[2:])}</div>
   <footer>
     <div>資料來源：內政部戶政司開放資料「動態資料統計表」（各村里每月出生、死亡數，本站加總成縣市與全台）。數字依戶籍登記月份計算，不是實際出生或死亡的月份；每天檢查一次，通常每月上旬公布上個月。</div>
     <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>
   </footer>
 </div>
+<script type="application/json" id="bd-data">{page_data(data, name)}</script>
 {JS}
 </body>
 </html>
