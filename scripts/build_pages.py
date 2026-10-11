@@ -284,14 +284,6 @@ def about_page():
 <body>
 {site_nav.nav("about", '<h1 class="sitesection">關於本站</h1>')}
 <div class="wrap prose">
-  <section class="box">
-    <h2>這個網站在做什麼</h2>
-    <p>政府其實公開了很多有用的資料，但大多藏在表格和下載檔裡，一般人很難看懂。Taiwan Data 台灣數據把這些開放資料整理成打開就看得懂的頁面，第一個工具是<a href="/reservoir/">台灣水庫水情</a>，之後會陸續加入出生人口、出入境人次等主題。</p>
-  </section>
-  <section class="box">
-    <h2>資料從哪裡來</h2>
-    <p>所有數字都直接取自政府開放資料，例如水庫資料來自經濟部水利署，每小時自動更新一次。本站不自行推估或預測，只整理官方公布的數字；若和官方公告不同，以官方公告為準。</p>
-  </section>
   {f'<section class="box"><h2>關於我</h2><p>{ABOUT_ME}</p></section>' if ABOUT_ME else ""}
   <section class="box">
     <h2>聯絡我</h2>
