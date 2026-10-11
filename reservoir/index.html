@@ -124,9 +124,9 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .card .info { min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; }
 /* 右邊一格當水杯：從底部填到蓄水率的高度，大數字放在杯子中間 */
 .card .tank { position: relative; display: grid; place-items: center; border-left: 1px solid var(--line); min-height: 112px; }
-.card .tank[style] { background: linear-gradient(to top, var(--wc) var(--p), var(--wl) var(--p), var(--wl) calc(var(--p) + 2px), transparent calc(var(--p) + 2px)); }
+.card .tank[style] { background: linear-gradient(to top, var(--wc) var(--p), transparent var(--p)); }
 .card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 700; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; text-align: center; padding: 0 6px; }
-.card .pct small { font-size: 14px; color: var(--muted); }
+.card .pct small { font-size: 14px; color: inherit; }
 .card .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .card.nodata .pct { font-size: 13px; color: var(--muted); font-family: var(--f-body); font-weight: 500; }
 .meta { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); margin-top: auto; padding-top: 6px; }
@@ -151,8 +151,9 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .card:has(a:focus-visible) { outline: 2px solid var(--water); outline-offset: 2px; }
 .card h3 a:focus-visible { outline: none; }
 .card .delta { display: block; margin-top: 4px; font-family: var(--f-body); font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-.card .delta.up { color: var(--rise); }
-.card .delta.down { color: var(--fall); }
+.card .delta b { font-weight: 700; }
+.card .delta .up { color: var(--rise); }
+.card .delta .down { color: var(--fall); }
 .allres { margin-top: 24px; padding: 12px 16px; display: grid; gap: 8px; font-size: 14px; }
 .allres h2 { font-size: 15px; margin: 0; }
 .allres b { font-size: 13px; color: var(--muted); font-weight: 500; }
@@ -450,7 +451,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   // 右邊的水杯：從底部填到蓄水率的高度，顏色同地圖的四級
   function water(p) {
     var h = binOf(p).color.replace("#", ""), rgb = [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }).join(",");
-    return ' style="--p:' + Math.min(100, Math.max(0, p)).toFixed(1) + '%;--wc:rgba(' + rgb + ',.35);--wl:rgba(' + rgb + ',.9)"';
+    return ' style="--p:' + Math.min(100, Math.max(0, p)).toFixed(1) + '%;--wc:rgba(' + rgb + ',.6)"';
   }
 
   // 和昨天比：目前蓄水率 − 昨天最後一筆紀錄的蓄水率（都是官方數字）
@@ -458,8 +459,8 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var h = (state.hist[r.id] || []).filter(function (p) { return p[0] < state.today; });
     if (!h.length) return "";
     var d = Math.round((r.percent - h[h.length - 1][1]) * 10) / 10;
-    var cls = d > 0 ? "up" : d < 0 ? "down" : "";
-    return '<span class="delta ' + cls + '">比昨天 ' + (d > 0 ? "▲ " + fmt(d, 1) + "%" : d < 0 ? "▼ " + fmt(-d, 1) + "%" : "持平") + '</span>';
+    var cls = d > 0 ? "up" : d < 0 ? "down" : "flat";
+    return '<span class="delta">比昨天 <b class="' + cls + '">' + (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + fmt(Math.abs(d), 1) + '%</b></span>';
   }
 
   function lastYear(r) {

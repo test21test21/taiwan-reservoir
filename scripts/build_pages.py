@@ -120,8 +120,8 @@ h2 { font-size:17px; margin:0 0 8px; }
 .pct small { font-size:20px; color:var(--muted); margin-left:2px; }
 .pct.low { color:var(--low); }
 .delta { font-size:15px; font-weight:500; color:var(--muted); }
-.delta.up { color:#1f8a4c; }
-.delta.down { color:#d13c3c; }
+.delta .up { color:#1f8a4c; }
+.delta .down { color:#d13c3c; }
 .pct.none { font-size:22px; color:var(--muted); font-weight:500; }
 .gauge { height:12px; border-radius:6px; background:var(--water-soft); overflow:hidden; margin-top:12px; }
 .gauge i { display:block; height:100%; border-radius:6px; }
@@ -206,8 +206,8 @@ def reservoir_page(r, info, hist, alert, peers, updated):
         change = ""
         if prev:
             d = round(p - float(prev[-1]["percent"]), 1)
-            change = (f'<span class="delta up">比昨天 ▲ {d:.1f}%</span>' if d > 0 else
-                      f'<span class="delta down">比昨天 ▼ {-d:.1f}%</span>' if d < 0 else '<span class="delta">比昨天 持平</span>')
+            cls, arrow = ("up", "▲") if d > 0 else ("down", "▼") if d < 0 else ("flat", "▶")
+            change = f'<span class="delta">比昨天 <b class="{cls}">{arrow} {abs(d):.1f}%</b></span>'
         big = (f'<div class="pct{" low" if p < LOW else ""}">{p:.1f}<small>%</small></div>{change}'
                f'<div class="lead">有效蓄水量 {vol(r.get("storage"))} / {vol(r.get("capacity"))} 萬立方公尺</div>')
         gauge = f'<div class="gauge"><i style="width:{min(100, p):.1f}%;background:{color(p)}"></i></div>'
