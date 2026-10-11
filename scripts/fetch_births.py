@@ -13,6 +13,7 @@
 """
 import csv
 import json
+import ssl
 import sys
 import time
 import urllib.parse
@@ -32,12 +33,19 @@ def table_for(y, m):
     return "ODRP061" if (y, m) >= (2020, 9) else "ODRP012"
 
 
+def ssl_context():
+    # 政府網站憑證鏈缺 Subject Key Identifier，Python 3.13 的嚴格模式會拒絕；仍照常驗證憑證。
+    ctx = ssl.create_default_context()
+    ctx.verify_flags &= ~getattr(ssl, "VERIFY_X509_STRICT", 0)
+    return ctx
+
+
 def get(url, tries=4):
     for i in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "taiwandata.info"})
-            with urllib.request.urlopen(req, timeout=90) as r:
-                return json.loads(r.read().decode("utf-8"))
+            with urllib.request.urlopen(req, timeout=90, context=ssl_context()) as r:
+                return json.loads(r.read().decode("utf-8-sig"))
         except Exception as ex:  # 偶爾逾時，等一下再試
             if i == tries - 1:
                 raise
@@ -86,6 +94,15 @@ def months_from(start, end):
         y, m = (y + 1, 1) if m == 12 else (y, m + 1)
 
 
+def save(rows):
+    rows.sort(key=lambda r: (r["month"], r["county"]))
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    with OUT.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+
+
 def main():
     since = FIRST
     if "--since" in sys.argv:
@@ -113,12 +130,8 @@ def main():
         for c, a in sorted(agg.items()):
             rows.append(dict(zip(FIELDS, [key, c, *a])))
         added += 1
-    rows.sort(key=lambda r: (r["month"], r["county"]))
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    with OUT.open("w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDS)
-        w.writeheader()
-        w.writerows(rows)
+        save(rows)  # 每抓完一個月就存，中途斷掉也不會白抓
+    save(rows)
     print(f"新增 {added} 個月，共 {len({r['month'] for r in rows})} 個月")
 
 
