@@ -3,6 +3,16 @@
 <title>台灣水庫水情：即時蓄水率與水情燈號｜Taiwan Data</title>
 <meta name="description" content="台灣各水庫即時蓄水率、有效蓄水量與官方水情燈號，北中南東一張地圖看懂，每小時更新，資料來自經濟部水利署。">
 <link rel="canonical" href="https://taiwandata.info/reservoir/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Taiwan Data 台灣數據">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:title" content="台灣水庫水情：即時蓄水率與水情燈號｜Taiwan Data">
+<meta property="og:description" content="台灣各水庫即時蓄水率、有效蓄水量與官方水情燈號，北中南東一張地圖看懂，每小時更新，資料來自經濟部水利署。">
+<meta property="og:url" content="https://taiwandata.info/reservoir/">
+<meta property="og:image" content="https://taiwandata.info/reservoir/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -132,6 +142,12 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 @media (min-width: 860px) { .ad-row { min-height: 90px; } }
 /* 申請到 AdSense 前先隱藏廣告位；要開回來就刪掉這行 */
 .ad { display: none !important; }
+.card h3 a { color: inherit; text-decoration: none; }
+.card h3 a:hover { text-decoration: underline; }
+.allres { margin-top: 24px; padding: 12px 16px; display: grid; gap: 8px; font-size: 14px; }
+.allres h2 { font-size: 15px; margin: 0; }
+.allres b { font-size: 13px; color: var(--muted); font-weight: 500; }
+.allres ul { list-style: none; padding: 0; margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 2px 14px; }
 .brand { display: inline-block; font-size: 13px; color: var(--muted); text-decoration: none; padding-block: 6px; }
 .brand:hover { color: var(--fg); }
 footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 70ch; }
@@ -170,6 +186,11 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     <ul class="cards" id="cards"></ul>
   </section>
   </div>
+
+  <nav class="box allres" aria-label="各水庫頁面">
+    <h2>各水庫頁面</h2>
+    <!--RESERVOIR_LINKS-->
+  </nav>
 
   <footer>
     <div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料）與水利署官網水情燈號，每小時更新；縣市界線取自內政部村里界圖（經 taiwan-atlas 整理）。蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>
@@ -453,7 +474,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       if (good && r.percent < LOW) chips += '<span class="chip low">偏低</span> ';
       if (r.suspect) chips += '<span class="chip">官方數字疑似有誤</span> ';
       return '<li class="box card' + (good ? "" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '">' +
-        '<h3>' + r.name + '<span class="reg">' + r.region + '</span></h3>' +
+        '<h3><a href="' + r.id + '/">' + r.name + '</a><span class="reg">' + r.region + '</span></h3>' +
         '<div class="pct">' + right + '</div>' +
         '<div class="sub">' + (r.storage != null ? fmt(r.storage, r.storage < 100 ? 1 : 0) + " / " : "") + (r.capacity != null ? fmt(r.capacity, r.capacity < 100 ? 1 : 0) + " 萬噸" : "") + '</div>' +
         (good ? '<div class="gauge"><i style="width:' + Math.min(100, r.percent) + '%;background:' + binOf(r.percent).color + '"></i></div>' : "") +
