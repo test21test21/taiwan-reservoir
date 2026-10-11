@@ -427,7 +427,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       });
       return n;
     }
-    dots.slice(0, 6).forEach(function (d) {
+    dots.slice(0, 8).forEach(function (d) { // 容量前 8 大（到南化、烏山頭）才標名字
       var name = short(d.r.name), w = name.length * FS + 4, h = FS + 6, gap = 6, R = d.rad;
       var tries = [
         [d.x + R + gap, d.y - h / 2], [d.x - R - gap - w, d.y - h / 2],
