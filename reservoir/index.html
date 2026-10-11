@@ -1,0 +1,517 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>台灣水庫水情：即時蓄水率與水情燈號｜Taiwan Data</title>
+<meta name="description" content="台灣各水庫即時蓄水率、有效蓄水量與官方水情燈號，北中南東一張地圖看懂，每小時更新，資料來自經濟部水利署。">
+<link rel="canonical" href="https://taiwandata.info/reservoir/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: phone first — 各區燈號與主要水庫（第一面）→ 燈號地圖 → 水庫列表；桌機上地圖在左、各區在右 */
+:root {
+  --bg: #f6f6f4; --surface: #ffffff; --fg: #1d2125; --muted: #676d73; --line: #e4e4e0;
+  --water: #0a6cc2; --water-soft: #e3eef8; --water-lite: #7fbfec;
+  --low: #7a4fc4; --chip: #efefec;
+  --paper: #f1f1ee; /* 地圖底，兩種主題都用淺色，讓官方縣市線看得清楚 */
+  --shadow: 0 1px 2px rgba(12,30,46,.06), 0 4px 16px rgba(12,30,46,.05);
+  --f-display: "Noto Serif TC", "Songti TC", serif;
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --f-num: "IBM Plex Sans Condensed", "Noto Sans TC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121416; --surface: #1b1e21; --fg: #ececea; --muted: #9a9fa4; --line: #2c3035;
+    --water: #4fb0f0; --water-soft: #16304a; --water-lite: #2b6fa3;
+    --low: #bba2f0; --chip: #24282c; --paper: #ecece9; --shadow: none; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121416; --surface: #1b1e21; --fg: #ececea; --muted: #9a9fa4; --line: #2c3035;
+  --water: #4fb0f0; --water-soft: #16304a; --water-lite: #2b6fa3;
+  --low: #bba2f0; --chip: #24282c; --paper: #ecece9; --shadow: none; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; }
+a { color: var(--fg); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+.box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px; }
+h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(24px, 6vw, 34px); margin: 0; letter-spacing: .02em; }
+.updated { color: var(--muted); font-size: 13px; }
+
+/* 第一面：各區 */
+.hero { margin-top: 12px; display: grid; gap: 12px; }
+@media (min-width: 860px) { .hero { grid-template-columns: minmax(0, 420px) 1fr; grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: span 2; } }
+.hero > * { min-width: 0; }
+.regions { padding: 6px 0; }
+.regions-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; padding: 8px 16px 4px; }
+.regions-head h2 { font-size: 16px; margin: 0; }
+.regions-head span { font-size: 12px; color: var(--muted); }
+.region { display: grid; grid-template-columns: 18px 62px 1fr; gap: 0 10px; align-items: center; width: 100%; text-align: left; font: inherit; color: inherit;
+  background: none; border: 0; border-top: 1px solid var(--line); padding: 10px 16px; cursor: pointer; }
+.region:first-of-type { border-top: 0; }
+.region:hover { background: var(--chip); }
+.lamp { width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 0 0 3px var(--surface), 0 0 10px var(--glow, transparent); }
+.region .name { font-weight: 700; font-size: 17px; line-height: 1.2; }
+.region .light { display: block; font-size: 12px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.region .res { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.mini, .mini .p, .mini .bar { display: block; }
+.mini { min-width: 0; }
+.mini .n { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.mini .p { font-family: var(--f-num); font-weight: 600; font-size: 19px; line-height: 1.1; color: var(--fg); font-variant-numeric: tabular-nums; }
+.mini .p small { font-size: 11px; color: var(--muted); margin-left: 1px; }
+.mini .bar { height: 4px; border-radius: 2px; background: var(--water-soft); margin-top: 3px; overflow: hidden; }
+.mini .bar i { display: block; height: 100%; background: var(--water); }
+.mini.low .p { color: var(--low); }
+.mini.none .p { color: var(--muted); font-size: 13px; font-family: var(--f-body); font-weight: 500; }
+.region .lit { grid-column: 2 / -1; font-size: 13px; margin-top: 4px; }
+
+.mapbox { padding: 12px; }
+.mapbox h2 { font-size: 15px; margin: 0 0 8px; }
+.mapframe { background: var(--paper); border-radius: 12px; padding: 6px; }
+#map { width: 100%; height: auto; display: block; cursor: pointer; }
+#map-fallback { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; align-items: center; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.legend { display: grid; gap: 6px; }
+.legend .row { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.legend .row b { font-weight: 700; color: var(--fg); min-width: 4.5em; }
+.legend .bin { width: 14px; height: 14px; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); }
+.legend .size { display: inline-flex; align-items: center; gap: 4px; }
+.legend .size i { background: #8a9aa8; margin: 0; }
+.note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+details.lights { margin-top: 6px; font-size: 13px; }
+details.lights summary { cursor: pointer; color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+details.lights ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+details.lights li i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+/* 水庫列表 */
+.list { margin-top: 24px; }
+.listhead { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; scroll-margin-top: 12px; }
+.listhead > * { min-width: 0; }
+.listhead h2 { font-size: 17px; margin: 0; width: 100%; }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.tabs button, .sort button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 12px; white-space: nowrap; cursor: pointer; }
+.tabs button[aria-pressed="true"], .sort button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.sort { display: flex; flex-wrap: wrap; white-space: nowrap; gap: 6px; font-size: 13px; align-items: center; color: var(--muted); }
+.cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.card { padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; min-width: 0; scroll-margin-top: 16px; }
+.card.sel { border-color: var(--water); box-shadow: 0 0 0 1px var(--water); }
+.card h3 { margin: 0; font-size: 17px; font-weight: 700; min-width: 0; }
+.card .reg { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 600; font-size: 30px; line-height: 1; text-align: right; font-variant-numeric: tabular-nums; grid-row: span 2; align-self: center; }
+.card .pct small { font-size: 14px; color: var(--muted); }
+.card .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.card.nodata .pct { font-size: 15px; color: var(--muted); font-family: var(--f-body); font-weight: 500; }
+.gauge { grid-column: 1 / -1; height: 10px; border-radius: 5px; background: var(--water-soft); overflow: hidden; margin-top: 8px; }
+.gauge i { display: block; height: 100%; background: var(--water); border-radius: 5px; }
+.meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.chip { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.chip.low { background: transparent; border: 1px solid var(--low); color: var(--low); }
+.spark { grid-column: 1 / -1; margin-top: 6px; }
+.spark svg { width: 100%; height: 36px; display: block; }
+.spark .hint { font-size: 12px; color: var(--muted); }
+.est { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; font-size: 13px; }
+.est b { font-family: var(--f-num); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
+
+/* 廣告位置：先固定高度，廣告載入時版面才不會跳動 */
+.ad { display: grid; place-items: center; align-content: center; gap: 2px; border: 1.5px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 13px; text-align: center; min-width: 0; }
+.ad b { font-size: 11px; letter-spacing: .1em; font-weight: 500; }
+.ad-box { min-height: 250px; }
+.ad-row { grid-column: 1 / -1; min-height: 250px; }
+@media (min-width: 860px) { .ad-row { min-height: 90px; } }
+.brand { display: inline-block; font-size: 13px; color: var(--muted); text-decoration: none; margin-bottom: 2px; }
+.brand:hover { color: var(--fg); }
+footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 70ch; }
+.err { padding: 16px; margin-top: 12px; }
+@media (prefers-reduced-motion: no-preference) { .gauge i, .mini .bar i { transition: width .6s ease; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div><a class="brand" href="../">Taiwan Data 台灣數據</a><h1>台灣水庫水情</h1></div>
+    <span class="updated" id="updated">讀取資料中…</span>
+  </header>
+
+  <div class="hero">
+    <section class="box mapbox" aria-label="水情燈號地圖">
+      <h2>水庫蓄水與官方水情燈號</h2>
+      <div class="mapframe">
+        <canvas id="map" width="720" height="1136" role="img" aria-label="各縣市官方水情燈號與主要水庫蓄水率地圖" hidden></canvas>
+        <img id="map-fallback" alt="水利署公布的全台水情燈號圖" hidden>
+      </div>
+      <div class="legend" id="legend"></div>
+      <p class="note">圓圈是水庫，圓圈面積＝水庫有效容量；縣市底色是水利署公告的水情燈號。點圓圈可看該水庫。</p>
+      <details class="lights"><summary>各燈號代表什麼？</summary><ul id="light-list"></ul></details>
+    </section>
+    <section class="box regions" id="regions" aria-label="各區水情"></section>
+    <aside class="ad ad-box" aria-label="廣告"><b>廣告</b>廣告位置 1（300×250）</aside>
+  </div>
+
+  <section class="list" aria-label="水庫列表">
+    <div class="listhead" id="listhead">
+      <h2>所有水庫</h2>
+      <div class="tabs" id="tabs" role="group" aria-label="地區"></div>
+      <div class="sort" role="group" aria-label="排序">排序
+        <button type="button" id="sort-cap" aria-pressed="true">容量大到小</button>
+        <button type="button" id="sort-low" aria-pressed="false">蓄水率低到高</button>
+      </div>
+    </div>
+    <ul class="cards" id="cards"></ul>
+  </section>
+
+  <footer>
+    <div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料）與水利署官網水情燈號，每小時更新。蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>
+    <div>水情燈號以 <a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">經濟部水利署公告</a> 為準。水庫圓點的藍色深淺只代表蓄水率，和燈號無關。</div>
+    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var LOW = 40;
+  var TABS = ["全部", "北部", "中部", "南部", "東部", "澎湖", "金門", "馬祖"];
+
+  // 官方水情燈號（顯示的就是官方燈號本身，所以照官方用色）。fill 是地圖上縣市的底色。
+  var LIGHTS = {
+    N: { name: "藍燈", label: "水情正常", color: "#2f6fd6", fill: "#ffffff", desc: "水情正常" },
+    G: { name: "綠燈", label: "水情提醒", color: "#2e9d4f", fill: "#c6e8cd", desc: "水情提醒：加強水源調度" },
+    Y: { name: "黃燈", label: "減壓供水", color: "#e2b000", fill: "#f8e7a1", desc: "減壓供水：離峰時段降低水壓" },
+    O: { name: "橙燈", label: "減量供水", color: "#ef7d1a", fill: "#f9cfa3", desc: "減量供水：大用水戶、游泳池、洗車等減供" },
+    R: { name: "紅燈", label: "分區供水", color: "#d93a2f", fill: "#f3b9b2", desc: "分區輪流停水或定點供水" }
+  };
+  var RANK = { N: 0, G: 1, Y: 2, O: 3, R: 4 };
+
+  var AREAS = [
+    { name: "北部", tabs: ["北部"], counties: ["基隆市", "臺北市", "新北市", "桃園市", "新竹市", "新竹縣"] },
+    { name: "中部", tabs: ["中部"], counties: ["苗栗縣", "臺中市", "彰化縣", "南投縣", "雲林縣"] },
+    { name: "南部", tabs: ["南部"], counties: ["嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣"] },
+    { name: "東部", tabs: ["東部"], counties: ["宜蘭縣", "花蓮縣", "臺東縣"] },
+    { name: "離島", tabs: ["澎湖", "金門", "馬祖"], counties: ["澎湖縣", "金門縣", "連江縣"] }
+  ];
+
+  // 官方燈號圖（480×568）上各縣市內部的一點，和 scripts/fetch_reservoirs.py 的 COUNTY_SEEDS 相同
+  var MAP_W = 480, MAP_H = 568, K = 2, X0 = 120; // 只畫本島（裁掉左邊的離島）
+  var SEEDS = {
+    "基隆市": [386, 42], "臺北市": [362, 45], "新北市": [345, 80], "桃園市": [300, 60], "新竹市": [272, 97],
+    "新竹縣": [300, 120], "苗栗縣": [250, 140], "臺中市": [240, 185], "彰化縣": [200, 230], "南投縣": [280, 250],
+    "雲林縣": [190, 270], "嘉義市": [206, 306], "嘉義縣": [240, 320], "臺南市": [180, 360], "高雄市": [250, 380],
+    "屏東縣": [230, 460], "宜蘭縣": [400, 110], "花蓮縣": [350, 250], "臺東縣": [290, 420]
+  };
+  // 經緯度 → 官方燈號圖像素（用富貴角、鵝鑾鼻、三貂角、七股四點對齊，誤差約 5 像素）
+  function toMap(lon, lat) { return [150.633 * lon - 3.045 * lat - 17874.046, 5.029 * lon - 161.214 * lat + 3477.974]; }
+
+  // 本島水庫約略座標（經度, 緯度）
+  var COORDS = {
+    "10201": [121.245, 24.811], "10203": [121.735, 25.105], "10204": [121.718, 25.136], "10205": [121.580, 24.908],
+    "10211": [121.540, 24.952], "10212": [121.553, 24.940], "10401": [121.050, 24.728], "10405": [121.065, 24.708],
+    "10501": [120.925, 24.612], "10503": [121.035, 24.665], "10601": [120.880, 24.580], "20101": [120.785, 24.333],
+    "20201": [121.165, 24.255], "20202": [120.780, 24.275], "20203": [121.010, 24.205], "20501": [121.130, 24.030],
+    "20502": [120.915, 23.860], "20503": [120.780, 23.830], "20508": [120.870, 23.840], "20509": [120.600, 23.660],
+    "30301": [120.505, 23.470], "30302": [120.475, 23.465], "30401": [120.475, 23.340], "30403": [120.380, 23.250],
+    "30501": [120.370, 23.200], "30502": [120.530, 23.250], "30503": [120.550, 23.100], "30504": [120.480, 23.065],
+    "30601": [120.330, 23.030], "30602": [120.335, 23.040], "30802": [120.365, 22.800], "31201": [120.790, 22.140]
+  };
+
+  var state = { region: "全部", sort: "cap", sel: null, data: [], hist: {}, alert: null, dots: [] };
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(n, d) { return n == null ? "–" : n.toLocaleString("zh-TW", { maximumFractionDigits: d == null ? 0 : d }); }
+  function ok(r) { return r.percent != null && !r.suspect; }
+  function short(name) { return name.replace(/水庫$/, "").replace(/第二$/, "二"); }
+  function timeText(iso) {
+    if (!iso) return "";
+    var parts = {};
+    new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+      .formatToParts(new Date(iso)).forEach(function (x) { parts[x.type] = x.value; });
+    return parts.month + "/" + parts.day + " " + parts.hour + ":" + parts.minute;
+  }
+  function dateText(d) { var p = d.split("-"); return Number(p[1]) + "/" + Number(p[2]); }
+  // 蓄水率分四級（避開官方燈號用的綠黃橙紅）
+  var BINS = [
+    { min: 80, label: "80% 以上", color: "#0b3d7a" },
+    { min: 60, label: "60–80%", color: "#2f7fd0" },
+    { min: 40, label: "40–60%", color: "#8cc4f0" },
+    { min: -1, label: "40% 以下", color: "#8a4fd0" }
+  ];
+  function binOf(p) { for (var i = 0; i < BINS.length; i++) if (p >= BINS[i].min) return BINS[i]; return BINS[BINS.length - 1]; }
+
+  function loadAll() {
+    return Promise.all([
+      fetch("../data/latest.json", { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      fetch("../data/history.csv", { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; }),
+      fetch("../data/alert.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    ]);
+  }
+
+  function parseHistory(text) {
+    var out = {};
+    var lines = text.trim().split(/\r?\n/);
+    var head = (lines.shift() || "").split(",");
+    var iD = head.indexOf("date"), iId = head.indexOf("id"), iP = head.indexOf("percent");
+    lines.forEach(function (l) {
+      var c = l.split(","); var p = parseFloat(c[iP]);
+      if (!c[iId] || isNaN(p) || p > 105) return;
+      (out[c[iId]] = out[c[iId]] || []).push([c[iD], p]);
+    });
+    return out;
+  }
+
+  function countyLight(name) {
+    var c = state.alert && state.alert.counties;
+    return c ? c[name] || null : null;
+  }
+
+  function areaLight(area) {
+    var worst = null, lit = [];
+    area.counties.forEach(function (c) {
+      var l = countyLight(c);
+      if (!l) return;
+      if (worst === null || RANK[l] > RANK[worst]) worst = l;
+      if (l !== "N") lit.push(c.replace(/[縣市]$/, "") + " " + LIGHTS[l].name);
+    });
+    return { light: worst, lit: lit };
+  }
+
+  function mini(name, pct, low, none) {
+    return '<span class="mini' + (low ? " low" : "") + (none ? " none" : "") + '"><span class="n">' + name + '</span>' +
+      '<span class="p">' + (none ? "無資料" : fmt(pct, pct >= 99.95 ? 0 : 1) + "<small>%</small>") + '</span>' +
+      (none ? "" : '<span class="bar"><i style="width:' + Math.min(100, pct) + '%"></i></span>') + '</span>';
+  }
+
+  function renderRegions() {
+    var a = state.alert;
+    var head = '<div class="regions-head"><h2>各區水情</h2><span>' +
+      (a && a.published ? "燈號：水利署 " + dateText(a.published) + " 公告" : "燈號資料暫時讀不到") + '</span></div>';
+    var rows = AREAS.map(function (area) {
+      var al = areaLight(area);
+      var L = al.light ? LIGHTS[al.light] : null;
+      var res;
+      if (area.name === "離島") {
+        res = area.tabs.map(function (t) {
+          var rs = state.data.filter(function (r) { return r.region === t && ok(r); });
+          var s = 0, c = 0; rs.forEach(function (r) { s += r.storage; c += r.capacity; });
+          return mini(t, c ? s / c * 100 : null, c && s / c * 100 < LOW, !c);
+        }).join("");
+      } else {
+        var rs = state.data.filter(function (r) { return r.region === area.name && ok(r) && !/[堰壩]$/.test(r.name); })
+          .sort(function (x, y) { return y.capacity - x.capacity; }).slice(0, 3);
+        res = rs.length ? rs.map(function (r) { return mini(short(r.name), r.percent, r.percent < LOW); }).join("")
+          : '<span class="mini none" style="grid-column:1/-1"><span class="n">這區沒有水庫資料</span></span>';
+      }
+      return '<button type="button" class="region" data-tab="' + area.tabs[0] + '">' +
+        '<i class="lamp" style="background:' + (L ? L.color : "var(--line)") + ';--glow:' + (L ? L.color + "88" : "transparent") + '"></i>' +
+        '<span><span class="name">' + area.name + '</span><span class="light">' + (L ? L.label : "燈號看官網") + '</span></span>' +
+        '<span class="res">' + res + '</span>' +
+        (al.lit.length ? '<span class="lit">亮燈：' + al.lit.join("、") + '</span>' : "") +
+        '</button>';
+    }).join("");
+    $("regions").innerHTML = head + rows;
+  }
+
+  function renderLegend() {
+    // 五種燈號都列出來，即使目前沒有縣市亮該燈
+    $("legend").innerHTML = Object.keys(LIGHTS).map(function (k) {
+      return '<span><i style="background:' + LIGHTS[k].fill + ';box-shadow:inset 0 0 0 1.5px ' + LIGHTS[k].color + '"></i>' + LIGHTS[k].name + " " + LIGHTS[k].label + '</span>';
+    }).join("");
+    $("legend").innerHTML = '<div class="row"><b>水庫蓄水率</b>' + BINS.map(function (b) {
+        return '<span><i class="bin" style="background:' + b.color + '"></i>' + b.label + '</span>';
+      }).join("") + '</div>' +
+      '<div class="row"><b>縣市底色</b>' + $("legend").innerHTML + '</div>';
+    $("light-list").innerHTML = Object.keys(LIGHTS).map(function (k) {
+      return '<li><i style="background:' + LIGHTS[k].color + '"></i><b>' + LIGHTS[k].name + '</b>　' + LIGHTS[k].desc + '</li>';
+    }).join("");
+    if (state.alert && state.alert.source_url) $("src-link").href = state.alert.source_url;
+  }
+
+  // 在官方縣市底圖上，依各縣市燈號填色，再畫上水庫圓點
+  function renderMap() {
+    var a = state.alert;
+    var cv = $("map"), fb = $("map-fallback");
+    if (!a || !a.local_image) {
+      if (a && a.image_url) { fb.src = a.image_url; fb.hidden = false; }
+      return;
+    }
+    var img = new Image();
+    img.onload = function () {
+      if (img.naturalWidth !== MAP_W || img.naturalHeight !== MAP_H || !a.counties) { fb.src = img.src; fb.hidden = false; return; }
+      var ctx = cv.getContext("2d");
+      ctx.imageSmoothingEnabled = true;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, -X0 * K, 0, MAP_W * K, MAP_H * K);
+      var id;
+      try { id = ctx.getImageData(0, 0, cv.width, cv.height); } catch (e) { fb.src = img.src; fb.hidden = false; return; }
+      Object.keys(SEEDS).forEach(function (name) {
+        var l = a.counties[name];
+        if (l && LIGHTS[l]) flood(id, (SEEDS[name][0] - X0) * K, SEEDS[name][1] * K, LIGHTS[l].fill);
+      });
+      ctx.putImageData(id, 0, 0);
+      drawDots(ctx);
+      drawScale(ctx);
+      cv.hidden = false;
+    };
+    img.onerror = function () { if (a.image_url) { fb.src = a.image_url; fb.hidden = false; } };
+    img.src = "../" + a.local_image;
+  }
+
+  function flood(id, sx, sy, hex) {
+    var W = id.width, H = id.height, d = id.data;
+    var fr = parseInt(hex.slice(1, 3), 16), fg = parseInt(hex.slice(3, 5), 16), fbl = parseInt(hex.slice(5, 7), 16);
+    var i0 = (sy * W + sx) * 4, r0 = d[i0], g0 = d[i0 + 1], b0 = d[i0 + 2];
+    if (d[i0 + 3] < 128) return; // 透明＝海，不填
+    var seen = new Uint8Array(W * H), stack = [sx, sy], n = 0;
+    while (stack.length) {
+      var y = stack.pop(), x = stack.pop();
+      if (x < 0 || y < 0 || x >= W || y >= H) continue;
+      var p = y * W + x;
+      if (seen[p]) continue;
+      seen[p] = 1;
+      var i = p * 4;
+      if (d[i + 3] < 128 || Math.abs(d[i] - r0) + Math.abs(d[i + 1] - g0) + Math.abs(d[i + 2] - b0) > 90) continue;
+      d[i] = fr; d[i + 1] = fg; d[i + 2] = fbl; n++;
+      stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
+      if (n > W * H / 4) return; // 漏到整張圖就停
+    }
+  }
+
+  // 圓圈面積和有效容量成正比（半徑 ∝ √容量）。只有太小看不見的才放大到最小 2.5 像素。
+  var R_SCALE = 0.16;
+  function radius(cap) { return Math.max(2.5, R_SCALE * Math.sqrt(cap)); }
+
+  function drawScale(ctx) {
+    // 左上角海面只寫一行說明，不畫參考圓
+    ctx.font = "500 24px " + getComputedStyle(document.body).fontFamily;
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.fillStyle = "#676d73";
+    ctx.fillText("圓圈面積＝有效容量", 20, 40);
+  }
+
+  function drawDots(ctx) {
+    state.dots = [];
+    var list = state.data.filter(function (r) { return COORDS[r.id] && r.capacity; })
+      .sort(function (a, b) { return b.capacity - a.capacity; });
+    list.forEach(function (r) {
+      var p = toMap(COORDS[r.id][0], COORDS[r.id][1]);
+      var x = (p[0] - X0) * K, y = p[1] * K, rad = radius(r.capacity);
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2);
+      ctx.fillStyle = ok(r) ? binOf(r.percent).color : "#c9d3dc"; ctx.fill();
+      ctx.lineWidth = state.sel === r.id ? 5 : Math.min(3, rad * 0.5); ctx.strokeStyle = state.sel === r.id ? "#1d2125" : "#ffffff"; ctx.stroke();
+      state.dots.push({ id: r.id, x: x, y: y, r: rad });
+    });
+    ctx.font = "500 26px " + getComputedStyle(document.body).fontFamily;
+    ctx.textBaseline = "middle";
+    list.slice(0, 6).forEach(function (r) {
+      var d = state.dots.filter(function (q) { return q.id === r.id; })[0];
+      var left = COORDS[r.id][0] < 120.9, label = short(r.name) + " " + (ok(r) ? fmt(r.percent, 0) + "%" : "");
+      ctx.textAlign = left ? "right" : "left";
+      var tx = d.x + (left ? -d.r - 8 : d.r + 8);
+      ctx.lineWidth = 5; ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.strokeText(label, tx, d.y);
+      ctx.fillStyle = "#1d2125"; ctx.fillText(label, tx, d.y);
+    });
+  }
+
+  function sparkline(id) {
+    var h = state.hist[id] || [];
+    if (h.length < 2) return '<div class="spark"><span class="hint">趨勢圖從 10/10 開始累積，明天起會出現</span></div>';
+    var pts = h.slice(-30), n = pts.length, W = 300, H = 36;
+    var xy = pts.map(function (p, i) { return [(i / (n - 1)) * (W - 4) + 2, H - 3 - (p[1] / 100) * (H - 6)]; });
+    var line = xy.map(function (q) { return q[0].toFixed(1) + "," + q[1].toFixed(1); }).join(" ");
+    var last = xy[n - 1];
+    return '<div class="spark"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-label="近 ' + n + ' 天蓄水率">' +
+      '<polygon points="2,' + H + ' ' + line + ' ' + (W - 2) + ',' + H + '" fill="var(--water-soft)"/>' +
+      '<polyline points="' + line + '" fill="none" stroke="var(--water)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>' +
+      '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.5" fill="var(--water)"/></svg></div>';
+  }
+
+  function lastYear(r) {
+    if (r.last_year_percent == null) return "";
+    var diff = r.percent - r.last_year_percent;
+    return '<div class="est"><span>去年同期 <b>' + fmt(r.last_year_percent, 1) + '%</b>（' + (diff >= 0 ? "多 " : "少 ") + fmt(Math.abs(diff), 1) + ' 個百分點）</span></div>';
+  }
+
+  function renderCards() {
+    var list = state.data.filter(function (r) { return r.name && (state.region === "全部" || r.region === state.region); });
+    list.sort(function (a, b) {
+      if (ok(a) !== ok(b)) return ok(a) ? -1 : 1;
+      if (state.sort === "low") return (a.percent || 0) - (b.percent || 0);
+      return (b.capacity || 0) - (a.capacity || 0);
+    });
+    $("cards").innerHTML = list.map(function (r, i) {
+      var good = ok(r);
+      var right = good ? fmt(r.percent, 1) + "<small>%</small>" : (r.suspect ? "資料異常" : "無蓄水率");
+      var chips = "";
+      if (good && r.percent < LOW) chips += '<span class="chip low">偏低</span> ';
+      if (r.suspect) chips += '<span class="chip">官方數字疑似有誤</span> ';
+      return '<li class="box card' + (good ? "" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '">' +
+        '<h3>' + r.name + '<span class="reg">' + r.region + '</span></h3>' +
+        '<div class="pct">' + right + '</div>' +
+        '<div class="sub">' + (r.storage != null ? fmt(r.storage, r.storage < 100 ? 1 : 0) + " / " : "") + (r.capacity != null ? fmt(r.capacity, r.capacity < 100 ? 1 : 0) + " 萬噸" : "") + '</div>' +
+        (good ? '<div class="gauge"><i style="width:' + Math.min(100, r.percent) + '%"></i></div>' : "") +
+        (good ? lastYear(r) + sparkline(r.id) : "") +
+        '<div class="meta"><span>' + chips + (r.observed_at ? "觀測 " + timeText(r.observed_at) : (r.daily_date ? "日報 " + r.daily_date.slice(5).replace("-", "/") : "")) + '</span>' +
+        '<span>' + [r.inflow_daily != null ? "昨日進水 " + fmt(r.inflow_daily, 1) : "", r.outflow_daily != null ? "取用 " + fmt(r.outflow_daily, 1) : ""].filter(Boolean).join("・") + (r.inflow_daily != null || r.outflow_daily != null ? " 萬噸" : "") + '</span></div>' +
+        '</li>' + (i === 5 ? '<li class="ad ad-row" aria-label="廣告"><b>廣告</b>廣告位置 2（手機 300×250／電腦 728×90）</li>' : '');
+    }).join("");
+  }
+
+  function renderTabs() {
+    var present = {};
+    state.data.forEach(function (r) { present[r.region] = 1; });
+    $("tabs").innerHTML = TABS.filter(function (g) { return g === "全部" || present[g]; }).map(function (g) {
+      return '<button type="button" data-r="' + g + '" aria-pressed="' + (g === state.region) + '">' + g + '</button>';
+    }).join("");
+  }
+
+  function smooth() { return matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"; }
+
+  function select(id) {
+    var r = state.data.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    state.sel = id;
+    if (state.region !== "全部" && state.region !== r.region) state.region = "全部";
+    renderTabs(); renderCards(); renderMap();
+    var el = $("r-" + id);
+    if (el) el.scrollIntoView({ behavior: smooth(), block: "center" });
+  }
+
+  $("regions").addEventListener("click", function (e) {
+    var b = e.target.closest(".region"); if (!b) return;
+    var t = b.dataset.tab;
+    state.region = TABS.indexOf(t) >= 0 && state.data.some(function (r) { return r.region === t; }) ? t : "全部";
+    renderTabs(); renderCards();
+    $("listhead").scrollIntoView({ behavior: smooth(), block: "start" });
+  });
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    state.region = b.dataset.r; renderTabs(); renderCards();
+  });
+  ["cap", "low"].forEach(function (k) {
+    $("sort-" + k).addEventListener("click", function () {
+      state.sort = k;
+      ["cap", "low"].forEach(function (j) { $("sort-" + j).setAttribute("aria-pressed", j === k); });
+      renderCards();
+    });
+  });
+  $("map").addEventListener("click", function (e) {
+    var cv = e.currentTarget, rect = cv.getBoundingClientRect();
+    var x = (e.clientX - rect.left) * cv.width / rect.width, y = (e.clientY - rect.top) * cv.height / rect.height;
+    var best = null, bd = 1e9;
+    state.dots.forEach(function (d) { var dd = Math.hypot(d.x - x, d.y - y) - d.r; if (dd < bd) { bd = dd; best = d; } });
+    if (best && bd < 24) select(best.id);
+  });
+
+  loadAll().then(function (res) {
+    var doc = res[0];
+    state.data = doc.reservoirs || [];
+    state.hist = parseHistory(res[1] || "");
+    state.alert = res[2];
+    $("updated").textContent = "資料更新 " + timeText(doc.generated_at);
+    renderRegions(); renderLegend(); renderMap(); renderTabs(); renderCards();
+  }).catch(function () {
+    $("updated").textContent = "";
+    $("regions").innerHTML = '<div class="err">目前讀不到水庫資料，請稍後再重新整理。</div>';
+  });
+})();
+</script>

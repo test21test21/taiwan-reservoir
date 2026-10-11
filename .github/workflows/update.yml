@@ -46,6 +46,7 @@ jobs:
         run: |
           mkdir _site
           cp index.html _site/
+          cp -r reservoir _site/
           cp -r data _site/
           [ -f CNAME ] && cp CNAME _site/ || true
 
