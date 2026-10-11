@@ -44,7 +44,7 @@ h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(24px, 6vw
 
 /* 第一面：各區 */
 .hero { margin-top: 12px; display: grid; gap: 12px; }
-@media (min-width: 860px) { .hero { grid-template-columns: minmax(0, 460px) 1fr; grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: 1 / span 2; position: sticky; top: 12px; } .hero .list { grid-column: 2; margin-top: 12px; } }
+@media (min-width: 860px) { .hero { grid-template-columns: clamp(340px, 32vw, 560px) minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: 1 / span 2; position: sticky; top: 12px; } .hero .list { grid-column: 2; margin-top: 12px; } }
 .hero > * { min-width: 0; }
 .regions { padding: 6px 0; }
 .regions-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; padding: 8px 16px 4px; }
@@ -97,7 +97,7 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .tabs button, .sort button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 12px; white-space: nowrap; cursor: pointer; }
 .tabs button[aria-pressed="true"], .sort button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .sort { display: flex; flex-wrap: wrap; white-space: nowrap; gap: 6px; font-size: 13px; align-items: center; color: var(--muted); }
-.cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
 .card { padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; min-width: 0; scroll-margin-top: 16px; }
 .card.sel { border-color: var(--water); box-shadow: 0 0 0 1px var(--water); }
 .card h3 { margin: 0; font-size: 17px; font-weight: 700; min-width: 0; }
