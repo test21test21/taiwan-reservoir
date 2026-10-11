@@ -7,6 +7,7 @@
 - _site/reservoir/<水庫代碼>/index.html：數字直接寫進 HTML（Google 不用跑 JavaScript 就看得到）
 - _site/index.html、_site/reservoir/index.html：放進 <!--SITE_ICONS-->、<!--SITE_NAV-->（scripts/site_nav.py）
 - _site/reservoir/index.html：把 <!--RESERVOIR_LINKS--> 換成全部水庫頁的連結
+- _site/about/index.html：關於本站
 - _site/sitemap.xml、_site/robots.txt
 """
 import csv
@@ -20,6 +21,9 @@ from pathlib import Path
 import site_nav
 
 SITE = "https://taiwandata.info"
+# 關於本站頁上的自我介紹與聯絡方式
+ABOUT_ME = "（這段請換成你的自我介紹）"
+CONTACT = "有建議或發現數字有誤，歡迎來信：（這裡放你的 Email）"
 ROOT = Path(__file__).resolve().parent.parent
 LOW = 40
 REGIONS = ["北部", "中部", "南部", "東部", "澎湖", "金門", "馬祖"]
@@ -115,6 +119,8 @@ h2 { font-size:17px; margin:0 0 8px; }
 .pct { font-size:clamp(44px,12vw,64px); font-weight:700; line-height:1; }
 .pct small { font-size:20px; color:var(--muted); margin-left:2px; }
 .pct.low { color:var(--low); }
+.delta { font-size:15px; font-weight:500; color:var(--muted); }
+.delta.up { color:var(--water); }
 .pct.none { font-size:22px; color:var(--muted); font-weight:500; }
 .gauge { height:12px; border-radius:6px; background:var(--water-soft); overflow:hidden; margin-top:12px; }
 .gauge i { display:block; height:100%; border-radius:6px; }
@@ -129,6 +135,7 @@ table { width:100%; border-collapse:collapse; font-size:14px; }
 th, td { text-align:left; padding:6px 8px; border-top:1px solid var(--line); }
 td.n, th.n { text-align:right; }
 th { font-weight:500; color:var(--muted); }
+.prose p { margin:0; }
 .links { list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:6px 14px; }
 .links li { white-space:nowrap; }
 .links span { color:var(--muted); font-size:13px; margin-left:4px; }
@@ -193,7 +200,14 @@ def reservoir_page(r, info, hist, alert, peers, updated):
         title = f"{name}蓄水率 {p:.1f}%（{when} 更新）｜台灣水庫水情"
         desc = (f"{name}目前蓄水率 {p:.1f}%，有效蓄水量 {vol(r.get('storage'))} 萬立方公尺，"
                 f"有效容量 {vol(r.get('capacity'))} 萬立方公尺（{when} 觀測）。每小時更新，資料來自經濟部水利署。")
-        big = (f'<div class="pct{" low" if p < LOW else ""}">{p:.1f}<small>%</small></div>'
+        today = (r.get("observed_at") or "")[:10]
+        prev = [x for x in hist if x.get("percent") and x["date"] < today]
+        change = ""
+        if prev:
+            d = round(p - float(prev[-1]["percent"]), 1)
+            change = (f'<span class="delta up">比昨天 ▲ {d:.1f}%</span>' if d > 0 else
+                      f'<span class="delta">比昨天 ▼ {-d:.1f}%</span>' if d < 0 else '<span class="delta">比昨天 持平</span>')
+        big = (f'<div class="pct{" low" if p < LOW else ""}">{p:.1f}<small>%</small></div>{change}'
                f'<div class="lead">有效蓄水量 {vol(r.get("storage"))} / {vol(r.get("capacity"))} 萬立方公尺</div>')
         gauge = f'<div class="gauge"><i style="width:{min(100, p):.1f}%;background:{color(p)}"></i></div>'
     else:
@@ -263,6 +277,36 @@ def reservoir_page(r, info, hist, alert, peers, updated):
 """
 
 
+def about_page():
+    title = "關於本站｜Taiwan Data 台灣數據"
+    desc = "Taiwan Data 台灣數據是個人經營的網站，把政府開放資料整理成一眼看懂的工具。"
+    return f"""{head(title, desc, f"{SITE}/about/", "og.png")}
+<body>
+{site_nav.nav("about", '<h1 class="sitesection">關於本站</h1>')}
+<div class="wrap prose">
+  <section class="box">
+    <h2>這個網站在做什麼</h2>
+    <p>政府其實公開了很多有用的資料，但大多藏在表格和下載檔裡，一般人很難看懂。Taiwan Data 台灣數據把這些開放資料整理成打開就看得懂的頁面，第一個工具是<a href="/reservoir/">台灣水庫水情</a>，之後會陸續加入出生人口、出入境人次等主題。</p>
+  </section>
+  <section class="box">
+    <h2>資料從哪裡來</h2>
+    <p>所有數字都直接取自政府開放資料，例如水庫資料來自經濟部水利署，每小時自動更新一次。本站不自行推估或預測，只整理官方公布的數字；若和官方公告不同，以官方公告為準。</p>
+  </section>
+  <section class="box">
+    <h2>關於我</h2>
+    <p>{ABOUT_ME}</p>
+  </section>
+  <section class="box">
+    <h2>聯絡我</h2>
+    <p>{CONTACT}</p>
+  </section>
+  <footer><div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div></footer>
+</div>
+</body>
+</html>
+"""
+
+
 def main(out):
     out = Path(out)
     latest, info, hist, alert = load()
@@ -273,7 +317,9 @@ def main(out):
     for r in sorted(named, key=lambda x: -(x.get("capacity") or 0)):
         by_region[r["region"]].append(r)
 
-    urls = [f"{SITE}/", f"{SITE}/reservoir/"]
+    urls = [f"{SITE}/", f"{SITE}/reservoir/", f"{SITE}/about/"]
+    (out / "about").mkdir(parents=True, exist_ok=True)
+    (out / "about/index.html").write_text(about_page(), encoding="utf-8")
     for r in named:
         d = out / "reservoir" / r["id"]
         d.mkdir(parents=True, exist_ok=True)
