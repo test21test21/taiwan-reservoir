@@ -117,14 +117,13 @@ details.lights li i { display: inline-block; width: 10px; height: 10px; border-r
 .tabs button[aria-pressed="true"], .sort button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .sort { display: flex; flex-wrap: wrap; white-space: nowrap; gap: 6px; font-size: 13px; align-items: center; color: var(--muted); }
 .cards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
-.card { padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; min-width: 0; scroll-margin-top: 68px; }
+.card { padding: 12px 14px; display: grid; grid-template-columns: 1fr; gap: 2px 12px; min-width: 0; scroll-margin-top: 68px; }
 .card.sel { border-color: var(--water); box-shadow: 0 0 0 1px var(--water); }
 .card h3 { margin: 0; font-size: 17px; font-weight: 700; min-width: 0; }
 .card .reg { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 6px; }
 .card .info { min-width: 0; display: grid; gap: 2px; align-content: start; }
 .card .pct { color: var(--fg); font-family: var(--f-num); font-weight: 700; font-size: 30px; line-height: 1.1; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.glass { width: 40px; height: 92px; align-self: center; }
-.glass path[fill="none"] { stroke: var(--muted); stroke-width: 2; stroke-linejoin: round; }
+.card.water { background: linear-gradient(to top, var(--wc) var(--p), var(--wl) var(--p), var(--wl) calc(var(--p) + 2px), var(--surface) calc(var(--p) + 2px)); }
 .card .pct small { font-size: 14px; color: var(--muted); }
 .card .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .card.nodata .pct { font-size: 15px; color: var(--muted); font-family: var(--f-body); font-weight: 500; }
@@ -445,13 +444,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     svg.removeAttribute("hidden"); // SVG 元素沒有 .hidden 屬性
   }
 
-  // 水杯：杯子形狀固定，水位高度＝蓄水率（沒有蓄水率的水庫不畫杯子）
-  var CUP = "M3 3 H41 L37 93 Q36.6 97 33 97 H11 Q7.4 97 7 93 Z";
-  function glass(p, id) {
-    var y = 3 + 94 * (1 - Math.min(100, Math.max(0, p)) / 100);
-    var w = '<clipPath id="cup-' + id + '"><path d="' + CUP + '"/></clipPath>' +
-        '<rect x="0" y="' + y.toFixed(1) + '" width="44" height="100" fill="' + binOf(p).color + '" clip-path="url(#cup-' + id + ')"/>';
-    return '<svg class="glass" viewBox="0 0 44 100" aria-hidden="true">' + w + '<path d="' + CUP + '" fill="none"/></svg>';
+  // 整張卡片當水杯：從底部填到蓄水率的高度，顏色同地圖的四級
+  function water(p) {
+    var h = binOf(p).color.replace("#", ""), rgb = [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }).join(",");
+    return ' style="--p:' + Math.min(100, Math.max(0, p)).toFixed(1) + '%;--wc:rgba(' + rgb + ',.26);--wl:rgba(' + rgb + ',.9)"';
   }
 
   // 和昨天比：目前蓄水率 − 昨天最後一筆紀錄的蓄水率（都是官方數字）
@@ -482,12 +478,11 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       var chips = "";
       if (good && r.percent < LOW) chips += '<span class="chip low">偏低</span> ';
       if (r.suspect) chips += '<span class="chip">官方數字疑似有誤</span> ';
-      return '<li class="box card' + (good ? "" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '">' +
+      return '<li class="box card' + (good ? " water" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '"' + (good ? water(r.percent) : "") + '>' +
         '<div class="info"><h3><a href="' + r.id + '/">' + r.name + '</a><span class="reg">' + r.region + '</span></h3>' +
         '<div class="pct">' + right + (good ? delta(r) : "") + '</div>' +
         '<div class="sub">' + (r.storage != null ? fmt(r.storage, r.storage < 100 ? 1 : 0) + " / " : "") + (r.capacity != null ? fmt(r.capacity, r.capacity < 100 ? 1 : 0) + " 萬噸" : "") + '</div>' +
         (good ? lastYear(r) : "") + '</div>' +
-        (good ? glass(r.percent, r.id) : "") +
         '<div class="meta"><span>' + chips + (r.observed_at ? "觀測 " + timeText(r.observed_at) : (r.daily_date ? "日報 " + r.daily_date.slice(5).replace("-", "/") : "")) + '</span>' +
         '<span>' + [r.inflow_daily != null ? "昨日進水 " + fmt(r.inflow_daily, 1) : "", r.outflow_daily != null ? "取用 " + fmt(r.outflow_daily, 1) : ""].filter(Boolean).join("・") + (r.inflow_daily != null || r.outflow_daily != null ? " 萬噸" : "") + '</span></div>' +
         '</li>' + (i === 5 ? '<li class="ad ad-row" aria-label="廣告"><b>廣告</b>廣告位置 2（手機 300×250／電腦 728×90）</li>' : '');
