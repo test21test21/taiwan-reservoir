@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用 reservoir/taiwan-map.json 的縣市界線畫網站小圖示（藍底白色台灣），只在要改圖示時手動執行一次：
+"""用 reservoir/taiwan-map.json 的縣市界線畫網站小圖示（白底綠色台灣），只在要改圖示時手動執行一次：
     python3 scripts/build_icons.py
 先畫成 SVG，再用 Chromium 轉成 PNG 與 favicon.ico（網站左上角與瀏覽器分頁用）。
 """
@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-BLUE = "#0a6cc2"
+GREEN = "#1f9d55"
 
 m = json.loads((ROOT / "reservoir/taiwan-map.json").read_text(encoding="utf-8"))
 paths = list(m["counties"].values())
@@ -24,8 +24,8 @@ vb = f"{cx - side / 2:.1f} {cy - side / 2:.1f} {side:.1f} {side:.1f}"
 r = side * 0.22
 d = "".join(paths)
 svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}">'
-       f'<rect x="{cx - side / 2:.1f}" y="{cy - side / 2:.1f}" width="{side:.1f}" height="{side:.1f}" rx="{r:.1f}" fill="{BLUE}"/>'
-       f'<path d="{d}" fill="#fff" stroke="#fff" stroke-width="{side / 160:.1f}" stroke-linejoin="round"/></svg>')
+       f'<rect x="{cx - side / 2:.1f}" y="{cy - side / 2:.1f}" width="{side:.1f}" height="{side:.1f}" rx="{r:.1f}" fill="#fff"/>'
+       f'<path d="{d}" fill="{GREEN}" stroke="{GREEN}" stroke-width="{side / 160:.1f}" stroke-linejoin="round"/></svg>')
 tmp = Path(tempfile.mkdtemp()) / "icon.svg"
 tmp.write_text(svg, encoding="utf-8")
 
