@@ -23,7 +23,7 @@ import site_nav
 SITE = "https://taiwandata.info"
 # 關於本站頁上的自我介紹與聯絡方式
 ABOUT_ME = "（這段請換成你的自我介紹）"
-CONTACT = "有建議或發現數字有誤，歡迎來信：（這裡放你的 Email）"
+CONTACT = "有建議或發現數字有誤，歡迎來信：<a href=\"mailto:hello@taiwandata.info\">hello@taiwandata.info</a>"
 ROOT = Path(__file__).resolve().parent.parent
 LOW = 40
 REGIONS = ["北部", "中部", "南部", "東部", "澎湖", "金門", "馬祖"]
