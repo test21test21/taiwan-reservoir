@@ -3,7 +3,7 @@ name: 試抓出生資料（暫時）
 on:
   push:
     branches: [claude/project-thread-g45hxq]
-    paths: [.github/workflows/probe-births.yml]
+    paths: [.github/workflows/probe-births.yml, scripts/fetch_births.py]
 
 permissions:
   contents: write
@@ -11,20 +11,17 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: 抓
-        run: |
-          mkdir -p probe
-          curl -sS -m 60 -o probe/docs.html -w '%{http_code}\n' https://www.ris.gov.tw/rs-opendata/api/Main/docs/v1 || true
-          curl -sS -m 60 -o probe/docs.json -w '%{http_code}\n' https://www.ris.gov.tw/rs-opendata/api/swagger/docs/v1 || true
-          for m in 11407 11408; do
-            curl -sS -m 120 -o probe/ODRP003-$m.json -w "$m %{http_code}\n" "https://www.ris.gov.tw/rs-opendata/api/v1/datastore/ODRP003/$m" || true
-          done
-          ls -la probe; head -c 600 probe/ODRP003-11408.json || true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python3 scripts/fetch_births.py
       - name: 存回
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add probe
-          git commit -m "試抓出生資料" && git push || true
+          git add data/births || true
+          git commit -m "出生死亡資料（試抓）" && git push || true
