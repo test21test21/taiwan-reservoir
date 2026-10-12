@@ -39,8 +39,17 @@ CSS = """
 @media (min-width:860px) { .top { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr 1fr; } .top, .grid { column-gap:16px; row-gap:0; } }
 @media (min-width:1360px) { .grid { grid-template-columns:1fr 1fr 1fr; } }
 .chart.bd { max-height:none; }
-.pick { display:flex; align-items:center; gap:8px; margin:4px 0 0; height:44px; font-size:15px; }
-.pick select { font:inherit; font-size:16px; padding:6px 10px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
+.pick { position:relative; margin:6px 0 2px; }
+#pickbtn { display:inline-flex; align-items:center; gap:8px; font:inherit; font-size:24px; font-weight:700; color:var(--fg); background:none; border:0; padding:4px 0; cursor:pointer; }
+#pickbtn svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+#pickbtn small { font-size:14px; font-weight:400; color:var(--muted); }
+#pickbtn:hover small { color:var(--fg); text-decoration:underline; }
+.pickpanel { position:absolute; z-index:40; top:100%; left:0; width:min(420px, calc(100vw - 32px)); background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px rgba(12,30,46,.16); padding:12px; }
+.pickpanel h4 { margin:10px 0 6px; font-size:12px; font-weight:500; color:var(--muted); }
+.pickpanel .g { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.pickpanel a { text-align:center; padding:8px 0; border-radius:10px; background:var(--chip); color:var(--fg); text-decoration:none; font-size:15px; }
+.pickpanel a:hover { outline:1.5px solid var(--fg); }
+.pickpanel a.on { background:var(--fg); color:var(--bg); font-weight:700; }
 .duo { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
 .duo .k { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
 .duo .k i, .sex i { width:10px; height:10px; border-radius:50%; display:inline-block; }
@@ -50,8 +59,6 @@ CSS = """
 .duo .yoy b { font-weight:500; color:var(--fg); }
 .sex { display:flex; flex-wrap:wrap; gap:2px 10px; }
 .sex span { display:inline-flex; align-items:center; gap:4px; }
-.gap { margin:14px 0 0; padding-top:12px; border-top:1px solid var(--line); font-size:16px; }
-.gap b { font-size:20px; }
 .bd .line.b { stroke:var(--birth); }
 .bd .line.d { stroke:var(--death); }
 .bd .line.ly { stroke:var(--muted); stroke-width:2; stroke-dasharray:5 4; }
@@ -74,7 +81,7 @@ CSS = """
 .tw a { font-weight:500; }
 .tw tr.me td { background:var(--chip); font-weight:700; }
 .note { font-size:13px; color:var(--muted); margin:8px 0 0; }
-.mhead select { font:inherit; font-size:17px; font-weight:700; padding:2px 8px; margin-left:2px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
+.mhead select { font:inherit; font-size:17px; font-weight:700; padding:2px 8px; margin-left:-2px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
 .seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:2px; gap:2px; margin:2px 0 4px; }
 .seg button { font:inherit; font-size:14px; border:0; background:none; color:var(--muted); padding:4px 12px; border-radius:999px; cursor:pointer; }
 .seg button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
@@ -105,6 +112,13 @@ JS = """<script>
     });
   });
 
+  // 換縣市的格子
+  var pb = document.getElementById("pickbtn"), pp = document.getElementById("pickpanel");
+  function setPick(open) { pp.hidden = !open; pb.setAttribute("aria-expanded", open); }
+  pb.addEventListener("click", function (ev) { ev.stopPropagation(); setPick(pp.hidden); });
+  document.addEventListener("click", function (ev) { if (!pp.hidden && !pp.contains(ev.target)) setPick(false); });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") setPick(false); });
+
   var D = JSON.parse(document.getElementById("bd-data").textContent);
   var cur = D.m.length - 1, key = "b";
   function f(x) { return x.toLocaleString("en-US"); }
@@ -112,7 +126,6 @@ JS = """<script>
   function B(a) { return a[0] + a[1]; }
   function Dd(a) { return a[2] + a[3]; }
   function pct(v, p) { if (!p) return ""; var d = (v - p) / p * 100; return (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + Math.abs(d).toFixed(1) + "%"; }
-  function gap(b, d) { var g = b - d; return g < 0 ? "死亡比出生多 <b>" + f(-g) + "</b> 人，人口自然減少" : "出生比死亡多 <b>" + f(g) + "</b> 人，人口自然增加"; }
 
   // 單月：選過去 36 個月
   var box = document.getElementById("mbox");
@@ -129,7 +142,6 @@ JS = """<script>
         el.querySelector(".j-yoy").textContent = y;
         el.querySelector(".yoy").hidden = !y;
       });
-      box.querySelector(".j-gap").innerHTML = gap(B(a), Dd(a));
     }
     document.querySelector(".j-mapmonth").textContent = lab(D.m[i]);
     paint();
@@ -212,14 +224,6 @@ def pct(now, before):
     d = (now - before) / before * 100
     arrow = "▲" if d > 0 else "▼" if d < 0 else "▶"
     return f"{arrow} {abs(d):.1f}%"
-
-
-def gap_text(b, d):
-    """「死亡比出生多 N 人，人口自然減少」。網頁上選月份時，JS 的 gap() 產生同樣的字。"""
-    g = b - d
-    if g < 0:
-        return f"死亡比出生多 <b>{n(-g)}</b> 人，人口自然減少"
-    return f"出生比死亡多 <b>{n(g)}</b> 人，人口自然增加"
 
 
 def ym_label(ym):
@@ -356,9 +360,6 @@ def page_body(name, d):
         rows = [d[f"{yy}-{i:02d}"] for i in range(1, m + 1) if f"{yy}-{i:02d}" in d]
         return [sum(r[j] for r in rows) for j in range(4)] if rows else None
 
-    def gap_line(b, dd, lead):
-        return f'<p class="gap">{lead}<span class="j-gap">{gap_text(b, dd)}</span></p>'
-
     def duo(a, la, cmp):
         def one(key, cls, v, before, sex):
             yoy = f'<div class="yoy"{"" if before else " hidden"}>比{cmp} <b class="j-yoy">{pct(v, before)}</b></div>'
@@ -373,12 +374,11 @@ def page_body(name, d):
     pick = [mm for mm in months[-36:]][::-1]
     opts = "".join(f'<option value="{mm}"{" selected" if mm == last else ""}>{ym_label(mm)}</option>' for mm in pick)
     hero = duo(a, la, "去年同月")
-    out = [f'<section class="box" id="mbox"><h2 class="mhead">{where}<select id="mpick" aria-label="選月份">{opts}</select></h2>'
-           f'{hero}{gap_line(births(a), deaths(a), "這個月")}</section>']
+    out = [f'<section class="box" id="mbox"><h2 class="mhead"><select id="mpick" aria-label="選月份">{opts}</select></h2>'
+           f'{hero}</section>']
     cy, ly = ytd(y), ytd(y - 1)
     if m > 1 and cy:
-        out.append(f'<section class="box"><h2>{where}{y} 年 1～{m} 月累計</h2>{duo(cy, ly, "去年同期")}'
-                   f'{gap_line(births(cy), deaths(cy), "今年到目前，")}</section>')
+        out.append(f'<section class="box"><h2>今年累計</h2>{duo(cy, ly, "去年同期")}</section>')
 
     # 1. 每月出生（男女）
     recent = months[-24:]
@@ -454,10 +454,23 @@ def map_box(data, last, current, prefix):
             f'<details><summary>看各縣市數字</summary>{county_table(data, last, current, prefix)}</details></section>')
 
 
+REGIONS = [("北部", ["臺北市", "新北市", "基隆市", "桃園市", "新竹市", "新竹縣", "宜蘭縣"]),
+           ("中部", ["苗栗縣", "臺中市", "彰化縣", "南投縣", "雲林縣"]),
+           ("南部", ["嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣"]),
+           ("東部・離島", ["花蓮縣", "臺東縣", "澎湖縣", "金門縣", "連江縣"])]
+
+
 def picker(current, prefix):
-    opts = f'<option value="{prefix}"{" selected" if current == "全台" else ""}>全台</option>' + "".join(
-        f'<option value="{prefix}{slug}/"{" selected" if c == current else ""}>{c}</option>' for c, slug in COUNTIES)
-    return (f'<label class="pick">看哪裡：<select onchange="location.href=this.value" aria-label="選縣市">{opts}</select></label>')
+    """換縣市：平常只顯示「高雄市 ⌄」，點開是依地區分組的縣市格子。"""
+    def a(c, url):
+        on = ' class="on" aria-current="page"' if c == current else ""
+        return f'<a href="{url}"{on}>{c}</a>'
+    groups = f'<div class="g">{a("全台", prefix or "./")}</div>' + "".join(
+        f'<h4>{r}</h4><div class="g">' + "".join(a(c, f"{prefix}{SLUG[c]}/") for c in cs) + "</div>"
+        for r, cs in REGIONS)
+    return (f'<div class="pick"><button type="button" id="pickbtn" aria-expanded="false" aria-controls="pickpanel">'
+            f'{current}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><small>換縣市</small></button>'
+            f'<nav class="pickpanel" id="pickpanel" aria-label="選縣市" hidden>{groups}</nav></div>')
 
 
 def page_data(data, name):
