@@ -11,7 +11,7 @@ ICONS = """<link rel="icon" href="/favicon.ico" sizes="any">
 # 選單項目：(代號, 名稱, 網址)；網址空白代表即將推出
 MENU = [
     ("home", "首頁", "/"),
-    ("reservoir", "台灣水庫水情", "/reservoir/"),
+    ("reservoir", "水庫水情", "/reservoir/"),
     ("births", "出生與死亡", "/births/"),
     ("travel", "出入境人次", ""),
     ("about", "關於本站", "/about/"),
