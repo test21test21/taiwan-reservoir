@@ -344,9 +344,9 @@ def reservoir_page(r, info, hist, alert, peers, updated):
     image = "reservoir/og.png"
     return f"""{head(title, desc, url, image)}
 <body>
-{site_nav.nav("reservoir", '<a class="sitesection" href="../">台灣水庫水情</a>')}
+{site_nav.nav("reservoir", '<a class="sitesection" href="../">水庫水情</a>')}
 <div class="wrap">
-  <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">台灣水庫水情</a> › {e(r["region"])}</nav>
+  <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">水庫水情</a> › {e(r["region"])}</nav>
   <h1>{e(name)}即時蓄水率</h1>
   <p class="lead">{e(r["region"])}・{e(when)} 觀測・資料更新 {e(updated)}</p>
   <section class="box hero{" has-tank" if tank else ""}">
@@ -416,7 +416,7 @@ def main(out):
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
         ("index.html", site_nav.nav("home")),
-        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">台灣水庫水情</h1>')),
+        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">水庫水情</h1>')),
     ]
     for f, bar in pages:
         if (out / f).exists():
