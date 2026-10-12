@@ -91,16 +91,10 @@ a { color: var(--fg); text-underline-offset: 3px; }
 #map .maplegend text { font-family: var(--f-body); fill: #e8ebee; dominant-baseline: central; }
 #map .maplegend .lgt { font-size: 24px; font-weight: 700; dominant-baseline: hanging; }
 #map .maplegend .lgi { font-size: 24px; font-weight: 500; }
+#map .maplegend .dot-sw { fill-opacity: var(--dot-op); }
+#map .wm { font-family: var(--f-body); font-size: 26px; font-weight: 700; fill: #4a4f55; letter-spacing: .02em; pointer-events: none; } /* 深灰網址浮水印 */
 #map .dot { cursor: pointer; }
 #map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #e8ebee; paint-order: stroke; stroke: rgba(27,29,32,.85); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 8px; align-items: center; }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
-.legend { display: grid; gap: 6px; }
-.legend .row { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
-.legend .row b { font-weight: 700; color: var(--fg); min-width: 4.5em; }
-.legend .bin { width: 14px; height: 14px; }
-.legend .size { display: inline-flex; align-items: center; gap: 4px; }
-.legend .size i { background: #8a9aa8; margin: 0; }
 .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
 details.lights { margin-top: 6px; font-size: 13px; }
 details.lights summary { cursor: pointer; padding-block: 8px; color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
@@ -177,7 +171,6 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       <div class="mapframe">
         <svg id="map" role="img" aria-label="各縣市官方水情燈號與水庫蓄水率地圖" hidden></svg>
       </div>
-      <div class="legend" id="legend"></div>
       <p class="note">圓圈是水庫，圓圈面積＝水庫有效容量；縣市底色是水利署公告的水情燈號。點圓圈可看該水庫。</p>
       <details class="lights"><summary>各燈號代表什麼？</summary><ul id="light-list"></ul></details>
     </section>
@@ -214,7 +207,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 (function () {
   "use strict";
   var LOW = 40;
-  var TABS = ["全部", "北部", "中部", "南部", "東部", "澎湖", "金門", "馬祖"];
+  var TABS = ["全部", "北部", "中部", "南部", "東部", "離島"];
+  var ISLANDS = ["澎湖", "金門", "馬祖"]; // 這三區在清單分頁合併成「離島」
+  function inTab(r, t) { return t === "全部" || r.region === t || (t === "離島" && ISLANDS.indexOf(r.region) >= 0); }
 
   // 官方水情燈號（顯示的就是官方燈號本身，所以照官方用色）。fill 是地圖上縣市的底色。
   var LIGHTS = {
@@ -231,7 +226,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     { name: "中部", tabs: ["中部"], counties: ["苗栗縣", "臺中市", "彰化縣", "南投縣", "雲林縣"] },
     { name: "南部", tabs: ["南部"], counties: ["嘉義市", "嘉義縣", "臺南市", "高雄市", "屏東縣"] },
     { name: "東部", tabs: ["東部"], counties: ["宜蘭縣", "花蓮縣", "臺東縣"] },
-    { name: "離島", tabs: ["澎湖", "金門", "馬祖"], counties: ["澎湖縣", "金門縣", "連江縣"] }
+    { name: "離島", tabs: ["離島"], islands: ISLANDS, counties: ["澎湖縣", "金門縣", "連江縣"] }
   ];
 
   // 縣市底圖：scripts/build_map.py 由 taiwan-atlas（內政部村里界圖）產生的 SVG 路徑
@@ -322,12 +317,16 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var a = state.alert;
     var head = '<div class="regions-head"><h2>各區水情</h2><span>' +
       (a && a.published ? "燈號：水利署 " + dateText(a.published) + " 公告" : "燈號資料暫時讀不到") + '</span></div>';
-    var rows = AREAS.map(function (area) {
+    var rows = AREAS.filter(function (area) { // 沒有任何水庫的區（例如東部）就不列
+      return state.data.some(function (r) { return inTab(r, area.tabs[0]); });
+    }).map(function (area) {
       var al = areaLight(area);
       var L = al.light ? LIGHTS[al.light] : null;
       var res;
       if (area.name === "離島") {
-        res = area.tabs.map(function (t) {
+        res = area.islands.filter(function (t) {
+          return state.data.some(function (r) { return r.region === t; });
+        }).map(function (t) {
           var rs = state.data.filter(function (r) { return r.region === t && ok(r); });
           var s = 0, c = 0; rs.forEach(function (r) { s += r.storage; c += r.capacity; });
           return mini(t, c ? s / c * 100 : null, c && s / c * 100 < LOW, !c);
@@ -349,10 +348,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   }
 
   function renderLegend() {
-    // 縣市燈號的圖例畫在地圖右下角海面（renderMap）；這裡只列蓄水率
-    $("legend").innerHTML = '<div class="row"><b>水庫蓄水率</b>' + BINS.map(function (b) {
-        return '<span><i class="bin" style="background:' + b.color + '"></i>' + b.label + '</span>';
-      }).join("") + '</div>';
+    // 兩個圖例都畫在地圖海面上（renderMap）：蓄水率在左上、水情燈號在右下
     $("light-list").innerHTML = Object.keys(LIGHTS).map(function (k) {
       return '<li><i style="background:' + LIGHTS[k].color + '"></i><b>' + LIGHTS[k].name + '</b>　' + LIGHTS[k].desc + '</li>';
     }).join("");
@@ -400,6 +396,19 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       lg.appendChild(el("text", { "class": "lgi", x: 34, y: y + 12 }, LIGHTS[k].name + " " + LIGHTS[k].short));
     });
     svg.appendChild(lg);
+
+    // 水庫蓄水率圖例：放在左上角台灣海峽的海面
+    var sg = el("g", { "class": "maplegend", transform: "translate(22 24)" });
+    sg.appendChild(el("text", { "class": "lgt", x: 0, y: 0 }, "水庫蓄水率"));
+    BINS.forEach(function (b, i) {
+      var y = 42 + i * 38;
+      sg.appendChild(el("circle", { cx: 12, cy: y + 12, r: 11, fill: b.color, stroke: b.color, "stroke-width": 1.5, "class": "dot-sw" }));
+      sg.appendChild(el("text", { "class": "lgi", x: 34, y: y + 12 }, b.label));
+    });
+    svg.appendChild(sg);
+
+    // 浮水印：左下角海面放網址，截圖分享時看得出出處
+    svg.appendChild(el("text", { "class": "wm", x: 16, y: MAP.height - 24 }, "taiwandata.info"));
 
     var list = state.data.filter(function (r) { return COORDS[r.id] && r.capacity; })
       .sort(function (a, b) { return b.capacity - a.capacity; });
@@ -479,7 +488,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   }
 
   function renderCards() {
-    var list = state.data.filter(function (r) { return r.name && (state.region === "全部" || r.region === state.region); });
+    var list = state.data.filter(function (r) { return r.name && inTab(r, state.region); });
     list.sort(function (a, b) {
       if (ok(a) !== ok(b)) return ok(a) ? -1 : 1;
       if (state.sort === "low") return (a.percent || 0) - (b.percent || 0);
@@ -503,9 +512,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   }
 
   function renderTabs() {
-    var present = {};
-    state.data.forEach(function (r) { present[r.region] = 1; });
-    $("tabs").innerHTML = TABS.filter(function (g) { return g === "全部" || present[g]; }).map(function (g) {
+    $("tabs").innerHTML = TABS.filter(function (g) { return g === "全部" || state.data.some(function (r) { return inTab(r, g); }); }).map(function (g) {
       return '<button type="button" data-r="' + g + '" aria-pressed="' + (g === state.region) + '">' + g + '</button>';
     }).join("");
   }
@@ -516,7 +523,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var r = state.data.filter(function (x) { return x.id === id; })[0];
     if (!r) return;
     state.sel = id;
-    if (state.region !== "全部" && state.region !== r.region) state.region = "全部";
+    if (!inTab(r, state.region)) state.region = "全部";
     renderTabs(); renderCards(); renderMap();
     var el = $("r-" + id);
     if (el) el.scrollIntoView({ behavior: smooth(), block: "center" });
@@ -525,7 +532,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   $("regions").addEventListener("click", function (e) {
     var b = e.target.closest(".region"); if (!b) return;
     var t = b.dataset.tab;
-    state.region = TABS.indexOf(t) >= 0 && state.data.some(function (r) { return r.region === t; }) ? t : "全部";
+    state.region = TABS.indexOf(t) >= 0 && state.data.some(function (r) { return inTab(r, t); }) ? t : "全部";
     renderTabs(); renderCards();
     $("listhead").scrollIntoView({ behavior: smooth(), block: "start" });
   });
