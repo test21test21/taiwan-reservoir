@@ -29,9 +29,9 @@ ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島�
 
 # 出生藍、死亡橘；男藍、女粉（色盲也分得出來；深色模式另一組）
 CSS = """
-:root { --birth:#1f7ad6; --death:#cf6526; --male:#2a7fd4; --female:#d4508f; --y1:#2e9e5b; --y2:#9a7bd1; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; --y1:#4cbb78; --y2:#a98ee0; } }
-:root[data-theme="dark"] { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; --y1:#4cbb78; --y2:#a98ee0; }
+:root { --birth:#1f7ad6; --death:#cf6526; --male:#2a7fd4; --female:#d4508f; --y1:#2e9e5b; --y2:#e2a700; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; --y1:#4cbb78; --y2:#f0c43a; } }
+:root[data-theme="dark"] { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; --y1:#4cbb78; --y2:#f0c43a; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top > .box, .grid > .box { margin-top:12px; }
@@ -61,7 +61,7 @@ CSS = """
 .sex span { display:inline-flex; align-items:center; gap:4px; }
 .bd .line.b { stroke:var(--birth); }
 .bd .line.d { stroke:var(--death); }
-/* 前兩年：去年綠、前年紫（實線） */
+/* 前兩年：去年綠、前年黃（實線） */
 .bd .line.b1, .bd .line.d1 { stroke:var(--y1); stroke-width:2; }
 .bd .line.b2, .bd .line.d2 { stroke:var(--y2); stroke-width:2; }
 .bd .dot.b { fill:var(--birth); }
