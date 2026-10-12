@@ -50,8 +50,6 @@ CSS = """
 .duo .yoy b { font-weight:500; color:var(--fg); }
 .sex { display:flex; flex-wrap:wrap; gap:2px 10px; }
 .sex span { display:inline-flex; align-items:center; gap:4px; }
-.gap { margin:14px 0 0; padding-top:12px; border-top:1px solid var(--line); font-size:16px; }
-.gap b { font-size:20px; }
 .bd .line.b { stroke:var(--birth); }
 .bd .line.d { stroke:var(--death); }
 .bd .line.ly { stroke:var(--muted); stroke-width:2; stroke-dasharray:5 4; }
@@ -112,7 +110,6 @@ JS = """<script>
   function B(a) { return a[0] + a[1]; }
   function Dd(a) { return a[2] + a[3]; }
   function pct(v, p) { if (!p) return ""; var d = (v - p) / p * 100; return (d > 0 ? "▲ " : d < 0 ? "▼ " : "▶ ") + Math.abs(d).toFixed(1) + "%"; }
-  function gap(b, d) { var g = b - d; return g < 0 ? "死亡比出生多 <b>" + f(-g) + "</b> 人，人口自然減少" : "出生比死亡多 <b>" + f(g) + "</b> 人，人口自然增加"; }
 
   // 單月：選過去 36 個月
   var box = document.getElementById("mbox");
@@ -129,7 +126,6 @@ JS = """<script>
         el.querySelector(".j-yoy").textContent = y;
         el.querySelector(".yoy").hidden = !y;
       });
-      box.querySelector(".j-gap").innerHTML = gap(B(a), Dd(a));
     }
     document.querySelector(".j-mapmonth").textContent = lab(D.m[i]);
     paint();
@@ -212,14 +208,6 @@ def pct(now, before):
     d = (now - before) / before * 100
     arrow = "▲" if d > 0 else "▼" if d < 0 else "▶"
     return f"{arrow} {abs(d):.1f}%"
-
-
-def gap_text(b, d):
-    """「死亡比出生多 N 人，人口自然減少」。網頁上選月份時，JS 的 gap() 產生同樣的字。"""
-    g = b - d
-    if g < 0:
-        return f"死亡比出生多 <b>{n(-g)}</b> 人，人口自然減少"
-    return f"出生比死亡多 <b>{n(g)}</b> 人，人口自然增加"
 
 
 def ym_label(ym):
@@ -356,9 +344,6 @@ def page_body(name, d):
         rows = [d[f"{yy}-{i:02d}"] for i in range(1, m + 1) if f"{yy}-{i:02d}" in d]
         return [sum(r[j] for r in rows) for j in range(4)] if rows else None
 
-    def gap_line(b, dd, lead):
-        return f'<p class="gap">{lead}<span class="j-gap">{gap_text(b, dd)}</span></p>'
-
     def duo(a, la, cmp):
         def one(key, cls, v, before, sex):
             yoy = f'<div class="yoy"{"" if before else " hidden"}>比{cmp} <b class="j-yoy">{pct(v, before)}</b></div>'
@@ -374,11 +359,10 @@ def page_body(name, d):
     opts = "".join(f'<option value="{mm}"{" selected" if mm == last else ""}>{ym_label(mm)}</option>' for mm in pick)
     hero = duo(a, la, "去年同月")
     out = [f'<section class="box" id="mbox"><h2 class="mhead">{where}<select id="mpick" aria-label="選月份">{opts}</select></h2>'
-           f'{hero}{gap_line(births(a), deaths(a), "這個月")}</section>']
+           f'{hero}</section>']
     cy, ly = ytd(y), ytd(y - 1)
     if m > 1 and cy:
-        out.append(f'<section class="box"><h2>{where}{y} 年 1～{m} 月累計</h2>{duo(cy, ly, "去年同期")}'
-                   f'{gap_line(births(cy), deaths(cy), "今年到目前，")}</section>')
+        out.append(f'<section class="box"><h2>{where}今年累計</h2>{duo(cy, ly, "去年同期")}</section>')
 
     # 1. 每月出生（男女）
     recent = months[-24:]
