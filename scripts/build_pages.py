@@ -342,8 +342,20 @@ def reservoir_page(r, info, hist, alert, peers, updated):
     others = f'<section class="box"><h2>{e(r["region"])}其他水庫</h2><ul class="links">{others}</ul></section>' if others else ""
 
     image = "reservoir/og.png"
+    ld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "Dataset", "name": f"{name}即時蓄水率", "url": url, "description": desc,
+         "isAccessibleForFree": True, "inLanguage": "zh-Hant-TW", "license": "https://data.gov.tw/license",
+         "spatialCoverage": {"@type": "Place", "name": f"{name}（{r['region']}）"},
+         "creator": {"@type": "Organization", "name": "經濟部水利署", "url": "https://www.wra.gov.tw/"},
+         "variableMeasured": ["蓄水率", "有效蓄水量", "水位"]},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Taiwan Data 台灣數據", "item": f"{SITE}/"},
+            {"@type": "ListItem", "position": 2, "name": "台灣水庫水情", "item": f"{SITE}/reservoir/"},
+            {"@type": "ListItem", "position": 3, "name": name, "item": url}]},
+    ]}
     return f"""{head(title, desc, url, image)}
 <body>
+<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
 {site_nav.nav("reservoir", '<a class="sitesection" href="../">台灣水庫水情</a>')}
 <div class="wrap">
   <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">台灣水庫水情</a> › {e(r["region"])}</nav>

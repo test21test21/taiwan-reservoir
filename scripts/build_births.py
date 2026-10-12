@@ -481,6 +481,26 @@ def page_data(data, name):
                       ensure_ascii=False, separators=(",", ":"))
 
 
+def structured(name, url, last, first):
+    """給 Google 看的結構化資料：這頁是什麼資料集、在網站哪一層（JSON-LD，畫面上看不到）。"""
+    where = "台灣" if name == "全台" else name
+    crumbs = [("Taiwan Data 台灣數據", f"{SITE}/"), ("出生與死亡", f"{SITE}/births/")]
+    if name != "全台":
+        crumbs.append((name, url))
+    data = {"@context": "https://schema.org", "@graph": [
+        {"@type": "Dataset", "name": f"{where}每月出生與死亡人數", "url": url,
+         "description": f"{where}每月出生、死亡人數（分男女），{first[:4]} 年 {int(first[5:])} 月起，資料來自內政部戶政司動態資料統計表，依戶籍登記月份計算。",
+         "temporalCoverage": f"{first}/{last}", "spatialCoverage": {"@type": "Place", "name": where},
+         "isAccessibleForFree": True, "inLanguage": "zh-Hant-TW",
+         "license": "https://data.gov.tw/license",
+         "creator": {"@type": "Organization", "name": "內政部戶政司", "url": "https://www.ris.gov.tw/"},
+         "variableMeasured": ["出生人數", "死亡人數"]},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": i + 1, "name": nm, "item": u} for i, (nm, u) in enumerate(crumbs)]},
+    ]}
+    return f'<script type="application/ld+json">{json.dumps(data, ensure_ascii=False)}</script>'
+
+
 def build(out, head, nav):
     if not DATA.exists():
         return []
@@ -499,8 +519,12 @@ def build(out, head, nav):
         url = f"{SITE}/births/{slug + '/' if slug else ''}"
         prefix = "" if not slug else "../"
         extra = map_box(data, last, name, prefix)
+        summary = (f"{ym_label(last)}{where}出生 {n(births(a))} 人（男 {n(a[0])}、女 {n(a[1])}），"
+                   f"死亡 {n(deaths(a))} 人（男 {n(a[2])}、女 {n(a[3])}）。"
+                   + (f"{y} 年 1～{m} 月累計出生 {n(births(cy))} 人、死亡 {n(deaths(cy))} 人。" if cy else ""))
         page = f"""{head(title, desc, url, "og.png")}
 <body>
+{structured(name, url, last, min(data[name]))}
 <style>{CSS}</style>
 {nav(prefix)}
 <div class="wrap">
@@ -508,6 +532,7 @@ def build(out, head, nav):
   <div class="top">{"".join(blocks[:2])}</div>
   <div class="grid">{extra}{"".join(blocks[2:])}</div>
   <footer>
+    <div>{summary}</div>
     <div>資料來源：內政部戶政司開放資料「動態資料統計表」（各村里每月出生、死亡數，本站加總成縣市與全台）。數字依戶籍登記月份計算，不是實際出生或死亡的月份；每天檢查一次，通常每月上旬公布上個月。</div>
     <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>
   </footer>
