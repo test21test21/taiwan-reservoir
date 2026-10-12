@@ -61,8 +61,11 @@ CSS = """
 .sex span { display:inline-flex; align-items:center; gap:4px; }
 .bd .line.b { stroke:var(--birth); }
 .bd .line.d { stroke:var(--death); }
-.bd .line.ly { stroke:var(--muted); stroke-width:2; stroke-dasharray:5 4; }
-.bd .line.l2 { stroke:var(--muted); stroke-width:1.5; stroke-dasharray:1.5 4; opacity:.8; }
+/* 前兩年：同色系、越早越淡（實線） */
+.bd .line.b1 { stroke:color-mix(in srgb, var(--birth) 50%, var(--surface)); stroke-width:2; }
+.bd .line.b2 { stroke:color-mix(in srgb, var(--birth) 30%, var(--surface)); stroke-width:2; }
+.bd .line.d1 { stroke:color-mix(in srgb, var(--death) 50%, var(--surface)); stroke-width:2; }
+.bd .line.d2 { stroke:color-mix(in srgb, var(--death) 30%, var(--surface)); stroke-width:2; }
 .bd .dot.b { fill:var(--birth); }
 .bd .dot.d { fill:var(--death); }
 .bd .lab { font-size:12px; font-weight:700; fill:var(--fg); }
@@ -73,8 +76,10 @@ CSS = """
 .legend { flex-wrap:wrap; }
 .legend .k.b { border-color:var(--birth); }
 .legend .k.d { border-color:var(--death); }
-.legend .k.ly { border-top:2px dashed var(--muted); }
-.legend .k.l2 { border-top:2px dotted var(--muted); }
+.legend .k.b1 { border-color:color-mix(in srgb, var(--birth) 50%, var(--surface)); }
+.legend .k.b2 { border-color:color-mix(in srgb, var(--birth) 30%, var(--surface)); }
+.legend .k.d1 { border-color:color-mix(in srgb, var(--death) 50%, var(--surface)); }
+.legend .k.d2 { border-color:color-mix(in srgb, var(--death) 30%, var(--surface)); }
 .legend .sq { width:12px; height:12px; border-radius:3px; display:inline-block; margin-left:8px; }
 .legend .sq:first-child { margin-left:0; }
 .tw .neg { color:var(--muted); }
@@ -245,6 +250,8 @@ def nice_scale(lo, hi, ticks=4, zero=False):
     raw = span / ticks
     mag = 10 ** (len(str(int(raw))) - 1)
     step = next(s * mag for s in (1, 2, 2.5, 5, 10) if s * mag >= raw)
+    if hi >= 10000:  # 軸寫成「x.x 萬」，格線要是 1,000 的倍數才不會四捨五入走樣
+        step = next(s * 1000 for s in (1, 2, 5, 10, 20, 50) if s * 1000 >= step)
     lo = (lo // step) * step
     hi = -(-hi // step) * step
     if hi == lo:
@@ -252,10 +259,11 @@ def nice_scale(lo, hi, ticks=4, zero=False):
     return lo, hi, step
 
 
-def short(v):
+def short(v, wan=False):
+    """座標軸數字：圖上最大值到 1 萬以上時一律寫「x.x 萬」（不到 1 萬寫 0.x 萬）。"""
     v = int(v)
-    if v >= 10000:
-        return f"{v / 10000:g} 萬"
+    if wan:
+        return "0" if v == 0 else f"{v / 10000:.1f} 萬"
     return n(v)
 
 
@@ -263,10 +271,10 @@ W, H, L, R, T, B = 420, 230, 50, 14, 12, 26
 
 
 def frame(lo, hi, step, Y):
-    out, g = "", lo
+    out, g, wan = "", lo, hi >= 10000
     while g <= hi + 1e-9:
         out += (f'<line x1="{L}" x2="{W - R}" y1="{Y(g):.1f}" y2="{Y(g):.1f}" class="g"/>'
-                f'<text x="{L - 5}" y="{Y(g) + 4:.1f}" text-anchor="end">{short(g)}</text>')
+                f'<text x="{L - 5}" y="{Y(g) + 4:.1f}" text-anchor="end">{short(g, wan)}</text>')
         g += step
     return out
 
@@ -392,21 +400,20 @@ def page_body(name, d):
     def yoy_chart(title, fn, cls, word):
         yrs = [yy for yy in (y, y - 1, y - 2) if any(f"{yy}-{i:02d}" in d for i in range(1, 13))]
         series = []
-        for yy, c in zip(yrs, (cls, "ly", "l2")):
+        cs = (cls, cls + "1", cls + "2")
+        for yy, c in zip(yrs, cs):
             series.append((c, [fn(d[f"{yy}-{i:02d}"]) if f"{yy}-{i:02d}" in d else None for i in range(1, 13)]))
         legend = '<p class="legend">' + "".join(
-            f'<span class="k {c}"></span>{yy} 年' for yy, c in zip(yrs, (cls, "ly", "l2"))) + "</p>"
+            f'<span class="k {c}"></span>{yy} 年' for yy, c in zip(yrs, cs)) + "</p>"
         tips = []
         for i in range(1, 13):
             parts = [f"{yy} 年 {n(fn(d[f'{yy}-{i:02d}']))}" for yy in yrs if f"{yy}-{i:02d}" in d]
             tips.append(f"{i} 月{word}：" + "、".join(parts))
         labels = [(i - 1, f"{i}月") for i in (1, 3, 5, 7, 9, 11)]
-        return box(title, legend, lines_chart(12, series, labels, tips), f"{where}{title}折線圖",
+        return box(title, legend, lines_chart(12, series[::-1], labels, tips), f"{where}{title}折線圖",
                    "滑過或點圖看每月數字")
-    out.append(yoy_chart("每月出生：跟前兩年比", births, "b", "出生"))
-    out.append(yoy_chart("每月死亡：跟前兩年比", deaths, "d", "死亡"))
 
-    # 4. 最近 36 個月出生 vs 死亡
+    # 2. 最近 36 個月出生 vs 死亡（寬螢幕排在右上）
     recent = months[-36:]
     out.append(box(
         f"出生與死亡：最近 {len(recent)} 個月", '<p class="legend"><span class="k b"></span>出生<span class="k d"></span>死亡</p>',
@@ -414,6 +421,8 @@ def page_body(name, d):
                     month_ticks(recent), [f"{ym_label(mm)}：出生 {n(births(get(mm)))}、死亡 {n(deaths(get(mm)))}" for mm in recent],
                     end_labels={"b": "出生", "d": "死亡"}),
         f"{where}最近 {len(recent)} 個月每月出生與死亡人數折線圖", "滑過或點圖看每月數字"))
+    out.append(yoy_chart("每月出生：跟前兩年比", births, "b", "出生"))
+    out.append(yoy_chart("每月死亡：跟前兩年比", deaths, "d", "死亡"))
 
     return out, last, a, cy
 
