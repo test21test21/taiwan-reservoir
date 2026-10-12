@@ -39,17 +39,13 @@ CSS = """
 @media (min-width:860px) { .top { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr 1fr; } .top, .grid { column-gap:16px; row-gap:0; } }
 @media (min-width:1360px) { .grid { grid-template-columns:1fr 1fr 1fr; } }
 .chart.bd { max-height:none; }
-.pick { position:relative; margin:6px 0 2px; }
-#pickbtn { display:inline-flex; align-items:center; gap:8px; font:inherit; font-size:24px; font-weight:700; color:var(--fg); background:none; border:0; padding:4px 0; cursor:pointer; }
-#pickbtn svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
-#pickbtn small { font-size:14px; font-weight:400; color:var(--muted); }
-#pickbtn:hover small { color:var(--fg); text-decoration:underline; }
-.pickpanel { position:absolute; z-index:40; top:100%; left:0; width:min(420px, calc(100vw - 32px)); background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px rgba(12,30,46,.16); padding:12px; }
-.pickpanel h4 { margin:10px 0 6px; font-size:12px; font-weight:500; color:var(--muted); }
-.pickpanel .g { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.pickpanel a { text-align:center; padding:8px 0; border-radius:10px; background:var(--chip); color:var(--fg); text-decoration:none; font-size:15px; }
-.pickpanel a:hover { outline:1.5px solid var(--fg); }
-.pickpanel a.on { background:var(--fg); color:var(--bg); font-weight:700; }
+.chips { display:flex; gap:8px; overflow-x:auto; margin:8px -16px 0; padding:4px 16px 6px; scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.chips::-webkit-scrollbar { display:none; }
+.chips a { flex:none; padding:7px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--fg); text-decoration:none; font-size:15px; line-height:1.3; }
+.chips a:hover { border-color:var(--fg); }
+.chips a.on { background:var(--fg); border-color:var(--fg); color:var(--bg); font-weight:700; }
+@media (min-width:860px) { .chips { flex-wrap:wrap; overflow:visible; margin-inline:0; padding-inline:0; -webkit-mask-image:none; mask-image:none; } }
 .duo { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
 .duo .k { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
 .duo .k i, .sex i { width:10px; height:10px; border-radius:50%; display:inline-block; }
@@ -81,7 +77,7 @@ CSS = """
 .tw a { font-weight:500; }
 .tw tr.me td { background:var(--chip); font-weight:700; }
 .note { font-size:13px; color:var(--muted); margin:8px 0 0; }
-.mhead select { font:inherit; font-size:17px; font-weight:700; padding:2px 8px; margin-left:-2px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
+.mhead select { font:inherit; font-size:17px; font-weight:700; padding:2px 8px; margin-left:2px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--fg); }
 .seg { display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:2px; gap:2px; margin:2px 0 4px; }
 .seg button { font:inherit; font-size:14px; border:0; background:none; color:var(--muted); padding:4px 12px; border-radius:999px; cursor:pointer; }
 .seg button[aria-pressed="true"] { background:var(--fg); color:var(--bg); }
@@ -112,12 +108,9 @@ JS = """<script>
     });
   });
 
-  // 換縣市的格子
-  var pb = document.getElementById("pickbtn"), pp = document.getElementById("pickpanel");
-  function setPick(open) { pp.hidden = !open; pb.setAttribute("aria-expanded", open); }
-  pb.addEventListener("click", function (ev) { ev.stopPropagation(); setPick(pp.hidden); });
-  document.addEventListener("click", function (ev) { if (!pp.hidden && !pp.contains(ev.target)) setPick(false); });
-  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") setPick(false); });
+  // 手機上把目前的縣市標籤捲到看得到的位置
+  var on = document.querySelector("#chips .on"), ch = document.getElementById("chips");
+  if (on && ch.scrollWidth > ch.clientWidth) ch.scrollLeft = on.offsetLeft - ch.clientWidth / 2 + on.offsetWidth / 2;
 
   var D = JSON.parse(document.getElementById("bd-data").textContent);
   var cur = D.m.length - 1, key = "b";
@@ -374,11 +367,11 @@ def page_body(name, d):
     pick = [mm for mm in months[-36:]][::-1]
     opts = "".join(f'<option value="{mm}"{" selected" if mm == last else ""}>{ym_label(mm)}</option>' for mm in pick)
     hero = duo(a, la, "去年同月")
-    out = [f'<section class="box" id="mbox"><h2 class="mhead"><select id="mpick" aria-label="選月份">{opts}</select></h2>'
+    out = [f'<section class="box" id="mbox"><h2 class="mhead">{where}<select id="mpick" aria-label="選月份">{opts}</select></h2>'
            f'{hero}</section>']
     cy, ly = ytd(y), ytd(y - 1)
     if m > 1 and cy:
-        out.append(f'<section class="box"><h2>今年累計</h2>{duo(cy, ly, "去年同期")}</section>')
+        out.append(f'<section class="box"><h2>{where}今年累計</h2>{duo(cy, ly, "去年同期")}</section>')
 
     # 1. 每月出生（男女）
     recent = months[-24:]
@@ -461,16 +454,11 @@ REGIONS = [("北部", ["臺北市", "新北市", "基隆市", "桃園市", "新�
 
 
 def picker(current, prefix):
-    """換縣市：平常只顯示「高雄市 ⌄」，點開是依地區分組的縣市格子。"""
-    def a(c, url):
-        on = ' class="on" aria-current="page"' if c == current else ""
-        return f'<a href="{url}"{on}>{c}</a>'
-    groups = f'<div class="g">{a("全台", prefix or "./")}</div>' + "".join(
-        f'<h4>{r}</h4><div class="g">' + "".join(a(c, f"{prefix}{SLUG[c]}/") for c in cs) + "</div>"
-        for r, cs in REGIONS)
-    return (f'<div class="pick"><button type="button" id="pickbtn" aria-expanded="false" aria-controls="pickpanel">'
-            f'{current}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><small>換縣市</small></button>'
-            f'<nav class="pickpanel" id="pickpanel" aria-label="選縣市" hidden>{groups}</nav></div>')
+    """換縣市：一排縣市標籤，手機左右滑、電腦自動換行；目前的縣市反黑。"""
+    names = ["全台"] + [c for _, cs in REGIONS for c in cs]
+    return '<nav class="chips" id="chips" aria-label="選縣市">' + "".join(
+        f'<a href="{(prefix or "./") if c == "全台" else prefix + SLUG[c] + "/"}"'
+        f'{" class=\"on\" aria-current=\"page\"" if c == current else ""}>{c}</a>' for c in names) + "</nav>"
 
 
 def page_data(data, name):
