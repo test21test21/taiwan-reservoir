@@ -20,6 +20,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import build_births
+import i18n_en
 import site_nav
 
 SITE = "https://taiwandata.info"
@@ -57,6 +58,28 @@ def fmt(n, d=0):
 
 def vol(n):
     return fmt(n, 1 if n is not None and n < 100 else 0)
+
+
+def vol_m(n):
+    """英文版：萬立方公尺換成 million m³。"""
+    if n is None:
+        return "–"
+    v = n / 100
+    return fmt(v, 2 if v < 10 else 1)
+
+
+MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def en_time(iso):
+    if not iso:
+        return ""
+    t = datetime.fromisoformat(iso)
+    return f"{MON[t.month - 1]} {t.day}, {t:%H:%M}"
+
+
+def en_date(d):
+    return f"{MON[int(d[5:7]) - 1]} {int(d[8:10])}" if d else ""
 
 
 def color(p):
@@ -172,9 +195,18 @@ footer { margin-top:32px; font-size:13px; color:var(--muted); display:grid; gap:
 """
 
 
-def head(title, desc, url, image):
+def hreflang(zh_url, en_url):
+    """中英兩版互相標示，搜尋引擎才知道是同一頁的不同語言。"""
+    return (f'<link rel="alternate" hreflang="zh-Hant" href="{zh_url}">\n'
+            f'<link rel="alternate" hreflang="en" href="{en_url}">\n'
+            f'<link rel="alternate" hreflang="x-default" href="{zh_url}">')
+
+
+def head(title, desc, url, image, lang="zh", alt=None):
+    """alt：(中文網址, 英文網址)，有英文版的頁才給。"""
+    en = lang == "en"
     return f"""<!doctype html>
-<html lang="zh-Hant-TW">
+<html lang="{"en" if en else "zh-Hant-TW"}">
 <head>
 <meta charset="utf-8">
 <!-- Google Analytics -->
@@ -186,7 +218,7 @@ def head(title, desc, url, image):
 <link rel="canonical" href="{url}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Taiwan Data 台灣數據">
-<meta property="og:locale" content="zh_TW">
+<meta property="og:locale" content="{"en_US" if en else "zh_TW"}">
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{url}">
@@ -194,6 +226,7 @@ def head(title, desc, url, image):
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+{hreflang(*alt) if alt else ""}
 {site_nav.ICONS}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,7 +238,7 @@ def head(title, desc, url, image):
 CHART_MIN_DAYS = 7  # 資料滿 7 天才畫折線圖，不然只有幾個點不好看
 
 
-def history_chart(rows):
+def history_chart(rows, en=False):
     """過去 30 天蓄水率折線圖（SVG，直接寫進 HTML）。有一年前的資料時，多畫一條灰色虛線「去年同期」。"""
     all_rows = [r for r in rows if r.get("percent")]
     rows = all_rows[-30:]
@@ -252,82 +285,143 @@ def history_chart(rows):
     ticks = sorted({0, len(days) // 2, len(days) - 1})
     xlab = "".join(
         f'<text x="{X(days[i]):.1f}" y="{H - 8}" text-anchor="{"start" if i == 0 else "end" if i == len(days) - 1 else "middle"}">'
-        f'{days[i].month}/{days[i].day}</text>' for i in ticks)
+        f'{en_date(days[i].isoformat()) if en else f"{days[i].month}/{days[i].day}"}</text>' for i in ticks)
     ly_line = f'<path d="{path(last)}" class="ly"/>' if has_last else ""
     dot = f'<circle cx="{X(days[-1]):.1f}" cy="{Y(now[-1]):.1f}" r="4" class="dot"/>'
-    legend = ('<p class="legend"><span class="k now"></span>今年<span class="k ly"></span>去年同期</p>'
-              if has_last else "")
-    return (f'<section class="box"><h2>過去 {len(days)} 天蓄水率</h2>{legend}'
-            f'<svg class="chart" viewBox="0 0 {W} {H}" role="img" aria-label="過去 {len(days)} 天蓄水率折線圖">'
+    legend = ((f'<p class="legend"><span class="k now"></span>{"This year" if en else "今年"}'
+               f'<span class="k ly"></span>{"Same day last year" if en else "去年同期"}</p>') if has_last else "")
+    title = f"Storage over the last {len(days)} days" if en else f"過去 {len(days)} 天蓄水率"
+    return (f'<section class="box"><h2>{title}</h2>{legend}'
+            f'<svg class="chart" viewBox="0 0 {W} {H}" role="img" aria-label="{title}">'
             f'{grid}{ly_line}<path d="{path(now)}" class="line"/>{dot}{xlab}</svg></section>')
 
 
-def history_table(rows):
+def md(d, en=False):
+    """2026-10-13 → 中文 10/13、英文 Oct 13"""
+    return en_date(d) if en else f"{int(d[5:7])}/{int(d[8:10])}"
+
+
+def history_table(rows, en=False):
     rows = [r for r in rows if r.get("percent")][-30:]
     if len(rows) < 2:
         return ""
+    v = vol_m if en else vol
+    flow = (lambda x: fmt(x / 100, 2)) if en else (lambda x: fmt(x, 1))
     body = "".join(
-        f'<tr><td>{int(r["date"][5:7])}/{int(r["date"][8:10])}</td>'
+        f'<tr><td>{md(r["date"], en)}</td>'
         f'<td class="n">{float(r["percent"]):.1f}%</td>'
-        f'<td class="n">{vol(float(r["storage"])) if r.get("storage") else "–"}</td>'
-        f'<td class="n">{fmt(float(r["inflow_daily"]), 1) if r.get("inflow_daily") else "–"}</td></tr>'
+        f'<td class="n">{v(float(r["storage"])) if r.get("storage") else "–"}</td>'
+        f'<td class="n">{flow(float(r["inflow_daily"])) if r.get("inflow_daily") else "–"}</td></tr>'
         for r in reversed(rows)
     )
-    table = ('<table><tr><th>日期</th><th class="n">蓄水率</th><th class="n">蓄水量</th><th class="n">進水量</th></tr>'
-             f'{body}</table><p class="lead">蓄水量、進水量單位：萬立方公尺（約萬噸）</p>')
+    if en:
+        table = ('<table><tr><th>Date</th><th class="n">Storage %</th><th class="n">Storage</th><th class="n">Inflow</th></tr>'
+                 f'{body}</table><p class="lead">Storage and inflow in million m³</p>')
+        summary, h2 = "Daily figures", f"Storage over the last {len(rows)} days"
+    else:
+        table = ('<table><tr><th>日期</th><th class="n">蓄水率</th><th class="n">蓄水量</th><th class="n">進水量</th></tr>'
+                 f'{body}</table><p class="lead">蓄水量、進水量單位：萬立方公尺（約萬噸）</p>')
+        summary, h2 = "看每日數字", f"最近 {len(rows)} 天蓄水率"
     if len(rows) >= CHART_MIN_DAYS:  # 上面已有折線圖，表格收起來
-        return f'<section class="box"><details><summary>看每日數字</summary>{table}</details></section>'
-    return f'<section class="box"><h2>最近 {len(rows)} 天蓄水率</h2>{table}</section>'
+        return f'<section class="box"><details><summary>{summary}</summary>{table}</details></section>'
+    return f'<section class="box"><h2>{h2}</h2>{table}</section>'
 
 
-def reservoir_page(r, info, hist, alert, peers, updated):
-    name, rid = r["name"], r["id"]
-    url = f"{SITE}/reservoir/{rid}/"
-    when = tw_time(r.get("observed_at")) or (r.get("daily_date") or "")[5:].replace("-", "/")
+def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
+    """一座水庫一頁。lang="en" 產生 /en/reservoir/<代碼>/。"""
+    en = lang == "en"
+    rid = r["id"]
+    name = i18n_en.name(rid, r["name"]) if en else r["name"]
+    zh_url, en_url = f"{SITE}/reservoir/{rid}/", f"{SITE}/en/reservoir/{rid}/"
+    url = en_url if en else zh_url
+    region = i18n_en.REGIONS.get(r["region"], r["region"]) if en else r["region"]
+    if en:
+        when = en_time(r.get("observed_at")) or en_date(r.get("daily_date"))
+    else:
+        when = tw_time(r.get("observed_at")) or (r.get("daily_date") or "")[5:].replace("-", "/")
     good = ok(r)
     if good:
         p = r["percent"]
-        title = f"{name}蓄水率 {p:.1f}%（{when} 更新）｜台灣水庫水情"
-        desc = (f"{name}目前蓄水率 {p:.1f}%，有效蓄水量 {vol(r.get('storage'))} 萬立方公尺，"
-                f"有效容量 {vol(r.get('capacity'))} 萬立方公尺（{when} 觀測）。每小時更新，資料來自經濟部水利署。")
+        if en:
+            title = f"{name} Storage {p:.1f}% ({when}) | Taiwan Reservoir Levels"
+            desc = (f"{name}, Taiwan, is at {p:.1f}% of capacity: {vol_m(r.get('storage'))} of {vol_m(r.get('capacity'))} "
+                    f"million m³ effective storage (observed {when}). Updated hourly from Water Resources Agency open data.")
+        else:
+            title = f"{name}蓄水率 {p:.1f}%（{when} 更新）｜台灣水庫水情"
+            desc = (f"{name}目前蓄水率 {p:.1f}%，有效蓄水量 {vol(r.get('storage'))} 萬立方公尺，"
+                    f"有效容量 {vol(r.get('capacity'))} 萬立方公尺（{when} 觀測）。每小時更新，資料來自經濟部水利署。")
         today = (r.get("observed_at") or "")[:10]
         prev = [x for x in hist if x.get("percent") and x["date"] < today]
         change = ""
         if prev:
             d = round(p - float(prev[-1]["percent"]), 1)
             cls, arrow = ("up", "▲") if d > 0 else ("down", "▼") if d < 0 else ("flat", "▶")
-            change = f'<span class="delta">比昨天 <b class="{cls}">{arrow} {abs(d):.1f}%</b></span>'
+            change = f'<span class="delta">{"vs yesterday" if en else "比昨天"} <b class="{cls}">{arrow} {abs(d):.1f}%</b></span>'
         lvl = max(0, min(100, p))
         wc = next(c for m, c in TANK if p >= m)
         tank = (f'<div class="tank{" deep" if p >= 58 else ""}" style="--p:{lvl:.1f}%;--wc:{wc}">'
                 f'<div class="pct">{p:.1f}<small>%</small></div>{change}</div>')
-        big = f'<div class="lead">有效蓄水量 {vol(r.get("storage"))} / {vol(r.get("capacity"))} 萬立方公尺</div>'
+        if en:
+            big = f'<div class="lead">Effective storage {vol_m(r.get("storage"))} / {vol_m(r.get("capacity"))} million m³</div>'
+        else:
+            big = f'<div class="lead">有效蓄水量 {vol(r.get("storage"))} / {vol(r.get("capacity"))} 萬立方公尺</div>'
     else:
-        title = f"{name}即時水情｜台灣水庫水情"
-        desc = f"{name}的水位、進出水量與基本資料，每小時更新，資料來自經濟部水利署。"
-        msg = "官方數字疑似有誤，暫不顯示蓄水率" if r.get("suspect") else "水利署目前沒有提供這座水庫的蓄水率"
+        if en:
+            title = f"{name} Live Conditions | Taiwan Reservoir Levels"
+            desc = f"Water level, inflow and facts for {name}, Taiwan. Updated hourly from Water Resources Agency open data."
+            msg = ("The official figure looks wrong, so storage % is hidden for now" if r.get("suspect")
+                   else "The Water Resources Agency doesn't publish a storage % for this reservoir")
+        else:
+            title = f"{name}即時水情｜台灣水庫水情"
+            desc = f"{name}的水位、進出水量與基本資料，每小時更新，資料來自經濟部水利署。"
+            msg = "官方數字疑似有誤，暫不顯示蓄水率" if r.get("suspect") else "水利署目前沒有提供這座水庫的蓄水率"
         big = f'<div class="pct none">{msg}</div>'
         tank = ""
 
     stats = []
-    for key, label, unit, d in [
-        ("water_level", "水位", "公尺", 2), ("full_level", "滿水位", "公尺", 1),
-        ("inflow_daily", "昨日進水量", "萬噸", 1), ("outflow_daily", "昨日取用量", "萬噸", 1),
-        ("rainfall_daily", "昨日集水區雨量", "毫米", 1), ("inflow_cms", "目前進水", "立方公尺/秒", 1),
+    # (欄位, 中文名, 英文名, 中文單位, 英文單位, 小數位, 英文版換成 million m³)
+    for key, label, label_en, unit, unit_en, d, mm in [
+        ("water_level", "水位", "Water level", "公尺", "m", 2, False),
+        ("full_level", "滿水位", "Full level", "公尺", "m", 1, False),
+        ("inflow_daily", "昨日進水量", "Inflow yesterday", "萬噸", "million m³", 1, True),
+        ("outflow_daily", "昨日取用量", "Drawn yesterday", "萬噸", "million m³", 1, True),
+        ("rainfall_daily", "昨日集水區雨量", "Catchment rain yesterday", "毫米", "mm", 1, False),
+        ("inflow_cms", "目前進水", "Inflow now", "立方公尺/秒", "m³/s", 1, False),
     ]:
         if r.get(key) is not None:
-            stats.append(f"<div><dt>{label}</dt><dd>{fmt(r[key], d)}<small>{unit}</small></dd></div>")
+            v = fmt(r[key] / 100, 2) if en and mm else fmt(r[key], d)
+            stats.append(f"<div><dt>{label_en if en else label}</dt><dd>{v}<small>{unit_en if en else unit}</small></dd></div>")
 
     county = county_of(r, info)
     light = ""
     if alert and county and alert.get("counties", {}).get(county) in LIGHTS:
-        nm, lbl, c = LIGHTS[alert["counties"][county]]
+        k = alert["counties"][county]
+        nm, lbl, c = LIGHTS[k]
         pub = alert.get("published", "")
-        light = (f'<section class="box"><h2>{e(county)}水情燈號</h2><div class="light"><i class="lamp" style="background:{c}"></i>'
-                 f'<span><b>{lbl}（{nm}）</b>　<span class="lead">經濟部水利署 {e(pub)} 公告</span></span></div></section>')
+        if en:
+            nm, lbl, _ = i18n_en.LIGHTS[k]
+            light = (f'<section class="box"><h2>{e(i18n_en.COUNTIES.get(county, county))} water alert</h2><div class="light">'
+                     f'<i class="lamp" style="background:{c}"></i>'
+                     f'<span><b>{lbl} ({nm} light)</b>  <span class="lead">Water Resources Agency, {e(en_date(pub))}</span></span></div></section>')
+        else:
+            light = (f'<section class="box"><h2>{e(county)}水情燈號</h2><div class="light"><i class="lamp" style="background:{c}"></i>'
+                     f'<span><b>{lbl}（{nm}）</b>　<span class="lead">經濟部水利署 {e(pub)} 公告</span></span></div></section>')
 
     facts = ""
-    if info:
+    if en:
+        rows = ""
+        if county:
+            rows += f"<tr><th>Location</th><td>{e(i18n_en.COUNTIES.get(county, county))}</td></tr>"
+        if info and str(info.get("型式") or "").strip() in i18n_en.DAM_TYPES:
+            rows += f"<tr><th>Dam type</th><td>{e(i18n_en.DAM_TYPES[str(info['型式']).strip()])}</td></tr>"
+        if info and str(info.get("壩堰高") or "").strip() not in ("", "…"):
+            rows += f"<tr><th>Dam height</th><td>{e(str(info['壩堰高']).strip())} m</td></tr>"
+        purpose = (info or {}).get("功能") or r.get("purpose")
+        if purpose:
+            rows += f"<tr><th>Purpose</th><td>{e(i18n_en.purposes(purpose))}</td></tr>"
+        if rows:
+            facts = f'<section class="box"><h2>About {e(name)}</h2><table>{rows}</table></section>'
+    elif info:
         rows = "".join(f"<tr><th>{lbl}</th><td>{e(str(info[k]).strip())}</td></tr>"
                        for k, lbl in INFO_FIELDS if str(info.get(k) or "").strip() not in ("", "…"))
         if r.get("purpose") and "功能" not in info:
@@ -337,34 +431,53 @@ def reservoir_page(r, info, hist, alert, peers, updated):
         facts = f'<section class="box"><h2>{e(name)}基本資料</h2><table><tr><th>用途</th><td>{e(r["purpose"])}</td></tr></table></section>'
 
     others = "".join(
-        f'<li><a href="../{x["id"]}/">{e(x["name"])}</a>' + (f'<span>{x["percent"]:.1f}%</span>' if ok(x) else "") + "</li>"
+        f'<li><a href="../{x["id"]}/">{e(i18n_en.name(x["id"], x["name"]) if en else x["name"])}</a>'
+        + (f'<span>{x["percent"]:.1f}%</span>' if ok(x) else "") + "</li>"
         for x in peers if x["id"] != rid)
-    others = f'<section class="box"><h2>{e(r["region"])}其他水庫</h2><ul class="links">{others}</ul></section>' if others else ""
+    if others:
+        h = f"Other reservoirs in {e(region)}" if en else f"{e(region)}其他水庫"
+        others = f'<section class="box"><h2>{h}</h2><ul class="links">{others}</ul></section>'
 
     image = "reservoir/og.png"
-    return f"""{head(title, desc, url, image)}
+    if en:
+        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">Reservoirs</a>', "en", f"/reservoir/{rid}/")
+        top = (f'<nav class="crumb"><a href="../">Taiwan reservoirs</a> › {e(region)}</nav>\n'
+               f'  <h1>{e(name)}</h1>\n'
+               f'  <p class="lead">{e(region)} · observed {e(when)} · updated {e(updated)}</p>')
+        cta = "See all reservoirs on the map"
+        foot = ("<div>Source: Water Resources Agency (WRA), Ministry of Economic Affairs, open data (hourly reservoir conditions, "
+                "daily operations, reservoir facts); updated hourly. Storage % = effective storage ÷ effective capacity. "
+                "1 million m³ = 1 billion litres.</div>\n"
+                "    <div>An independent site, not affiliated with the government. All figures come from government open data.</div>")
+    else:
+        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">水庫水情</a>', "zh", f"/en/reservoir/{rid}/")
+        top = (f'<nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">水庫水情</a> › {e(region)}</nav>\n'
+               f'  <h1>{e(name)}即時蓄水率</h1>\n'
+               f'  <p class="lead">{e(region)}・{e(when)} 觀測・資料更新 {e(updated)}</p>')
+        cta = "看全台水庫地圖"
+        foot = ("<div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料），每小時更新。"
+                "蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>\n"
+                "    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>")
+    return f"""{head(title, desc, url, image, lang, (zh_url, en_url))}
 <body>
-{site_nav.nav("reservoir", '<a class="sitesection" href="../">水庫水情</a>')}
+{bar}
 <div class="wrap">
-  <nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">水庫水情</a> › {e(r["region"])}</nav>
-  <h1>{e(name)}即時蓄水率</h1>
-  <p class="lead">{e(r["region"])}・{e(when)} 觀測・資料更新 {e(updated)}</p>
+  {top}
   <section class="box hero{" has-tank" if tank else ""}">
     <div class="info">
       <div class="big">{big}</div>
       <dl class="stats">{"".join(stats)}</dl>
-      <a class="cta" href="../">看全台水庫地圖</a>
+      <a class="cta" href="../">{cta}</a>
     </div>
     {tank}
   </section>
   {light}
-  {history_chart(hist)}
-  {history_table(hist)}
+  {history_chart(hist, en)}
+  {history_table(hist, en)}
   {facts}
   {others}
   <footer>
-    <div>資料來源：經濟部水利署開放資料（水庫水情資料、水庫每日營運狀況、水庫基本資料），每小時更新。蓄水率＝有效蓄水量 ÷ 有效容量，1 萬立方公尺約等於 1 萬噸水。</div>
-    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>
+    {foot}
   </footer>
 </div>
 </body>
@@ -404,24 +517,50 @@ def main(out):
     urls = [f"{SITE}/", f"{SITE}/reservoir/", f"{SITE}/about/"]
     (out / "about").mkdir(parents=True, exist_ok=True)
     (out / "about/index.html").write_text(about_page(), encoding="utf-8")
+    updated_en = en_time(latest.get("generated_at"))
     for r in named:
-        d = out / "reservoir" / r["id"]
-        d.mkdir(parents=True, exist_ok=True)
-        page = reservoir_page(r, info.get(r["id"]), hist.get(r["id"], []), alert, by_region[r["region"]], updated)
-        (d / "index.html").write_text(page, encoding="utf-8")
-        urls.append(f"{SITE}/reservoir/{r['id']}/")
+        for lang, base in (("zh", out / "reservoir"), ("en", out / "en/reservoir")):
+            d = base / r["id"]
+            d.mkdir(parents=True, exist_ok=True)
+            page = reservoir_page(r, info.get(r["id"]), hist.get(r["id"], []), alert, by_region[r["region"]],
+                                  updated_en if lang == "en" else updated, lang)
+            (d / "index.html").write_text(page, encoding="utf-8")
+        urls += [f"{SITE}/reservoir/{r['id']}/", f"{SITE}/en/reservoir/{r['id']}/"]
+
+    # 英文版水庫總覽：用中文版 reservoir/index.html 換掉文字，JavaScript 靠 window.I18N 顯示英文
+    idx = out / "reservoir/index.html"
+    if idx.exists():
+        t = idx.read_text(encoding="utf-8")
+        for zh, en in i18n_en.OVERVIEW_HTML:
+            if zh not in t:
+                print(f"注意：英文版總覽頁找不到要翻譯的文字：{zh[:40]}…")
+            t = t.replace(zh, en)
+        i18n = {"txt": i18n_en.TXT, "regions": i18n_en.REGIONS, "counties": i18n_en.COUNTIES,
+                "lights": i18n_en.LIGHTS, "res": i18n_en.RESERVOIRS}
+        t = ('<!doctype html>\n<html lang="en">\n' + t
+             .replace("<!--I18N-->", f"<script>window.I18N = {json.dumps(i18n, ensure_ascii=False)};</script>")
+             .replace("<!--SITE_NAV-->", site_nav.nav("reservoir", '<h1 class="sitesection">Reservoirs</h1>', "en", "/reservoir/"))
+             .replace("<!--RESERVOIR_LINKS-->", "".join(
+                 f'<div><b>{i18n_en.REGIONS.get(g, g)}</b><ul class="links">' + "".join(
+                     f'<li><a href="{x["id"]}/">{e(i18n_en.name(x["id"], x["name"]))}</a></li>' for x in by_region[g])
+                 + "</ul></div>" for g in REGIONS if by_region.get(g))))
+        (out / "en/reservoir").mkdir(parents=True, exist_ok=True)
+        (out / "en/reservoir/index.html").write_text(t, encoding="utf-8")
+        urls.append(f"{SITE}/en/reservoir/")
 
     urls += build_births.build(out, head, lambda prefix: site_nav.nav("births", '<h1 class="sitesection">出生與死亡</h1>'))
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
         ("index.html", site_nav.nav("home")),
-        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">水庫水情</h1>')),
+        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">水庫水情</h1>', "zh", "/en/reservoir/")),
+        ("en/reservoir/index.html", ""),
     ]
     for f, bar in pages:
         if (out / f).exists():
             t = (out / f).read_text(encoding="utf-8")
-            t = t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", bar)
+            t = (t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", bar).replace("<!--I18N-->", "")
+                 .replace("<!--HREFLANG-->", hreflang(f"{SITE}/reservoir/", f"{SITE}/en/reservoir/") if "reservoir" in f else ""))
             (out / f).write_text(t, encoding="utf-8")
 
     # 水庫總覽頁底部：全部水庫頁的連結（不靠 JavaScript，搜尋引擎找得到）
