@@ -47,7 +47,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
-.wrap { max-width: 1840px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 48px); padding-left: max(clamp(16px, 3vw, 48px), env(safe-area-inset-left)); padding-right: max(clamp(16px, 3vw, 48px), env(safe-area-inset-right)); padding-block: 16px 48px; }
+.wrap { max-width: 1840px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 48px); padding-left: max(clamp(16px, 3vw, 48px), env(safe-area-inset-left)); padding-right: max(clamp(16px, 3vw, 48px), env(safe-area-inset-right)); padding-block: 8px 48px; }
 a { color: var(--fg); text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
 .box { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 16px; }
@@ -55,7 +55,7 @@ a { color: var(--fg); text-underline-offset: 3px; }
 .updated { color: var(--muted); font-size: 13px; white-space: nowrap; }
 
 /* 第一面：各區 */
-.hero { margin-top: 12px; display: grid; gap: 12px; }
+.hero { margin-top: 0; display: grid; gap: 12px; }
 @media (min-width: 860px) { .hero { grid-template-columns: clamp(340px, 32vw, 560px) minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; } .hero .mapbox { grid-row: 1 / span 2; position: sticky; top: 64px; } .hero .list { grid-column: 2; margin-top: 12px; } }
 .hero > * { min-width: 0; }
 .regions { padding: 6px 0; }
