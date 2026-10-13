@@ -18,11 +18,11 @@ MENU = [
 ]
 # 英文版選單：(代號, 名稱, 英文網址)；英文網址空白就連到中文頁、旁邊標「中文」
 MENU_EN = {
-    "home": ("Home", ""),
+    "home": ("Home", "/en/"),
     "reservoir": ("Reservoirs", "/en/reservoir/"),
-    "births": ("Births &amp; deaths", ""),
+    "births": ("Births &amp; deaths", "/en/births/"),
     "travel": ("Border crossings", ""),
-    "about": ("About", ""),
+    "about": ("About", "/en/about/"),
 }
 
 CSS = """
@@ -89,7 +89,7 @@ def nav(current, section="", lang="zh", alt=""):
     <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="sitemenu" aria-label="{'Open menu' if en else '開啟選單'}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
-    <a class="sitename" href="/"><img src="/icon-192.png" alt="" width="28" height="28"><span><b>{'Taiwan Data' if en else 'Taiwan Data 台灣數據'}</b><small>taiwandata.info</small></span></a>
+    <a class="sitename" href="{'/en/' if en else '/'}"><img src="/icon-192.png" alt="" width="28" height="28"><span><b>{'Taiwan Data' if en else 'Taiwan Data 台灣數據'}</b><small>taiwandata.info</small></span></a>
     {section}{switch}
   </div>
   <nav class="sitemenu" id="sitemenu" aria-label="{'Site menu' if en else '網站選單'}" hidden><ul>{items}</ul></nav>

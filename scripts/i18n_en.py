@@ -87,6 +87,7 @@ TXT = {
 
 # 水庫總覽頁的靜態 HTML：(中文, 英文)，build_pages.py 產生 /en/reservoir/ 時逐一替換
 OVERVIEW_HTML = [
+    ('<meta property="og:site_name" content="Taiwan Data 台灣數據">', '<meta property="og:site_name" content="Taiwan Data">'),
     ("<title>台灣水庫水情：即時蓄水率與水情燈號｜Taiwan Data</title>",
      "<title>Taiwan Reservoir Levels: Live Storage and Water Alerts | Taiwan Data</title>"),
     ('content="台灣各水庫即時蓄水率、有效蓄水量與官方水情燈號，北中南東一張地圖看懂，每小時更新，資料來自經濟部水利署。"',
@@ -117,5 +118,33 @@ OVERVIEW_HTML = [
     ('<div>水情燈號以 <a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">經濟部水利署公告</a> 為準。水庫圓點的藍色深淺只代表蓄水率，和燈號無關。</div>',
      '<div>The <a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">WRA announcement</a> is the official word on alert lights. The blue shades of the reservoir circles show storage only and are not alert lights.</div>'),
     ('<div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。<a href="../about/">關於本站</a></div>',
-     '<div>An independent site, not affiliated with the government. All figures come from government open data. <a href="/about/" lang="zh-Hant">About (Chinese)</a></div>'),
+     '<div>An independent site, not affiliated with the government. All figures come from government open data. <a href="/en/about/">About</a></div>'),
+]
+
+# 首頁（index.html）的文字：(中文, 英文)
+HOME_HTML = [
+    ('<meta property="og:site_name" content="Taiwan Data 台灣數據">', '<meta property="og:site_name" content="Taiwan Data">'),
+    ('<html lang="zh-Hant-TW">', '<html lang="en">'),
+    ("<title>Taiwan Data 台灣數據：一眼看懂台灣的即時數字</title>", "<title>Taiwan Data: Taiwan's Live Numbers at a Glance</title>"),
+    ('content="把政府開放資料整理成一眼看懂的工具：台灣水庫即時蓄水率與水情燈號、每月出生與死亡人數，更多台灣數據陸續推出。"',
+     'content="Government open data turned into easy-to-read tools: live reservoir levels and water alerts across Taiwan, monthly births and deaths, with more to come."'),
+    ('<link rel="canonical" href="https://taiwandata.info/">', '<link rel="canonical" href="https://taiwandata.info/en/">'),
+    ('<meta property="og:locale" content="zh_TW">', '<meta property="og:locale" content="en_US">'),
+    ('content="Taiwan Data 台灣數據：一眼看懂台灣的即時數字"', 'content="Taiwan Data: Taiwan\'s Live Numbers at a Glance"'),
+    ('<meta property="og:url" content="https://taiwandata.info/">', '<meta property="og:url" content="https://taiwandata.info/en/">'),
+    ("<h1>Taiwan Data 台灣數據</h1>", "<h1>Taiwan Data</h1>"),
+    ('<p class="lead">把政府開放資料整理成一眼看懂的工具。</p>', '<p class="lead">Taiwan\'s government open data, turned into tools you can read at a glance.</p>'),
+    ("<h2>水庫水情</h2>", "<h2>Reservoirs</h2>"),
+    ("<p>各區官方水情燈號、主要水庫即時蓄水率，一張地圖看懂。</p>", "<p>Official water alert lights by region and live storage levels for every major reservoir, on one map.</p>"),
+    ('<div class="num" id="res-updated">每小時更新</div>', '<div class="num" id="res-updated">Updated hourly</div>'),
+    ("<h2>出生與死亡</h2>", "<h2>Births and deaths</h2>"),
+    ("<p>全台每月出生、死亡人數，各縣市比較與歷年趨勢。</p>", "<p>Monthly births and deaths across Taiwan, compared by county and over time.</p>"),
+    ('<div class="num">內政部戶政司每月公布</div>', '<div class="num">Published monthly by the Ministry of the Interior</div>'),
+    ("<h2>出入境人次</h2><p>即將推出</p>", "<h2>Border crossings</h2><p>Coming soon</p>"),
+    ('<footer>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。<a href="about/">關於本站</a></footer>',
+     '<footer>An independent site, not affiliated with the government. All figures come from government open data. <a href="about/">About</a></footer>'),
+    ('fetch("data/latest.json"', 'fetch("/data/latest.json"'),
+    ('toLocaleString("zh-TW", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });',
+     'toLocaleString("en-US", { timeZone: "Asia/Taipei", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });'),
+    ('textContent = "資料更新 " + t;', 'textContent = "Updated " + t;'),
 ]

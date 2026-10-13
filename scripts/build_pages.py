@@ -217,7 +217,7 @@ def head(title, desc, url, image, lang="zh", alt=None):
 <meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{url}">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Taiwan Data 台灣數據">
+<meta property="og:site_name" content="{"Taiwan Data" if en else "Taiwan Data 台灣數據"}">
 <meta property="og:locale" content="{"en_US" if en else "zh_TW"}">
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(desc)}">
@@ -485,12 +485,38 @@ def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
 """
 
 
-def about_page():
+def about_page(lang="zh"):
+    en = lang == "en"
+    alt = (f"{SITE}/about/", f"{SITE}/en/about/")
+    if en:
+        title = "About | Taiwan Data"
+        desc = "Taiwan Data is an independent site that turns Taiwan's government open data into tools you can read at a glance."
+        bar = site_nav.nav("about", '<h1 class="sitesection">About</h1>', "en", "/about/")
+        contact = ("Suggestions, or spotted a wrong number? Email "
+                   "<a href=\"mailto:contact@taiwandata.info\">contact@taiwandata.info</a>")
+        return f"""{head(title, desc, alt[1], "og.png", "en", alt)}
+<body>
+{bar}
+<div class="wrap prose">
+  <section class="box">
+    <h2>About this site</h2>
+    <p>Taiwan Data turns Taiwan's government open data into simple tools: live reservoir levels and water alerts,
+    and monthly births and deaths. Every figure comes from official sources and is updated automatically.</p>
+  </section>
+  <section class="box">
+    <h2>Contact</h2>
+    <p>{contact}</p>
+  </section>
+  <footer><div>An independent site, not affiliated with the government. All figures come from government open data.</div></footer>
+</div>
+</body>
+</html>
+"""
     title = "關於本站｜Taiwan Data 台灣數據"
     desc = "Taiwan Data 台灣數據是個人經營的網站，把政府開放資料整理成一眼看懂的工具。"
-    return f"""{head(title, desc, f"{SITE}/about/", "og.png")}
+    return f"""{head(title, desc, f"{SITE}/about/", "og.png", "zh", alt)}
 <body>
-{site_nav.nav("about", '<h1 class="sitesection">關於本站</h1>')}
+{site_nav.nav("about", '<h1 class="sitesection">關於本站</h1>', "zh", "/en/about/")}
 <div class="wrap prose">
   {f'<section class="box"><h2>關於我</h2><p>{ABOUT_ME}</p></section>' if ABOUT_ME else ""}
   <section class="box">
@@ -514,9 +540,21 @@ def main(out):
     for r in sorted(named, key=lambda x: -(x.get("capacity") or 0)):
         by_region[r["region"]].append(r)
 
-    urls = [f"{SITE}/", f"{SITE}/reservoir/", f"{SITE}/about/"]
-    (out / "about").mkdir(parents=True, exist_ok=True)
-    (out / "about/index.html").write_text(about_page(), encoding="utf-8")
+    urls = [f"{SITE}/", f"{SITE}/en/", f"{SITE}/reservoir/", f"{SITE}/about/", f"{SITE}/en/about/"]
+    for lang, d in (("zh", out / "about"), ("en", out / "en/about")):
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(about_page(lang), encoding="utf-8")
+
+    # 英文版首頁：用中文版 index.html 換掉文字
+    home = out / "index.html"
+    if home.exists():
+        t = home.read_text(encoding="utf-8")
+        for zh, en in i18n_en.HOME_HTML:
+            if zh not in t:
+                print(f"注意：英文版首頁找不到要翻譯的文字：{zh[:40]}…")
+            t = t.replace(zh, en)
+        (out / "en").mkdir(parents=True, exist_ok=True)
+        (out / "en/index.html").write_text(t, encoding="utf-8")
     updated_en = en_time(latest.get("generated_at"))
     for r in named:
         for lang, base in (("zh", out / "reservoir"), ("en", out / "en/reservoir")):
@@ -548,11 +586,13 @@ def main(out):
         (out / "en/reservoir/index.html").write_text(t, encoding="utf-8")
         urls.append(f"{SITE}/en/reservoir/")
 
-    urls += build_births.build(out, head, lambda prefix: site_nav.nav("births", '<h1 class="sitesection">出生與死亡</h1>'))
+    urls += build_births.build(out, head, lambda prefix, lang, alt: site_nav.nav(
+        "births", f'<h1 class="sitesection">{"Births &amp; deaths" if lang == "en" else "出生與死亡"}</h1>', lang, alt))
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
-        ("index.html", site_nav.nav("home")),
+        ("index.html", site_nav.nav("home", "", "zh", "/en/")),
+        ("en/index.html", site_nav.nav("home", "", "en", "/")),
         ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">水庫水情</h1>', "zh", "/en/reservoir/")),
         ("en/reservoir/index.html", ""),
     ]
@@ -560,7 +600,8 @@ def main(out):
         if (out / f).exists():
             t = (out / f).read_text(encoding="utf-8")
             t = (t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", bar).replace("<!--I18N-->", "")
-                 .replace("<!--HREFLANG-->", hreflang(f"{SITE}/reservoir/", f"{SITE}/en/reservoir/") if "reservoir" in f else ""))
+                 .replace("<!--HREFLANG-->", hreflang(f"{SITE}/reservoir/", f"{SITE}/en/reservoir/") if "reservoir" in f
+                          else hreflang(f"{SITE}/", f"{SITE}/en/")))
             (out / f).write_text(t, encoding="utf-8")
 
     # 水庫總覽頁底部：全部水庫頁的連結（不靠 JavaScript，搜尋引擎找得到）
