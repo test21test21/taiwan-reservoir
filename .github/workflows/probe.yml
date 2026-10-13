@@ -11,14 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          mkdir -p probe
-          get(){ curl -sSL -m 120 -A "taiwandata.info" -o "probe/$1" "$2" -w "$1 %{http_code} %{size_download} %{content_type}\n" >> probe/log.txt || echo "$1 FAIL" >> probe/log.txt; }
-          for id in 30680 30681 30673 30678 30683 30682 34966; do get caa_$id.csv "https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=$id"; done
-          for n in $(seq 1 30); do get tour_$n.csv "https://stat.taiwan.net.tw/data/opendata/$n"; done
-          get outbound_idx.csv "https://media.taiwan.net.tw/od/01_PRD/國人出國旅遊重要指標統計表.csv"
-          get stat_home.html "https://stat.taiwan.net.tw/"
-          get stat_data.html "https://stat.taiwan.net.tw/data/opendata"
+          rm -rf probe; mkdir -p probe
+          get(){ curl -sSL -m 120 -A "Mozilla/5.0 taiwandata.info" -o "probe/$1" "$2" -w "$1 %{http_code} %{size_download} %{content_type} %{url_effective}\n" >> probe/log.txt || echo "$1 FAIL" >> probe/log.txt; }
+          for id in 41552 41540 41543 41546 41531 41528 40810; do get caa_$id.bin "https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=$id"; done
+          get admin_12124.html "https://admin.taiwan.net.tw/businessinfo/IssuePage?a=12124"
+          get admin_14642.html "https://admin.taiwan.net.tw/businessinfo/FilePage?a=14642"
+          get stat_main.js "https://stat.taiwan.net.tw/main-es2017.12a43d48256b7b0b46dd.js"
           cat probe/log.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add probe && git commit -m "probe results" && git push
+          git add -A probe && git commit -m "probe results 2" && git push
