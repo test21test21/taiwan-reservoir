@@ -13,24 +13,8 @@ jobs:
         with: { ref: claude/project-thread-g39uhz }
       - uses: actions/setup-python@v5
         with: { python-version: "3.13" }
-      - run: |
-          mkdir -p probe
-          cd scripts && python3 - <<'PY'
-          import urllib.request, urllib.parse, time, fetch_flights as F
-          out = open("../probe/ids.txt", "w")
-          for i in range(39300, 40400):
-              url = f"https://www.caa.gov.tw/FileAtt.ashx?lang=1&id={i}"
-              try:
-                  req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "taiwandata.info"})
-                  with urllib.request.urlopen(req, timeout=30, context=F.ssl_context()) as r:
-                      cd = r.headers.get("Content-Disposition", "")
-                      if "_173" in urllib.parse.unquote(cd).encode("latin1", "replace").decode("big5", "replace") or "_174" in urllib.parse.unquote(cd).encode("latin1", "replace").decode("big5", "replace"): out.write(f"{i}\t{r.status}\t{urllib.parse.unquote(cd).encode('latin1', 'replace').decode('big5', 'replace')}\n")
-              except Exception as ex:
-                  out.write(f"{i}\tERR\t{ex}\n")
-              out.flush()
-              time.sleep(0.1)
-          PY
+      - run: python3 scripts/fetch_flights.py
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add probe && git commit -m "probe ids (temporary)" && git push
+          git add data/flights && git commit -m "補民航局 114 年每月資料" && git push

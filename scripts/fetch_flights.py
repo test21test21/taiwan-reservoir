@@ -34,6 +34,8 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data/flights"
 CAA = "https://www.caa.gov.tw/FileAtt.ashx?lang=1&id={}"
 SOURCES = {"airports": 30683, "segments": 30682, "loadfactor": 30678, "routes": 30680, "routes_year": 34966}
+# 舊版檔案（民航局每年最後一版不會再被取代）：補上目前檔案沒有的月份，例如 114 年 1～7 月。只補缺的，不蓋掉新資料。
+BACKFILL = {"airports": [39662], "segments": [39665]}  # 114年1~12月 表3、表5
 
 # 表裡的機場名稱 → 代號（網址和英文版用）
 AIRPORTS = {
@@ -279,28 +281,30 @@ def write_csv(path, rows, fields):
         w.writerows(rows)
 
 
-def merge_csv(path, rows, fields, key):
-    """把新抓的列併進舊檔（同一個 key 用新的），舊月份保留，所以歷史會越存越多。"""
+def merge_csv(path, rows, fields, key, keep_old=False):
+    """把新抓的列併進舊檔（同一個 key 用新的；keep_old 時用舊的），舊月份保留，所以歷史會越存越多。"""
     old = {}
     if path.exists():
         with path.open(encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 old[tuple(r[k] for k in key)] = r
     for r in rows:
-        old[tuple(str(r[k]) for k in key)] = r
+        k = tuple(str(r[k]) for k in key)
+        if not (keep_old and k in old):
+            old[k] = r
     write_csv(path, sorted(old.values(), key=lambda r: tuple(str(r[k]) for k in key)), fields)
 
 
 ROUTE_FIELDS = ["scope", "region", "dest", "airline", "flights", "seats", "pax", "in_pax", "in_seats", "out_pax", "out_seats"]
 
 
-def save(kind, data):
+def save(kind, data, keep_old=False):
     if kind == "airports":
-        merge_csv(OUT / "airports.csv", parse_airports(data), ["period", "airport", "flights", "pax", "cargo"], ["period", "airport"])
+        merge_csv(OUT / "airports.csv", parse_airports(data), ["period", "airport", "flights", "pax", "cargo"], ["period", "airport"], keep_old)
     elif kind == "segments":
         merge_csv(OUT / "segments.csv", parse_segments(data),
                   ["period", "flights", "flights_intl", "flights_cross", "flights_dom", "pax", "pax_intl", "pax_cross", "pax_dom", "pax_transit"],
-                  ["period"])
+                  ["period"], keep_old)
     elif kind == "loadfactor":
         merge_csv(OUT / "loadfactor.csv", parse_loadfactor(data),
                   ["month", "scope", "region", "flights", "seats", "pax", "lf", "in_pax", "in_seats", "out_pax", "out_seats"],
@@ -332,6 +336,15 @@ def main():
         print(f"{kind}：抓 {version}")
         save(kind, get(url))
         seen[kind] = version
+    done = set(seen.get("backfill", []))
+    for kind, ids in BACKFILL.items():
+        for fid in ids:
+            if fid in done:
+                continue
+            print(f"{kind}：補舊資料 {fid}")
+            save(kind, get(f"https://www.caa.gov.tw/FileAtt.ashx?lang=1&id={fid}"), keep_old=True)
+            done.add(fid)
+    seen["backfill"] = sorted(done)
     src_file.write_text(json.dumps(seen, ensure_ascii=False, indent=1) + "\n")
 
 
