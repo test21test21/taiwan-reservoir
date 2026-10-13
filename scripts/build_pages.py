@@ -587,7 +587,7 @@ def main(out):
         urls.append(f"{SITE}/en/reservoir/")
 
     urls += build_births.build(out, head, lambda prefix, lang, alt: site_nav.nav(
-        "births", f'<h1 class="sitesection">{"Births &amp; deaths" if lang == "en" else "出生與死亡"}</h1>', lang, alt))
+        "births", f'<h1 class="sitesection">{"Births &amp; Deaths" if lang == "en" else "出生與死亡"}</h1>', lang, alt))
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [
