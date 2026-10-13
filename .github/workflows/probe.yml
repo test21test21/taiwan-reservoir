@@ -11,21 +11,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          rm -rf probe; mkdir -p probe/chunks
-          curl -sSL -m 60 -o probe/runtime.js https://stat.taiwan.net.tw/runtime-es2017.acdc0a12732f5cddfce1.js
+          rm -rf probe; mkdir -p probe
           python3 - <<'PY'
-          import re,subprocess
-          s=open('probe/runtime.js').read()
-          m=re.search(r'\{(\d+:"[0-9a-f]+"(?:,\d+:"[0-9a-f]+")*)\}',s)
-          pairs=re.findall(r'(\d+):"([0-9a-f]+)"',m.group(1)) if m else []
-          print(len(pairs), s[:0])
-          for k,h in pairs:
-              for name in (f"{k}-es2017.{h}.js", f"{k}.{h}.js"):
-                  r=subprocess.run(["curl","-sSL","-m","60","-o",f"probe/chunks/{name}","-w","%{http_code}",f"https://stat.taiwan.net.tw/{name}"],capture_output=True,text=True)
-                  if r.stdout=="200": break
-                  subprocess.run(["rm","-f",f"probe/chunks/{name}"])
+          import json,urllib.request,urllib.parse
+          H="https://stat.taiwan.net.tw/data/api"
+          def get(path,q=None,name=None):
+              url=H+path+("?"+urllib.parse.urlencode({"query":json.dumps(q,separators=(',',':'))}) if q is not None else "")
+              try:
+                  req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0","Accept":"application/json"})
+                  b=urllib.request.urlopen(req,timeout=120).read()
+              except Exception as ex:
+                  b=("ERR "+repr(ex)+" "+(ex.read()[:500].decode('utf-8','replace') if hasattr(ex,'read') else '')).encode()
+              open("probe/"+name,"wb").write(b); print(name,len(b)); return b
+          for side in ["inbound","outbound"]:
+              qp=get(f"/{side}/queryParams",name=f"{side}_qp.json")
+          for p in ["/index/inbound/lastMonth","/index/inbound/byResidence","/index/outbound/byDestination","/index/outbound/lastMonth","/index/inbound/nearYears"]:
+              get(p,name=p.strip('/').replace('/','_')+".json")
+          try:
+              qp=json.loads(open("probe/inbound_qp.json").read())
+              def codes(x,acc):
+                  if isinstance(x,dict):
+                      for k,v in x.items():
+                          if k in("code","value","countryCode") and isinstance(v,str) and v.isdigit(): acc.add(v)
+                          codes(v,acc)
+                  elif isinstance(x,list):
+                      for v in x: codes(v,acc)
+                  return acc
+              cs=sorted(codes(qp,set()))
+              print(len(cs))
+              q={"start":{"year":114,"month":1},"end":{"year":115,"month":8},"keyName":"residence","countries":cs,"keyValue":cs}
+              get("/inbound/search/residence",q,"inbound_residence.json")
+              qp2=json.loads(open("probe/outbound_qp.json").read()); cs2=sorted(codes(qp2,set()))
+              q={"start":{"year":114,"month":1},"end":{"year":115,"month":8},"keyName":"destination","countries":cs2,"keyValue":cs2}
+              get("/outbound/search/destination",q,"outbound_destination.json")
+          except Exception as ex: print("ERR",ex)
           PY
-          ls probe/chunks | head; du -sh probe
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A probe && git commit -m "probe results 3" && git push
+          git add -A probe && git commit -m "probe results 4" && git push
