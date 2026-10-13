@@ -269,7 +269,7 @@ def nice_scale(lo, hi, ticks=4, zero=False):
     mag = 10 ** (len(str(int(raw))) - 1)
     step = next(s * mag for s in (1, 2, 2.5, 5, 10) if s * mag >= raw)
     if hi >= 10000:  # 軸寫成「x.x 萬」，格線要是 1,000 的倍數才不會四捨五入走樣
-        step = next(s * 1000 for s in (1, 2, 5, 10, 20, 50) if s * 1000 >= step)
+        step = next(s * 1000 for s in (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000) if s * 1000 >= step)
     lo = (lo // step) * step
     hi = -(-hi // step) * step
     if hi == lo:
@@ -281,9 +281,9 @@ def short(v, wan=False):
     """座標軸數字：圖上最大值到 1 萬以上時一律寫「x.x 萬」（不到 1 萬寫 0.x 萬）。"""
     v = int(v)
     if wan:
-        if EN:  # 英文版寫 14k
-            return "0" if v == 0 else f"{v / 1000:g}k"
-        return "0" if v == 0 else f"{v / 10000:.1f} 萬"
+        if EN:  # 英文版寫 14k；百萬以上寫 2M（航班、旅遊頁）
+            return "0" if v == 0 else f"{v / 1e6:g}M" if v >= 1e6 else f"{v / 1000:g}k"
+        return "0" if v == 0 else f"{v / 10000:g} 萬" if v >= 1e6 else f"{v / 10000:.1f} 萬"
     return n(v)
 
 

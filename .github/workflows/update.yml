@@ -41,6 +41,15 @@ jobs:
             python3 scripts/fetch_births.py
           fi
 
+      - name: 抓民航局航班、觀光署旅遊資料（每天一次）
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: |
+          if [ "$(date -u +%H)" = "01" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python3 scripts/fetch_flights.py
+            python3 scripts/fetch_travel.py
+          fi
+
       - name: 存回 repo（保留每日快照）
         if: github.event_name != 'push'
         run: |
