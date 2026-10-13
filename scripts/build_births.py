@@ -391,7 +391,7 @@ def page_body(name, d):
 
     def duo(a, la, cmp):
         def one(key, cls, v, before, sex):
-            yoy = f'<div class="yoy"{"" if before else " hidden"}>{tr("比", "vs ")}{cmp} <b class="j-yoy">{pct(v, before)}</b></div>'
+            yoy = f'<div class="yoy"{"" if before else " hidden"}>{tr("比", "")}{cmp} <b class="j-yoy">{pct(v, before)}</b></div>'
             return (f'<div class="j-{cls}"><div class="k"><i style="background:var(--{cls})"></i>{key}</div>'
                     f'<div class="v"><span class="j-v">{n(v)}</span><small>{tr("人", "")}</small></div>'
                     f'<div class="sex"><span><i style="background:var(--male)"></i>{tr("男", "Male")} <span class="j-m">{n(sex[0])}</span></span>'
@@ -402,13 +402,13 @@ def page_body(name, d):
     where = "" if name == "全台" else cname(name) + " "
     pick = [mm for mm in months[-36:]][::-1]
     opts = "".join(f'<option value="{mm}"{" selected" if mm == last else ""}>{ym_label(mm)}</option>' for mm in pick)
-    hero = duo(a, la, tr("去年同月", "same month last year"))
+    hero = duo(a, la, tr("去年同月", "YoY"))
     out = [f'<section class="box" id="mbox"><h2 class="mhead"><select id="mpick" aria-label="{tr("選月份", "Choose month")}">{opts}</select></h2>'
            f'{hero}</section>']
     cy, ly = ytd(y), ytd(y - 1)
     if m > 1 and cy:
-        out.append(f'<section class="box"><h2>{tr("今年累計", f"{y} so far (Jan–{MON[m - 1]})")}</h2>'
-                   f'{duo(cy, ly, tr("去年同期", "same period last year"))}</section>')
+        out.append(f'<section class="box"><h2>{tr("今年累計", f"{y} YTD (Jan–{MON[m - 1]})")}</h2>'
+                   f'{duo(cy, ly, tr("去年同期", "YoY"))}</section>')
 
     # 1. 每月出生（男女）
     recent = months[-24:]
@@ -543,8 +543,9 @@ def page(out, head, nav, data, name, slug):
     zh_url, en_url = f"{SITE}/{path}", f"{SITE}/en/{path}"
     if EN:
         where = "Taiwan" if name == "全台" else f"{cname(name)}, Taiwan"
-        title = f"{where} Births and Deaths: {n(births(a))} births, {n(deaths(a))} deaths in {ym_label(last)} | Taiwan Data"
-        desc = (f"Latest Ministry of the Interior figures: {where} recorded {n(births(a))} births and {n(deaths(a))} deaths "
+        title = (f"{where} Births and Deaths, {ym_label(last)}: {n(births(a))} Births, {n(deaths(a))} Deaths"
+                 f" | Taiwan Vital Statistics")
+        desc = (f"Taiwan vital statistics from the Ministry of the Interior: {where} recorded {n(births(a))} births and {n(deaths(a))} deaths "
                 f"in {ym_label(last)}." + (f" Jan–{MON[m - 1]} {y}: {n(births(cy))} births, {n(deaths(cy))} deaths." if cy else "")
                 + " Monthly births by sex, comparison with the past two years, and a county map.")
         foot = ("<div>Source: Department of Household Registration, Ministry of the Interior, open data (monthly births and deaths "
