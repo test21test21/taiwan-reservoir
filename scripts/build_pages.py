@@ -9,8 +9,8 @@
 - _site/reservoir/index.html：把 <!--RESERVOIR_LINKS--> 換成全部水庫頁的連結
 - _site/about/index.html：關於本站
 - _site/births/：出生與死亡，全台＋各縣市一頁（scripts/build_births.py）
-- _site/flights/：機場航班（scripts/build_flights.py）
-- _site/travel/：旅遊統計（scripts/build_travel.py）
+- _site/flights/：航班（scripts/build_flights.py）
+- _site/tourism/：旅客人次（scripts/build_travel.py）
 - _site/sitemap.xml、_site/robots.txt
 """
 import csv
@@ -505,7 +505,7 @@ def about_page(lang="zh"):
   <section class="box">
     <h2>About this site</h2>
     <p>Taiwan Data turns Taiwan's government open data into simple tools: live reservoir levels and water alerts,
-    monthly births and deaths, airport passengers and flight load factors, and tourism statistics. Every figure comes from official sources and is updated automatically.</p>
+    monthly births and deaths, flight load factors, and passenger and tourism statistics. Every figure comes from official sources and is updated automatically.</p>
   </section>
   <section class="box">
     <h2>Contact</h2>
@@ -593,9 +593,9 @@ def main(out):
     urls += build_births.build(out, head, lambda prefix, lang, alt: site_nav.nav(
         "births", f'<h1 class="sitesection">{"Births &amp; Deaths" if lang == "en" else "出生與死亡"}</h1>', lang, alt))
     urls += build_flights.build(out, head, lambda lang, alt: site_nav.nav(
-        "flights", f'<h1 class="sitesection">{"Flights" if lang == "en" else "機場航班"}</h1>', lang, alt))
+        "flights", f'<h1 class="sitesection">{"Flights" if lang == "en" else "航班"}</h1>', lang, alt))
     urls += build_travel.build(out, head, lambda lang, alt: site_nav.nav(
-        "travel", f'<h1 class="sitesection">{"Travel" if lang == "en" else "旅遊統計"}</h1>', lang, alt))
+        "travel", f'<h1 class="sitesection">{"Tourism" if lang == "en" else "旅客人次"}</h1>', lang, alt))
 
     # 首頁與水庫總覽頁：分頁小圖示、最上方的選單列
     pages = [

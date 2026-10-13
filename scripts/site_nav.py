@@ -13,8 +13,8 @@ MENU = [
     ("home", "首頁", "/"),
     ("reservoir", "水庫水情", "/reservoir/"),
     ("births", "出生與死亡", "/births/"),
-    ("flights", "機場航班", "/flights/"),
-    ("travel", "旅遊統計", "/travel/"),
+    ("flights", "航班", "/flights/"),
+    ("travel", "旅客人次", "/tourism/"),
     ("about", "關於本站", "/about/"),
 ]
 # 英文版選單：(代號, 名稱, 英文網址)；英文網址空白就連到中文頁、旁邊標「中文」
@@ -23,7 +23,7 @@ MENU_EN = {
     "reservoir": ("Reservoirs", "/en/reservoir/"),
     "births": ("Births &amp; deaths", "/en/births/"),
     "flights": ("Flights", "/en/flights/"),
-    "travel": ("Travel", "/en/travel/"),
+    "travel": ("Tourism", "/en/tourism/"),
     "about": ("About", "/en/about/"),
 }
 

@@ -1,8 +1,8 @@
-"""旅遊統計頁：/travel/（中文）和 /en/travel/（英文），數字和圖直接寫進 HTML。
+"""旅客人次頁：/tourism/（中文）和 /en/tourism/（英文），數字和圖直接寫進 HTML。
 
 資料：
 - data/travel/（scripts/fetch_travel.py 從觀光署開放資料整理，每年）
-- data/flights/loadfactor.csv（民航局每月國際及兩岸航班入境、出境旅客，當作最新月份的參考）
+- data/flights/airports.csv、segments.csv（民航局每月各機場旅客）
 build_pages.py 部署時呼叫 build(out, head, nav)。
 """
 import csv
@@ -13,6 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import build_births as bb
+import build_flights as bf
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data/travel"
@@ -81,17 +82,13 @@ def load():
     for r in read(DATA / "ports.csv"):
         if r["place"].startswith("總計"):
             port[int(r["year"])][r["port"]] = int(r["count"])
-    monthly = {}
-    for r in read(ROOT / "data/flights/loadfactor.csv"):
-        if r["scope"] == "ALL" and r.get("region", "all") == "all":
-            monthly[r["month"]] = (int(r["in_pax"]), int(r["out_pax"]))
-    return inbound, outbound, totals, purpose, port, monthly
+    return inbound, outbound, totals, purpose, port
 
 
 CSS = """
-:root { --in:#1f7ad6; --out:#e07b28; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --in:#4a90e2; --out:#ec8f45; } }
-:root[data-theme="dark"] { --in:#4a90e2; --out:#ec8f45; }
+:root { --in:#1f7ad6; --out:#e07b28; --intl:#1f7ad6; --cross:#8a55dd; --dom:#2e9e5b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --in:#4a90e2; --out:#ec8f45; --intl:#4a90e2; --cross:#a77ee8; --dom:#4cbb78; } }
+:root[data-theme="dark"] { --in:#4a90e2; --out:#ec8f45; --intl:#4a90e2; --cross:#a77ee8; --dom:#4cbb78; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top > .box, .grid > .box { margin-top:12px; min-width:0; }
@@ -105,6 +102,18 @@ CSS = """
 .duo .v small { font-size:15px; color:var(--muted); font-weight:500; margin-left:2px; }
 .duo .yoy { font-size:14px; color:var(--muted); }
 .duo .yoy b { font-weight:500; color:var(--fg); }
+.big { font-size:clamp(34px,9vw,56px); font-weight:700; line-height:1.1; white-space:nowrap; }
+.big small { font-size:16px; color:var(--muted); font-weight:500; margin-left:4px; }
+.box > .yoy { font-size:14px; color:var(--muted); }
+.box > .yoy b { font-weight:500; color:var(--fg); }
+.split { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0 0; }
+.split div { min-width:0; }
+.split dt { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:5px; }
+.split dt i { width:10px; height:10px; border-radius:50%; display:inline-block; flex:none; }
+.split dd { margin:0; font-size:clamp(15px,4.4vw,18px); font-weight:700; white-space:nowrap; }
+.bd .bar.i { fill:var(--intl); } .bd .bar.c { fill:var(--cross); } .bd .bar.o { fill:var(--dom); }
+.legend .sq { width:12px; height:12px; border-radius:3px; display:inline-block; margin-left:8px; }
+.legend .sq:first-child { margin-left:0; }
 .note { font-size:13px; color:var(--muted); margin:8px 0 0; }
 .tip { font-size:13px; color:var(--muted); margin:2px 0 0; min-height:1.6em; }
 .chart.bd { max-height:none; }
@@ -187,15 +196,16 @@ def build(out, head, nav):
     if not (DATA / "totals.csv").exists():
         return []
     data = load()
+    seg, airports = bf.load()[:2]
     urls = []
     for EN in (False, True):
-        bb.EN = EN
-        urls.append(page(out, head, nav, *data))
-    EN = bb.EN = False
+        bb.EN = bf.EN = EN
+        urls.append(page(out, head, nav, *data, seg, airports))
+    EN = bb.EN = bf.EN = False
     return urls
 
 
-def page(out, head, nav, inbound, outbound, totals, purpose, port, monthly):
+def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports):
     y = max(yy for yy, (i, o) in totals.items() if i and o)
     ti, to = totals[y]
     pi, po = totals.get(y - 1, (0, 0))
@@ -213,21 +223,32 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, monthly):
             f'{one(tr("國人出國", "Taiwanese going abroad"), "out", to, po, pre and pre[1])}</div>'
             f'<p class="note">{tr("觀光署每年公布一次全年統計。", "Published once a year by the Tourism Administration.")}</p></section>')
 
-    latest = ""
-    if monthly:
-        lm = max(monthly)
-        my, mm = int(lm[:4]), int(lm[5:])
-        a, b = monthly[lm]
-        ytd = [monthly[k] for k in monthly if k.startswith(f"{my}-") and k <= lm]
-        yi, yo = sum(x[0] for x in ytd), sum(x[1] for x in ytd)
-        label = tr(f"{my} 年 {mm} 月", f"{MON[mm - 1]} {my}")
-        latest = (f'<section class="box"><h2>{tr(f"最新月份：{label} 國際航班旅客", f"Latest month: international air travel, {label}")}</h2><div class="duo">'
-                  f'<div><div class="k"><i style="background:var(--in)"></i>{tr("入境", "Arrivals")}</div><div class="v">{n(a)}<small>{tr("人次", "")}</small></div>'
-                  f'<div class="yoy">{tr(f"今年 1～{mm} 月", f"Jan–{MON[mm - 1]}")} <b>{n(yi)}</b></div></div>'
-                  f'<div><div class="k"><i style="background:var(--out)"></i>{tr("出境", "Departures")}</div><div class="v">{n(b)}<small>{tr("人次", "")}</small></div>'
-                  f'<div class="yoy">{tr(f"今年 1～{mm} 月", f"Jan–{MON[mm - 1]}")} <b>{n(yo)}</b></div></div></div>'
-                  f'<p class="note">{tr("民航局國際及兩岸定期航班的入境、出境旅客，外國旅客和國人都算在內；每月更新。更多航班數字見", "Passengers on scheduled international and China flights from the Civil Aeronautics Administration, foreign visitors and Taiwanese alike; updated monthly. More in")}'
-                  f' <a href="{"/en" if EN else ""}/flights/">{tr("機場航班", "Flights")}</a>{tr("。", ".")}</p></section>')
+    # 機場旅客（民航局，每月）
+    latest = air_box = bars_box = ""
+    months = sorted(p for p in seg if len(p) == 7)
+    if months:
+        last = months[-1]
+        ly, lm = int(last[:4]), int(last[5:])
+        x, prev = seg[last], seg.get(f"{ly - 1}-{lm:02d}")
+        ytd = [seg[k] for k in months if k.startswith(f"{ly}-")]
+        items = [(tr("國際", "International"), "intl", "pax_intl"), (tr("兩岸", "China"), "cross", "pax_cross"),
+                 (tr("國內", "Domestic"), "dom", "pax_dom")]
+        split = '<dl class="split">' + "".join(
+            f'<div><dt><i style="background:var(--{c})"></i>{k}</dt><dd>{bf.wan(x[f])}</dd></div>' for k, c, f in items) + "</dl>"
+        yoy = pct(x["pax"], prev and prev["pax"])
+        latest = (f'<section class="box"><h2>{tr(f"{ly} 年 {lm} 月・全台機場旅客", f"{MON[lm - 1]} {ly}: passengers at Taiwan airports")}</h2>'
+                  f'<div class="big">{n(x["pax"])}<small>{tr("人次", "")}</small></div>'
+                  + (f'<div class="yoy">{tr("比去年同月", "vs a year earlier")} <b>{yoy}</b>・{tr(f"今年 1～{lm} 月", f"Jan–{MON[lm - 1]}")} <b>{n(sum(r["pax"] for r in ytd))}</b></div>' if yoy else "")
+                  + split + f'<p class="note">{tr("含入境、出境及過境旅客；民航局每月公布。", "Arrivals, departures and transit; published monthly by the Civil Aeronautics Administration.")}</p></section>')
+        air_box = (f'<section class="box"><h2>{tr(f"各機場旅客（{ly} 年 {lm} 月）", f"Passengers by airport ({MON[lm - 1]} {ly})")}</h2>'
+                   f'<p class="note" style="margin:0 0 6px">{tr("右邊是比去年同月", "Right: change from a year earlier")}</p>'
+                   f'<ul class="hbars in">{bf.airport_list(airports, last)}</ul></section>')
+        recent = months[-24:]
+        bars_box = (f'<section class="box"><h2>{tr("每月機場旅客", "Airport passengers per month")}</h2>'
+                    f'<p class="legend"><i class="sq" style="background:var(--intl)"></i>{tr("國際", "International")}'
+                    f'<i class="sq" style="background:var(--cross)"></i>{tr("兩岸", "China")}<i class="sq" style="background:var(--dom)"></i>{tr("國內", "Domestic")}</p>'
+                    f'<p class="tip">{tr("滑過或點長條看當月數字", "Hover or tap a bar to see that month")}</p>'
+                    f'<svg class="chart bd" viewBox="0 0 {bb.W} {bb.H}" role="img" aria-label="{tr("每月機場旅客人次", "Airport passengers per month")}">{bf.pax_bars(seg, recent)}</svg></section>')
 
     # 歷年趨勢
     yrs = [yy for yy in sorted(totals) if yy >= 1990 and yy <= y]
@@ -284,29 +305,29 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, monthly):
                          tr("滑過或點圖看每年數字", "Hover or tap the chart to see each year")))
 
     pj = {"names": names, "in": ib, "out": ob, "purpose": purpose, "port": port}
-    path = "travel/"
+    path = "tourism/"
     zh_url, en_url = f"{SITE}/{path}", f"{SITE}/en/{path}"
     top3 = "、".join(names[p] for p, _ in top[:3]) if not EN else ", ".join(names[p] for p, _ in top[:3])
     if EN:
-        title = f"Taiwan Tourism Statistics {y}: {ti / 1e6:.2f}M Visitors, {to / 1e6:.2f}M Trips Abroad | Taiwan Data"
+        title = f"Taiwan Tourism and Travellers {y}: {ti / 1e6:.2f}M Visitors, {to / 1e6:.2f}M Trips Abroad | Taiwan Data"
         desc = (f"Taiwan welcomed {n(ti)} visitors in {y} ({pct(ti, pi)}) and Taiwanese made {n(to)} trips abroad ({pct(to, po)}). "
                 f"Top markets: {top3}. Visitors by country, purpose and port of entry, destinations of Taiwanese travellers, and trends since {yrs[0]}.")
         foot = ("<div>Sources: Tourism Administration, Ministry of Transportation and Communications, tourism statistics open data (yearly); "
-                "monthly air passengers from the Civil Aeronautics Administration. Checked daily.</div>\n"
+                "monthly airport passengers from the Civil Aeronautics Administration. Checked daily.</div>\n"
                 "    <div>An independent site, not affiliated with the government. All figures come from government open data.</div>")
     else:
-        title = f"台灣旅遊統計統計：{y} 年來台 {ti / 1e4:,.0f} 萬人次、出國 {to / 1e4:,.0f} 萬人次｜Taiwan Data 台灣數據"
+        title = f"台灣旅客人次：{y} 年來台 {ti / 1e4:,.0f} 萬人次、出國 {to / 1e4:,.0f} 萬人次｜Taiwan Data 台灣數據"
         desc = (f"觀光署最新統計：{y} 年來台旅客 {n(ti)} 人次（{pct(ti, pi)}），國人出國 {n(to)} 人次（{pct(to, po)}）。"
-                f"主要來源地{top3}；來台目的、入境港口、國人出國目的地與 {yrs[0]} 年以來趨勢。")
-        foot = ("<div>資料來源：交通部觀光署觀光統計開放資料（每年）；每月國際航班旅客來自交通部民用航空局。每天檢查一次。</div>\n"
+                f"各機場旅客、主要來源地{top3}；來台目的、入境港口、國人出國目的地與 {yrs[0]} 年以來趨勢。")
+        foot = ("<div>資料來源：交通部觀光署觀光統計開放資料（每年）；每月機場旅客來自交通部民用航空局。每天檢查一次。</div>\n"
                 "    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>")
     html_ = f"""{head(title, desc, en_url if EN else zh_url, "og.png", "en" if EN else "zh", (zh_url, en_url))}
 <body>
 <style>{CSS}{style}</style>
 {nav("en" if EN else "zh", "/" + path if EN else "/en/" + path)}
 <div class="wrap">
-  <div class="top">{hero}{latest}</div>
-  <div class="grid">{trend}{blocks[-1]}</div>
+  <div class="top">{latest}{hero}</div>
+  <div class="grid">{air_box}{bars_box}{trend}{blocks[-1]}</div>
   {pick}
   <div class="grid">{"".join(blocks[:-1])}</div>
   <footer>
