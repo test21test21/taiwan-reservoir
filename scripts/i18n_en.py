@@ -144,7 +144,7 @@ HOME_HTML = [
     ("<p>熱門航點與航空公司的旅客、載客率排行，哪條航線最滿一眼看懂。</p>", "<p>The busiest routes and airlines, and how full their flights are.</p>"),
     ('<div class="num">民航局每月公布</div>', '<div class="num">Published monthly by the Civil Aeronautics Administration</div>'),
     ("<h2>旅客人次</h2>", "<h2>Tourism</h2>"),
-    ("<p>各機場旅客、來台旅客從哪裡來、國人出國去哪裡。</p>", "<p>Passengers at every airport, where visitors to Taiwan come from, and where Taiwanese travel.</p>"),
+    ("<p>各機場旅客、來台旅客來源、出國目的地。</p>", "<p>Passengers at every airport, visitor origins and destinations abroad.</p>"),
     ('<div class="num">民航局每月、觀光署每年公布</div>', '<div class="num">Monthly airport and yearly tourism figures</div>'),
     ('<footer>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。<a href="about/">關於本站</a></footer>',
      '<footer>An independent site, not affiliated with the government. All figures come from government open data. <a href="about/">About</a></footer>'),
