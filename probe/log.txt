@@ -1,40 +1,10 @@
-caa_30680.csv 200 183 application/octet-stream
-caa_30681.csv 200 186 application/octet-stream
-caa_30673.csv 200 191 application/octet-stream
-caa_30678.csv 200 165 application/octet-stream
-caa_30683.csv 200 156 application/octet-stream
-caa_30682.csv 200 180 application/octet-stream
-caa_34966.csv 200 196 application/octet-stream
-tour_1.csv 200 9978 text/csv;charset=UTF-8
-tour_2.csv 200 53392 text/csv
-tour_3.csv 200 67251 text/csv
-tour_4.csv 200 49399 text/csv
-tour_5.csv 200 9986 text/csv
-tour_6.csv 200 53452 text/csv
-tour_7.csv 200 11525 text/csv
-tour_8.csv 200 32057 text/csv
-tour_9.csv 200 1781 text/csv
-tour_10.csv 200 43487 text/csv
-tour_11.csv 200 11147 text/csv
-tour_12.csv 200 5333 text/csv
-tour_13.csv 200 73541 text/csv
-tour_14.csv 200 62775 text/csv
-tour_15.csv 200 12230 text/csv
-tour_16.csv 200 43611 text/csv
-tour_17.csv 200 1923 text/csv
-tour_18.csv 404 137 application/json
-tour_19.csv 404 137 application/json
-tour_20.csv 404 137 application/json
-tour_21.csv 404 137 application/json
-tour_22.csv 404 137 application/json
-tour_23.csv 404 137 application/json
-tour_24.csv 404 137 application/json
-tour_25.csv 404 137 application/json
-tour_26.csv 404 137 application/json
-tour_27.csv 404 137 application/json
-tour_28.csv 404 137 application/json
-tour_29.csv 404 137 application/json
-tour_30.csv 404 137 application/json
-outbound_idx.csv 200 937 application/octet-stream
-stat_home.html 200 14232 text/html; charset=utf-8
-stat_data.html 404 134 application/json
+caa_41552.bin 200 41281 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=41552
+caa_41540.bin 200 46607 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=41540
+caa_41543.bin 200 322963 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=41543
+caa_41546.bin 200 27178 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=41546
+caa_41531.bin 200 27741 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=41531
+caa_41528.bin 200 43210 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=41528
+caa_40810.bin 200 156752 application/octet-stream https://www.caa.gov.tw/FileAtt.ashx?lang=1&id=40810
+admin_12124.html 200 111965 text/html; charset=utf-8 https://admin.taiwan.net.tw/businessinfo/IssuePage?a=12124
+admin_14642.html 200 124824 text/html; charset=utf-8 https://admin.taiwan.net.tw/businessinfo/FilePage?a=14642
+stat_main.js 200 1713968 application/javascript; charset=UTF-8 https://stat.taiwan.net.tw/main-es2017.12a43d48256b7b0b46dd.js
