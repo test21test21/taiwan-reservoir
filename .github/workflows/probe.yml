@@ -18,17 +18,17 @@ jobs:
           cd scripts && python3 - <<'PY'
           import urllib.request, urllib.parse, time, fetch_flights as F
           out = open("../probe/ids.txt", "w")
-          for i in list(range(38700, 38800)) + list(range(41490, 41560)) + list(range(35950, 35970)):
+          for i in range(39300, 40400):
               url = f"https://www.caa.gov.tw/FileAtt.ashx?lang=1&id={i}"
               try:
                   req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "taiwandata.info"})
                   with urllib.request.urlopen(req, timeout=30, context=F.ssl_context()) as r:
                       cd = r.headers.get("Content-Disposition", "")
-                      out.write(f"{i}\t{r.status}\t{urllib.parse.unquote(cd).encode('latin1', 'replace').decode('big5', 'replace')}\n")
+                      if "_173" in urllib.parse.unquote(cd).encode("latin1", "replace").decode("big5", "replace") or "_174" in urllib.parse.unquote(cd).encode("latin1", "replace").decode("big5", "replace"): out.write(f"{i}\t{r.status}\t{urllib.parse.unquote(cd).encode('latin1', 'replace').decode('big5', 'replace')}\n")
               except Exception as ex:
                   out.write(f"{i}\tERR\t{ex}\n")
               out.flush()
-              time.sleep(0.2)
+              time.sleep(0.1)
           PY
       - run: |
           git config user.name "github-actions[bot]"
