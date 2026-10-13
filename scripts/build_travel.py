@@ -378,10 +378,11 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
         def prev_month(p):
             return seg.get(f"{int(p[:4]) - 1}-{p[5:]}")
 
+        pick_m = [p for p in months if prev_month(p)] or [last]  # 只列能和去年同月比較的月份
         panes = "".join(
             f'<div data-mpane="{p}"{"" if p == last else " hidden"}>{block(seg[p], prev_month(p), tr("比去年同月", "vs same month last year"))}</div>'
-            for p in months)
-        opts = "".join(f'<option value="{p}"{" selected" if p == last else ""}>{ym_full(p)}</option>' for p in reversed(months))
+            for p in pick_m)
+        opts = "".join(f'<option value="{p}"{" selected" if p == last else ""}>{ym_full(p)}</option>' for p in reversed(pick_m))
         latest = (f'<section class="box"><h2><select id="mpick" aria-label="{tr("月份", "Month")}">{opts}</select>'
                   f'{tr("・全台機場旅客", " · passengers at Taiwan airports")}</h2>{panes}'
                   f'<p class="note">{tr("含入境、出境及過境旅客；民航局每月公布。", "Arrivals, departures and transit; published monthly by the Civil Aeronautics Administration.")}</p></section>')
