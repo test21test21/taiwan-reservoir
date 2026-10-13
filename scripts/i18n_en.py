@@ -7,7 +7,7 @@
 RESERVOIRS = {
     "10201": "Shihmen Reservoir", "10203": "Xishi Reservoir", "10204": "Xinshan Reservoir",
     "10205": "Feitsui Reservoir", "10206": "Ronghua Dam", "10211": "Qingtan Weir", "10212": "Zhitan Dam",
-    "10401": "Baoshan Reservoir", "10405": "Baoshan Second Reservoir", "10501": "Yongheshan Reservoir",
+    "10401": "Baoshan Reservoir", "10405": "Second Baoshan Reservoir", "10501": "Yongheshan Reservoir",
     "10503": "Dapu Reservoir", "10601": "Mingde Reservoir", "10802": "Luodong Weir",
     "20101": "Liyutan Reservoir", "20201": "Deji Reservoir", "20202": "Shigang Dam", "20405": "Shilin Weir",
     "20501": "Wushe Reservoir", "20502": "Sun Moon Lake Reservoir", "20503": "Jiji Weir", "20507": "Wujie Dam",
