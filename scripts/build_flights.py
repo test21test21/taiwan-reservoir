@@ -10,7 +10,9 @@ from collections import defaultdict
 from pathlib import Path
 
 import build_births as bb
+import geo
 import i18n_en
+import worldmap
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data/flights"
@@ -154,7 +156,15 @@ html[lang="en"] .hbars li { grid-template-columns:9em 1fr auto; }
 .tables > div { min-width:0; overflow-x:auto; }
 @media (min-width:1100px) { .tables { grid-template-columns:3fr 2fr; } }
 .tables h3 { font-size:15px; margin:8px 0 0; }
-"""
+#routes [data-st="o"] { margin-top:14px; }
+.rt-arc .ln { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; opacity:.7; }
+.rt-arc .hit { fill:none; stroke:transparent; vector-effect:non-scaling-stroke; stroke-linecap:round; pointer-events:stroke; cursor:pointer; }
+.rt-arc .hit { stroke-width:12px; }
+.rt-dot .tap { fill:transparent; cursor:pointer; }
+.rt-dot .pt { fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round; }
+.ov.dim .rt-arc .ln, .ov.dim .rt-dot { opacity:.15; }
+.ov.dim .rt-arc.on .ln, .ov.dim .rt-dot.on { opacity:1; }
+""" + worldmap.CSS
 
 JS = """<script>
 (function () {
@@ -227,9 +237,78 @@ JS = """<script>
         '<td class="n fl">' + Object.keys(d).length + "</td></tr>";
     });
     abody.innerHTML = h;
+    drawMap();
     note.textContent = st.o === "pax" ? "" : (EN ? "Only routes and airlines with at least " + f(D.min[st.p]) + " flights in this period."
       : "只列這段期間至少 " + f(D.min[st.p]) + " 個航班的航點和航空公司。");
   }
+  // 航線地圖：線越粗旅客越多，顏色是載客率；點城市看各航空公司
+  var svg = document.getElementById("rt-map"), ov = svg.querySelector(".ov"), info = document.getElementById("rt-info");
+  var LFC = [[90, "#ff5c5c"], [80, "#ffa940"], [70, "#ffe17a"], [0, "#7fc8ff"]], sel = null, cur = [];
+  function lfColor(v) { for (var i = 0; i < LFC.length; i++) if (v >= LFC[i][0]) return LFC[i][1]; }
+  function showInfo(a) {
+    if (!a) {
+      var tp = 0; cur.forEach(function (x) { tp += x.p; });
+      info.innerHTML = '<span class="muted">' + (EN ? cur.length + " destinations, " + f(tp) + " passengers. Tap a city to see its airlines."
+        : "共 " + cur.length + " 個航點、旅客 " + f(tp) + " 人次。點地圖上的城市看各航空公司。") + "</span>";
+      return;
+    }
+    var h = "<h3>" + nm(D.dn, a.k) + "</h3><div>" + (EN ? "Passengers " : "旅客 ") + f(a.p) + (EN ? " · load factor " : "・載客率 ") +
+      (a.p / a.s * 100).toFixed(1) + "%" + (EN ? " · flights " : "・航班 ") + f(a.f) + "</div>";
+    var top = a.sub.slice().sort(function (x, y) { return y[5] - x[5]; }), mx = top[0][5] || 1;
+    h += '<ul class="hbars">' + top.slice(0, 8).map(function (r) {
+      return '<li><span class="nm">' + nm(D.an, r[2]) + '</span><span class="track"><span class="fill" style="width:' + (r[5] / mx * 100).toFixed(1) +
+        '%;background:' + lfColor(r[5] / r[4] * 100) + '"></span></span><span class="val">' + f(r[5]) + "<small>" + (r[5] / r[4] * 100).toFixed(1) + "%</small></span></li>";
+    }).join("") + "</ul>";
+    info.innerHTML = h;
+  }
+  function pick(k) {
+    sel = sel === k ? null : k;
+    ov.classList.toggle("dim", sel !== null);
+    ov.querySelectorAll("[data-k]").forEach(function (e) { e.classList.toggle("on", +e.getAttribute("data-k") === sel); });
+    showInfo(cur.filter(function (a) { return a.k === sel; })[0]);
+  }
+  function drawMap() {
+    var rows = (D.D[st.p] || {})[st.s] || [], u = WM.unit(svg), o = D.o[st.s], vb = svg.viewBox.baseVal;
+    cur = agg(rows, 1).filter(function (a) { return D.xy[a.k]; }).sort(function (a, b) { return a.p - b.p; });
+    if (!cur.some(function (a) { return a.k === sel; })) sel = null;
+    var mx = cur.length ? cur[cur.length - 1].p : 1;
+    ov.innerHTML = ""; ov.classList.toggle("dim", sel !== null);
+    var arcs = WM.el("g", {}), dots = WM.el("g", {}), labs = WM.el("g", {});
+    cur.forEach(function (a) {
+      var d = D.xy[a.k], dx = d[0] - o[0], dy = d[1] - o[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var bend = len * 0.22, nx = -dy / len, ny = dx / len;
+      if (ny > 0) { nx = -nx; ny = -ny; }   // 弧線往北彎
+      var cx = (o[0] + d[0]) / 2 + nx * bend, cy = (o[1] + d[1]) / 2 + ny * bend;
+      var w = Math.max(1, Math.sqrt(a.p / mx) * 9), c = lfColor(a.p / a.s * 100), on = a.k === sel ? " on" : "";
+      var g = WM.el("g", { "class": "rt-arc" + on, "data-k": a.k });
+      var path = "M" + o[0] + "," + o[1] + "Q" + cx.toFixed(1) + "," + cy.toFixed(1) + " " + d[0] + "," + d[1];
+      g.appendChild(WM.el("path", { d: path, stroke: c, "stroke-width": w, "class": "ln" }));
+      g.appendChild(WM.el("path", { d: path, "class": "hit" }));
+      arcs.appendChild(g);
+      var dot = WM.el("g", { "class": "rt-dot" + on, "data-k": a.k });
+      dot.appendChild(WM.el("path", { d: "M" + d[0] + "," + d[1] + "h0", stroke: c, "stroke-width": Math.max(5, w + 3), "class": "pt" }));
+      dot.appendChild(WM.el("circle", { cx: d[0], cy: d[1], r: 11 * u, "class": "tap" }));
+      var t = WM.el("title", {}); t.textContent = nm(D.dn, a.k) + " " + f(a.p); dot.appendChild(t);
+      dots.appendChild(dot);
+    });
+    // 城市名：旅客多的先放，互相重疊或超出畫面就不放
+    var fs = 12 * u, placed = [], x0 = vb.x, x1 = vb.x + vb.width, y0 = vb.y, y1 = vb.y + vb.height;
+    var r = svg.getBoundingClientRect();
+    x0 = vb.x + (vb.width - r.width * u) / 2; x1 = x0 + r.width * u; y0 = vb.y + (vb.height - r.height * u) / 2; y1 = y0 + r.height * u;
+    cur.slice().reverse().slice(0, 40).forEach(function (a) {
+      var d = D.xy[a.k], s = nm(D.dn, a.k), w = s.length * fs * (EN ? 0.56 : 1), bx = d[0] + 5 * u, by = d[1] - fs * 0.5;
+      var b = [bx, by - fs * 0.5, bx + w, by + fs * 0.6];
+      if (b[0] < x0 || b[2] > x1 || b[1] < y0 || b[3] > y1) return;
+      if (placed.some(function (q) { return b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1]; })) return;
+      placed.push(b);
+      var t = WM.el("text", { x: bx, y: by + fs * 0.35, "font-size": fs, "style": "stroke-width:" + 3 * u });
+      t.textContent = s; labs.appendChild(t);
+    });
+    ov.appendChild(arcs); ov.appendChild(dots); ov.appendChild(labs);
+    showInfo(cur.filter(function (a) { return a.k === sel; })[0]);
+  }
+  ov.addEventListener("click", function (ev) { var g = ev.target.closest("[data-k]"); if (g) pick(+g.getAttribute("data-k")); });
+  svg.addEventListener("wmview", drawMap);
   rbody.addEventListener("click", function (ev) {
     var tr = ev.target.closest("tr.main"); if (!tr) return;
     var open = !tr.classList.contains("open"); tr.classList.toggle("open", open);
@@ -245,6 +324,7 @@ JS = """<script>
       });
     });
   });
+  WM.init(svg);
   render();
 })();
 </script>"""
@@ -386,7 +466,9 @@ def route_data(routes, periods):
                 ai[r["airline"]] = len(an); an.append(r["airline"])
             packed[key].setdefault(r["scope"], []).append(
                 [0 if r["region"] == "intl" else 1, di[r["dest"]], ai[r["airline"]], int(r["flights"]), int(r["seats"]), int(r["pax"])])
-    return {"dn": [dn, [i18n_en.DESTS.get(x) for x in dn]], "an": [an, [i18n_en.AIRLINES.get(x) for x in an]], "D": packed}
+    return {"dn": [dn, [i18n_en.DESTS.get(x) for x in dn]], "an": [an, [i18n_en.AIRLINES.get(x) for x in an]], "D": packed,
+            "xy": [worldmap.xy(*geo.DEST[x]) if x in geo.DEST else None for x in dn],
+            "o": {c: worldmap.xy(*geo.AIRPORT[c]) for c in SCOPES}}
 
 
 def build(out, head, nav):
@@ -448,9 +530,15 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
     tha = (f'<tr><th></th><th>{tr("航空公司", "Airline")}</th><th class="n">{tr("旅客", "Passengers")}</th>'
            f'<th class="n">{tr("載客率", "Load factor")}</th><th class="n fl">{tr("航點", "Routes")}</th></tr>')
     blocks.append(
-        f'<section class="box wide" id="routes"><h2>{tr("熱門航點與航空公司", "Top destinations and airlines")}</h2>'
+        f'<section class="box wide" id="routes"><h2>{tr("航線地圖與熱門航點", "Route map and top destinations")}</h2>'
         + seg_buttons('data-st="p" aria-label="' + tr("期間", "Period") + '"', periods, periods[0][0])
         + seg_buttons('data-st="s" aria-label="' + tr("機場", "Airport") + '"', [(c, ap(c) if c != "ALL" else tr("全部", "All")) for c in SCOPES], "ALL")
+        + seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view") + '"', [("asia", tr("亞洲", "Asia")), ("world", tr("全球", "World"))], "asia")
+        + worldmap.svg("rt-map", tr("台灣飛往各城市的航線地圖", "Map of routes from Taiwan"))
+        + '<div class="wmleg"><span>' + tr("線越粗旅客越多；顏色是載客率：", "Thicker line = more passengers. Colour = load factor:") + "</span>"
+        + "".join(f'<span><i style="background:{c}"></i>{t}</span>' for c, t in
+                  [("#7fc8ff", tr("70% 以下", "under 70%")), ("#ffe17a", "70–80%"), ("#ffa940", "80–90%"), ("#ff5c5c", tr("90% 以上", "90%+"))])
+        + '</div><div class="wminfo" id="rt-info" aria-live="polite"></div>'
         + seg_buttons('data-st="o" aria-label="' + tr("排序", "Sort") + '"',
                       [("pax", tr("旅客最多", "Most passengers")), ("hi", tr("最滿", "Fullest")), ("lo", tr("最空", "Emptiest"))], "pax")
         + f'<p class="note" id="rt-note"></p><div class="tables">'
@@ -500,6 +588,7 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
   </footer>
 </div>
 <script type="application/json" id="rt-data">{json.dumps(rd, ensure_ascii=False, separators=(",", ":"))}</script>
+{worldmap.JS}
 {JS}
 </body>
 </html>

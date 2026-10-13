@@ -14,6 +14,8 @@ from pathlib import Path
 
 import build_births as bb
 import build_flights as bf
+import geo
+import worldmap
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data/travel"
@@ -140,6 +142,23 @@ html[lang="en"] .hbars li { grid-template-columns:9em 1fr auto; }
 .hbars .up { color:#1f8a4c; } .hbars .down { color:#d13c3c; }
 .legend .sw { width:18px; height:0; border-top:2.5px solid; display:inline-block; margin-left:8px; }
 .legend .sw:first-child { margin-left:0; }
+#tmap { margin-top:12px; }
+.tm-year { position:absolute; left:12px; bottom:8px; font-size:clamp(28px,7vw,48px); font-weight:700; color:#e8eaed; line-height:1; pointer-events:none; font-variant-numeric:tabular-nums; }
+.tm-year small { display:block; font-size:13px; font-weight:400; color:#aeb4bb; margin-top:4px; }
+.wm .c.has { cursor:pointer; }
+.wm .c.on { stroke:#fff; stroke-width:2; }
+.tm-dot { stroke:#1b1d20; vector-effect:non-scaling-stroke; stroke-width:1.5; cursor:pointer; }
+.tm-dot.on { stroke:#fff; stroke-width:2.5; }
+.play { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.play button { font:inherit; font-size:15px; border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:999px; padding:6px 14px; cursor:pointer; white-space:nowrap; min-width:5.5em; }
+.play input { flex:1; min-width:0; accent-color:var(--in); height:28px; }
+.tm-prof { display:grid; gap:4px 16px; }
+@media (min-width:700px) { .tm-prof { grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); align-items:center; } }
+.tm-prof svg { width:100%; height:auto; max-height:120px; display:block; }
+.tm-prof .ln { fill:none; stroke-width:2; vector-effect:non-scaling-stroke; }
+.tm-prof .ln.in { stroke:var(--in); } .tm-prof .ln.out { stroke:var(--out); }
+.tm-prof .ax { font-size:11px; fill:var(--muted); }
+.wminfo b.up { color:#1f8a4c; font-weight:500; } .wminfo b.down { color:#d13c3c; font-weight:500; }
 """
 
 JS = """<script>
@@ -173,7 +192,86 @@ JS = """<script>
     });
     document.querySelectorAll(".j-year").forEach(function (el) { el.textContent = y; });
   }
-  sel.addEventListener("change", show);
+  sel.addEventListener("change", function () { show(); setYear(+sel.value); });
+
+  // 世界地圖：各國依人數上色，年份可以播放
+  var svg = document.getElementById("tm-map"), ov = svg.querySelector(".ov"), info = document.getElementById("tm-info");
+  var slider = document.getElementById("tm-slider"), playB = document.getElementById("tm-play"), yl = document.getElementById("tm-year");
+  var BINS = [1e6, 3e5, 1e5, 3e4, 1e4, 1];
+  var PAL = { "in": ["#c2e0ff", "#7db6f2", "#4a90e2", "#2f6fb8", "#24538a", "#1e3a5c"], out: ["#ffd3a3", "#f4a35e", "#e07b28", "#a65f22", "#74441d", "#4a2e17"] };
+  var M = { dir: "in", year: +slider.value, sel: null, timer: null };
+  var paths = {}; svg.querySelectorAll(".land .c").forEach(function (p) { paths[p.getAttribute("data-id")] = p; });
+  function color(v) { for (var i = 0; i < BINS.length; i++) if (v >= BINS[i]) return PAL[M.dir][i]; return null; }
+  function pc(now, before) {
+    if (!before) return "";
+    var x = (now - before) / before * 100;
+    return '<b class="' + (x > 0 ? "up" : x < 0 ? "down" : "") + '">' + (x > 0 ? "▲ " : x < 0 ? "▼ " : "▶ ") + Math.abs(x).toFixed(1) + "%</b>";
+  }
+  function paint() {
+    var cur = D[M.dir][M.year] || {}, u = WM.unit(svg);
+    slider.style.accentColor = "var(--" + M.dir + ")";
+    document.querySelectorAll(".tm-sw").forEach(function (e) { e.style.background = PAL[M.dir][+e.getAttribute("data-i")]; });
+    Object.keys(paths).forEach(function (k) { var p = paths[k]; p.style.fill = ""; p.classList.remove("has", "on"); p.removeAttribute("data-p"); });
+    ov.innerHTML = "";
+    Object.keys(cur).forEach(function (pl) {
+      var c = color(cur[pl]), iso = D.iso[pl], dot = D.dot[pl];
+      if (!c) return;
+      if (iso && paths[iso]) {
+        var p = paths[iso]; p.style.fill = c; p.classList.add("has"); p.setAttribute("data-p", pl);
+        if (pl === M.sel) p.classList.add("on");
+      }
+      if (dot) {
+        var e = WM.el("circle", { cx: dot[0], cy: dot[1], r: 6 * u, fill: c, "class": "tm-dot" + (pl === M.sel ? " on" : ""), "data-p": pl });
+        var t = WM.el("title", {}); t.textContent = (D.names[pl] || pl) + " " + f(cur[pl]); e.appendChild(t);
+        ov.appendChild(e);
+      }
+    });
+    var tot = D.tot[M.year] ? D.tot[M.year][M.dir === "in" ? 0 : 1] : 0;
+    yl.innerHTML = M.year + (tot ? "<small>" + (M.dir === "in" ? (EN ? "Visitors " : "來台 ") : (EN ? "Trips abroad " : "出國 ")) + f(tot) + "</small>" : "");
+    profile();
+  }
+  function spark(pl) {
+    var ys = D.years, W = 500, H = 90, vals = ys.map(function (y) { return (D[M.dir][y] || {})[pl] || 0; });
+    var mx = Math.max.apply(null, vals) || 1, pts = vals.map(function (v, i) { return (i / (ys.length - 1) * W).toFixed(1) + "," + (H - 14 - v / mx * (H - 22)).toFixed(1); });
+    var i = ys.indexOf(M.year), cx = i / (ys.length - 1) * W, cy = H - 14 - vals[i] / mx * (H - 22);
+    return '<svg viewBox="-6 0 ' + (W + 12) + " " + H + '"><polyline class="ln ' + M.dir + '" points="' + pts.join(" ") + '"/>' +
+      '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="4" fill="var(--' + M.dir + ')"/>' +
+      '<text class="ax" x="0" y="' + (H - 1) + '">' + ys[0] + '</text><text class="ax" x="' + W + '" y="' + (H - 1) + '" text-anchor="end">' + ys[ys.length - 1] + "</text></svg>";
+  }
+  function profile() {
+    var cur = D[M.dir][M.year] || {};
+    if (!M.sel || !cur[M.sel]) {
+      info.innerHTML = '<span class="muted">' + (EN ? "Tap a country to see its numbers over the years." : "點國家看它歷年的人數。") + "</span>";
+      return;
+    }
+    var v = cur[M.sel], prev = (D[M.dir][M.year - 1] || {})[M.sel], pre = (D[M.dir][2019] || {})[M.sel];
+    var rank = Object.keys(cur).filter(function (k) { return cur[k] > v; }).length + 1;
+    var h = "<div><h3>" + (D.names[M.sel] || M.sel) + "</h3><div>" + M.year + (EN ? ": " : " 年") + (M.dir === "in" ? (EN ? "visitors to Taiwan " : "來台 ") : (EN ? "Taiwanese arrivals " : "國人前往 ")) +
+      "<b>" + f(v) + "</b>" + (EN ? "" : " 人次") + (EN ? " · rank " : "・第 ") + rank + (EN ? "" : " 名") + "</div><div class='muted'>" +
+      (prev ? (EN ? "vs previous year " : "比前一年 ") + pc(v, prev) : "") + (pre && M.year > 2019 ? (EN ? " · " : "・") + (EN ? "" : "2019 年的 ") + "<b>" + (v / pre * 100).toFixed(0) + "%</b>" + (EN ? " of 2019" : "") : "") +
+      "</div></div>" + spark(M.sel);
+    info.innerHTML = '<div class="tm-prof">' + h + "</div>";
+  }
+  function setYear(y) { M.year = y; slider.value = y; if (+sel.value !== y && sel.querySelector('option[value="' + y + '"]')) { sel.value = y; show(); } paint(); }
+  slider.addEventListener("input", function () { stop(); setYear(+slider.value); });
+  function stop() { if (M.timer) { clearInterval(M.timer); M.timer = null; } playB.textContent = EN ? "▶ Play" : "▶ 播放"; }
+  playB.addEventListener("click", function () {
+    if (M.timer) { stop(); return; }
+    if (M.year >= +slider.max) setYear(+slider.min);
+    playB.textContent = EN ? "❚❚ Pause" : "❚❚ 暫停";
+    M.timer = setInterval(function () { if (M.year >= +slider.max) { stop(); return; } setYear(M.year + 1); }, 800);
+  });
+  svg.addEventListener("click", function (ev) {
+    var t = ev.target.closest("[data-p]"); M.sel = t && t.getAttribute("data-p") !== M.sel ? t.getAttribute("data-p") : null; paint();
+  });
+  document.querySelectorAll("[data-tmdir] button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      b.parentNode.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b); });
+      M.dir = b.getAttribute("data-k"); M.sel = null; paint();
+    });
+  });
+  svg.addEventListener("wmview", paint);
+  WM.init(svg);
   show();
 })();
 </script>"""
@@ -304,7 +402,32 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
                          tr("前五大來台旅客來源地歷年人次", "Visitors from the top five markets by year"),
                          tr("滑過或點圖看每年數字", "Hover or tap the chart to see each year")))
 
-    pj = {"names": names, "in": ib, "out": ob, "purpose": purpose, "port": port}
+    # 世界地圖
+    years_all = sorted(set(ib) & set(ob))
+    iso, dot = {}, {}
+    for yy in years_all:
+        for p in list(ib[yy]) + list(ob[yy]):
+            zh = split_name(p)[0]
+            if zh in geo.PLACE_ISO:
+                iso[p] = geo.PLACE_ISO[zh]
+            if zh in geo.SMALL:
+                dot[p] = worldmap.xy(*geo.SMALL[zh])
+    bins = [(1e6, tr("100 萬以上", "1M+")), (3e5, tr("30～100 萬", "300k–1M")), (1e5, tr("10～30 萬", "100k–300k")),
+            (3e4, tr("3～10 萬", "30k–100k")), (1e4, tr("1～3 萬", "10k–30k")), (1, tr("1 萬以下", "under 10k"))]
+    pal_in = ["#c2e0ff", "#7db6f2", "#4a90e2", "#2f6fb8", "#24538a", "#1e3a5c"]
+    tmap = (f'<section class="box" id="tmap"><h2>{tr("世界地圖：旅客從哪來、到哪去", "World map: where travellers come from and go")}</h2>'
+            + bf.seg_buttons('data-tmdir aria-label="' + tr("方向", "Direction") + '"', [("in", tr("來台旅客從哪來", "Visitors to Taiwan")), ("out", tr("國人出國去哪", "Taiwanese going abroad"))], "in")
+            + bf.seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view") + '"', [("asia", tr("亞洲", "Asia")), ("world", tr("全球", "World"))], "asia")
+            + worldmap.svg("tm-map", tr("各國旅客人數世界地圖", "World map of travellers by country"), extra='<div class="tm-year" id="tm-year"></div>')
+            + f'<div class="play"><button type="button" id="tm-play">{tr("▶ 播放", "▶ Play")}</button>'
+            + f'<input type="range" id="tm-slider" min="{years_all[0]}" max="{years_all[-1]}" step="1" value="{y}" aria-label="{tr("年份", "Year")}"></div>'
+            + '<div class="wmleg"><span>' + tr("人次：", "Travellers:") + "</span>"
+            + "".join(f'<span><i class="tm-sw" data-i="{i}" style="background:{pal_in[i]}"></i>{t}</span>' for i, (_, t) in enumerate(bins)) + "</div>"
+            + '<div class="wminfo" id="tm-info" aria-live="polite"></div>'
+            + f'<p class="note">{tr("觀光署每年統計：來台依居住地，出國依第一站抵達地。灰色是沒有單獨統計的國家；香港、澳門等小地方畫成圓點。", "Tourism Administration yearly figures: visitors by country of residence, trips abroad by first destination. Grey countries are not counted separately; small places such as Hong Kong and Macau are shown as dots.")}</p></section>')
+
+    pj = {"names": names, "in": ib, "out": ob, "purpose": purpose, "port": port, "iso": iso, "dot": dot, "years": years_all,
+          "tot": {yy: totals[yy] for yy in years_all if yy in totals}}
     path = "tourism/"
     zh_url, en_url = f"{SITE}/{path}", f"{SITE}/en/{path}"
     top3 = "、".join(names[p] for p, _ in top[:3]) if not EN else ", ".join(names[p] for p, _ in top[:3])
@@ -323,10 +446,11 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
                 "    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>")
     html_ = f"""{head(title, desc, en_url if EN else zh_url, "og.png", "en" if EN else "zh", (zh_url, en_url))}
 <body>
-<style>{CSS}{style}</style>
+<style>{CSS}{style}{worldmap.CSS}</style>
 {nav("en" if EN else "zh", "/" + path if EN else "/en/" + path)}
 <div class="wrap">
   <div class="top">{latest}{hero}</div>
+  {tmap}
   <div class="grid">{air_box}{bars_box}{trend}{blocks[-1]}</div>
   {pick}
   <div class="grid">{"".join(blocks[:-1])}</div>
@@ -335,6 +459,7 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
   </footer>
 </div>
 <script type="application/json" id="tv-data">{json.dumps(pj, ensure_ascii=False, separators=(",", ":"))}</script>
+{worldmap.JS}
 {JS}
 </body>
 </html>
