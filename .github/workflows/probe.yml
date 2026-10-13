@@ -16,19 +16,21 @@ jobs:
       - run: |
           mkdir -p probe
           cd scripts && python3 - <<'PY'
-          import csv, io, fetch_flights as F
-          for kind in ("airports", "segments", "loadfactor"):
-              meta = F.get(F.CAA.format(F.SOURCES[kind])).decode("utf-8-sig")
-              rows = list(csv.reader(io.StringIO(meta)))
-              open(f"../probe/{kind}-meta.txt", "w").write(meta)
-              sheets = F.read_ods(F.get(rows[1][3]))
-              with open(f"../probe/{kind}.txt", "w") as f:
-                  for name, rs in sheets.items():
-                      f.write(f"=== sheet {name}\n")
-                      for r in rs[:80]:
-                          f.write(" | ".join(F.clean(c) for c in r[:16]) + "\n")
+          import urllib.request, urllib.parse, time, fetch_flights as F
+          out = open("../probe/ids.txt", "w")
+          for i in range(38400, 39900, 6):
+              url = f"https://www.caa.gov.tw/FileAtt.ashx?lang=1&id={i}"
+              try:
+                  req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "taiwandata.info"})
+                  with urllib.request.urlopen(req, timeout=30, context=F.ssl_context()) as r:
+                      cd = r.headers.get("Content-Disposition", "")
+                      out.write(f"{i}\t{r.status}\t{urllib.parse.unquote(cd)}\n")
+              except Exception as ex:
+                  out.write(f"{i}\tERR\t{ex}\n")
+              out.flush()
+              time.sleep(0.3)
           PY
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add probe && git commit -m "probe dump (temporary)" && git push
+          git add probe && git commit -m "probe ids (temporary)" && git push
