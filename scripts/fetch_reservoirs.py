@@ -23,6 +23,7 @@ import re
 import ssl
 import sys
 import struct
+import time
 import urllib.request
 import zlib
 from datetime import datetime, timedelta, timezone
@@ -47,10 +48,17 @@ def ssl_context():
     return ctx
 
 
-def fetch_json(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "reservoir-site/0.1"})
-    with urllib.request.urlopen(req, timeout=60, context=ssl_context()) as r:
-        return json.loads(r.read().decode("utf-8-sig"))
+def fetch_json(url, tries=3):
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "reservoir-site/0.1"})
+            with urllib.request.urlopen(req, timeout=60, context=ssl_context()) as r:
+                return json.loads(r.read().decode("utf-8-sig"))
+        except Exception as ex:  # 水利署偶爾逾時，等一下再試
+            if i == tries - 1:
+                raise
+            print(f"  重試 {url}：{ex}", file=sys.stderr)
+            time.sleep(10 * (i + 1))
 
 
 def as_rows(payload):
