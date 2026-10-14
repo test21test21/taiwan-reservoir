@@ -42,6 +42,31 @@ def n(x):
     return f"{x:,}"
 
 
+def sgn(now, before):
+    """比去年：+3.0%（綠）、-3.0%（紅）。"""
+    if not before:
+        return ""
+    d = (now - before) / before * 100
+    cls = "up" if d > 0 else "down" if d < 0 else ""
+    return f'<b class="{cls}">{"+" if d > 0 else "-" if d < 0 else ""}{abs(d):.1f}%</b>'
+
+
+def ym_full(p):
+    y, m = int(p[:4]), int(p[5:])
+    return f"{MON[m - 1]} {y}" if EN else f"{y} 年 {m} 月"
+
+
+def ytd_prev(seg, y, m, keys):
+    """去年 1～m 月合計：每月都有就直接加；否則用去年全年減掉 m+1～12 月（都是民航局公布的數字）。"""
+    mm = [f"{y}-{i:02d}" for i in range(1, m + 1)]
+    if all(k in seg for k in mm):
+        return {k: sum(seg[x][k] for x in mm) for k in keys}
+    rest = [f"{y}-{i:02d}" for i in range(m + 1, 13)]
+    if str(y) in seg and all(k in seg for k in rest):
+        return {k: seg[str(y)][k] - sum(seg[x][k] for x in rest) for k in keys}
+    return None
+
+
 def pct(now, before):
     if not before:
         return ""
@@ -93,6 +118,13 @@ CSS = """
 :root[data-theme="dark"] { --in:#4a90e2; --out:#ec8f45; --intl:#4a90e2; --cross:#a77ee8; --dom:#4cbb78; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
+.top { align-items:stretch; }
+.top > .box { display:flex; flex-direction:column; }
+.top > .box > .note { margin-top:auto; padding-top:8px; }
+.box h2 select { font:inherit; font-weight:700; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--fg); padding:1px 6px; margin-right:2px; }
+.box .yoy b.up, .split b.up { color:#1f8a4c; } .box .yoy b.down, .split b.down { color:#d13c3c; }
+.split dd small { display:block; font-size:13px; }
+.split dd small b { font-weight:500; }
 .top > .box, .grid > .box { margin-top:12px; min-width:0; }
 @media (min-width:860px) { .top, .grid { grid-template-columns:1fr 1fr; column-gap:16px; row-gap:0; } }
 @media (min-width:1360px) { .grid { grid-template-columns:1fr 1fr 1fr; } }
@@ -192,6 +224,10 @@ JS = """<script>
     });
     document.querySelectorAll(".j-year").forEach(function (el) { el.textContent = y; });
   }
+  var mp = document.getElementById("mpick");
+  if (mp) mp.addEventListener("change", function () {
+    document.querySelectorAll("[data-mpane]").forEach(function (p) { p.hidden = p.getAttribute("data-mpane") !== mp.value; });
+  });
   sel.addEventListener("change", function () { show(); setYear(+sel.value); });
 
   // 世界地圖：各國依人數上色，年份可以播放
@@ -321,23 +357,40 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
             f'{one(tr("國人出國", "Taiwanese going abroad"), "out", to, po, pre and pre[1])}</div>'
             f'<p class="note">{tr("觀光署每年公布一次全年統計。", "Published once a year by the Tourism Administration.")}</p></section>')
 
-    # 機場旅客（民航局，每月）
-    latest = air_box = bars_box = ""
+    # 機場旅客（民航局，每月）：左邊單月（可選），右邊今年累計
+    latest = air_box = bars_box = ytd_box = ""
     months = sorted(p for p in seg if len(p) == 7)
     if months:
         last = months[-1]
         ly, lm = int(last[:4]), int(last[5:])
-        x, prev = seg[last], seg.get(f"{ly - 1}-{lm:02d}")
-        ytd = [seg[k] for k in months if k.startswith(f"{ly}-")]
         items = [(tr("國際", "International"), "intl", "pax_intl"), (tr("兩岸", "China"), "cross", "pax_cross"),
                  (tr("國內", "Domestic"), "dom", "pax_dom")]
-        split = '<dl class="split">' + "".join(
-            f'<div><dt><i style="background:var(--{c})"></i>{k}</dt><dd>{bf.wan(x[f])}</dd></div>' for k, c, f in items) + "</dl>"
-        yoy = pct(x["pax"], prev and prev["pax"])
-        latest = (f'<section class="box"><h2>{tr(f"{ly} 年 {lm} 月・全台機場旅客", f"{MON[lm - 1]} {ly}: passengers at Taiwan airports")}</h2>'
-                  f'<div class="big">{n(x["pax"])}<small>{tr("人次", "")}</small></div>'
-                  + (f'<div class="yoy">{tr("比去年同月", "vs a year earlier")} <b>{yoy}</b>・{tr(f"今年 1～{lm} 月", f"Jan–{MON[lm - 1]}")} <b>{n(sum(r["pax"] for r in ytd))}</b></div>' if yoy else "")
-                  + split + f'<p class="note">{tr("含入境、出境及過境旅客；民航局每月公布。", "Arrivals, departures and transit; published monthly by the Civil Aeronautics Administration.")}</p></section>')
+        keys = ["pax"] + [k for _, _, k in items]
+
+        def block(x, prev, vs):
+            d = sgn(x["pax"], prev and prev["pax"])
+            split = '<dl class="split">' + "".join(
+                f'<div><dt><i style="background:var(--{c})"></i>{k}</dt><dd>{bf.wan(x[f])}'
+                f'{"<small>" + sgn(x[f], prev[f]) + "</small>" if prev else ""}</dd></div>' for k, c, f in items) + "</dl>"
+            return (f'<div class="big">{n(x["pax"])}<small>{tr("人次", "")}</small></div>'
+                    f'<div class="yoy">{vs} {d if d else tr("（去年資料尚未收錄）", "(no data for last year yet)")}</div>{split}')
+
+        def prev_month(p):
+            return seg.get(f"{int(p[:4]) - 1}-{p[5:]}")
+
+        pick_m = [p for p in months if prev_month(p)] or [last]  # 只列能和去年同月比較的月份
+        panes = "".join(
+            f'<div data-mpane="{p}"{"" if p == last else " hidden"}>{block(seg[p], prev_month(p), tr("比去年同月", "vs same month last year"))}</div>'
+            for p in pick_m)
+        opts = "".join(f'<option value="{p}"{" selected" if p == last else ""}>{ym_full(p)}</option>' for p in reversed(pick_m))
+        latest = (f'<section class="box"><h2><select id="mpick" aria-label="{tr("月份", "Month")}">{opts}</select>'
+                  f'{tr("・全台機場旅客", " · passengers at Taiwan airports")}</h2>{panes}'
+                  f'<p class="note">{tr("含入境、出境及過境旅客；民航局每月公布。", "Arrivals, departures and transit; published monthly by the Civil Aeronautics Administration.")}</p></section>')
+        ytd = {k: sum(seg[f"{ly}-{i:02d}"][k] for i in range(1, lm + 1)) for k in keys} if all(f"{ly}-{i:02d}" in seg for i in range(1, lm + 1)) else None
+        if ytd:
+            ytd_box = (f'<section class="box"><h2>{tr(f"{ly} 年 1～{lm} 月累計・全台機場旅客", f"{ly} so far (Jan–{MON[lm - 1]}): passengers at Taiwan airports")}</h2>'
+                       + block(ytd, ytd_prev(seg, ly - 1, lm, keys), tr("比去年同期", "vs same period last year"))
+                       + f'<p class="note">{tr("今年到最新月份的合計。", "Total from January to the latest month.")}</p></section>')
         air_box = (f'<section class="box"><h2>{tr(f"各機場旅客（{ly} 年 {lm} 月）", f"Passengers by airport ({MON[lm - 1]} {ly})")}</h2>'
                    f'<p class="note" style="margin:0 0 6px">{tr("右邊是比去年同月", "Right: change from a year earlier")}</p>'
                    f'<ul class="hbars in">{bf.airport_list(airports, last)}</ul></section>')
@@ -384,10 +437,10 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
                 + (f'<p class="note">{note}</p>' if note else "") + "</section>")
 
     blocks = [
-        hbox(tr("來台旅客從哪裡來", "Where visitors come from"), "in", ib, "in", 15, tr("依旅客居住地。", "By country of residence.")),
-        hbox(tr("國人出國去哪裡", "Where Taiwanese travel"), "out", ob, "out", 15, tr("依出國後第一站抵達的地方。", "By first destination after leaving Taiwan.")),
-        hbox(tr("來台目的", "Why visitors come"), "purpose", purpose, "in", 8),
-        hbox(tr("從哪裡入境", "Where visitors arrive"), "port", port, "in", 6),
+        hbox(tr("來台旅客來源", "Visitor origins"), "in", ib, "in", 15, tr("依旅客居住地。", "By country of residence.")),
+        hbox(tr("出國目的地", "Destinations abroad"), "out", ob, "out", 15, tr("依出國後第一站抵達的地方。", "By first destination after leaving Taiwan.")),
+        hbox(tr("來台目的", "Purpose of visit"), "purpose", purpose, "in", 8),
+        hbox(tr("入境地點", "Ports of entry"), "port", port, "in", 6),
     ]
 
     # 主要來源地近 10 年
@@ -415,8 +468,8 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
     bins = [(1e6, tr("100 萬以上", "1M+")), (3e5, tr("30～100 萬", "300k–1M")), (1e5, tr("10～30 萬", "100k–300k")),
             (3e4, tr("3～10 萬", "30k–100k")), (1e4, tr("1～3 萬", "10k–30k")), (1, tr("1 萬以下", "under 10k"))]
     pal_in = ["#c2e0ff", "#7db6f2", "#4a90e2", "#2f6fb8", "#24538a", "#1e3a5c"]
-    tmap = (f'<section class="box" id="tmap"><h2>{tr("世界地圖：旅客從哪來、到哪去", "World map: where travellers come from and go")}</h2>'
-            + bf.seg_buttons('data-tmdir aria-label="' + tr("方向", "Direction") + '"', [("in", tr("來台旅客從哪來", "Visitors to Taiwan")), ("out", tr("國人出國去哪", "Taiwanese going abroad"))], "in")
+    tmap = (f'<section class="box" id="tmap"><h2>{tr("世界地圖：來台旅客來源與出國目的地", "World map: visitor origins and destinations abroad")}</h2>'
+            + bf.seg_buttons('data-tmdir aria-label="' + tr("方向", "Direction") + '"', [("in", tr("來台旅客來源", "Visitor origins")), ("out", tr("出國目的地", "Destinations abroad"))], "in")
             + bf.seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view") + '"', [("asia", tr("亞洲", "Asia")), ("world", tr("全球", "World"))], "asia")
             + worldmap.svg("tm-map", tr("各國旅客人數世界地圖", "World map of travellers by country"), extra='<div class="tm-year" id="tm-year"></div>')
             + f'<div class="play"><button type="button" id="tm-play">{tr("▶ 播放", "▶ Play")}</button>'
@@ -449,9 +502,9 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
 <style>{CSS}{style}{worldmap.CSS}</style>
 {nav("en" if EN else "zh", "/" + path if EN else "/en/" + path)}
 <div class="wrap">
-  <div class="top">{latest}{hero}</div>
+  <div class="top">{latest}{ytd_box}</div>
   {tmap}
-  <div class="grid">{air_box}{bars_box}{trend}{blocks[-1]}</div>
+  <div class="grid">{hero}{air_box}{bars_box}{trend}{blocks[-1]}</div>
   {pick}
   <div class="grid">{"".join(blocks[:-1])}</div>
   <footer>
