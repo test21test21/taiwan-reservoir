@@ -9,6 +9,7 @@
 - _site/reservoir/index.html：把 <!--RESERVOIR_LINKS--> 換成全部水庫頁的連結
 - _site/about/index.html：關於本站
 - _site/births/：出生與死亡，全台＋各縣市一頁（scripts/build_births.py）
+- _site/power/：今日電力（scripts/build_power.py）
 - _site/flights/：航班（scripts/build_flights.py）
 - _site/tourism/：旅客人次（scripts/build_travel.py）
 - _site/sitemap.xml、_site/robots.txt
@@ -23,6 +24,7 @@ from pathlib import Path
 
 import build_births
 import build_flights
+import build_power
 import build_travel
 import i18n_en
 import site_nav
@@ -592,6 +594,8 @@ def main(out):
 
     urls += build_births.build(out, head, lambda prefix, lang, alt: site_nav.nav(
         "births", f'<h1 class="sitesection">{"Births &amp; Deaths" if lang == "en" else "出生與死亡"}</h1>', lang, alt))
+    urls += build_power.build(out, head, lambda lang, alt: site_nav.nav(
+        "power", f'<h1 class="sitesection">{"Electricity" if lang == "en" else "今日電力"}</h1>', lang, alt))
     urls += build_flights.build(out, head, lambda lang, alt: site_nav.nav(
         "flights", f'<h1 class="sitesection">{"Flights" if lang == "en" else "航班"}</h1>', lang, alt))
     urls += build_travel.build(out, head, lambda lang, alt: site_nav.nav(
