@@ -30,7 +30,7 @@ import site_nav
 SITE = "https://taiwandata.info"
 # 關於本站頁上的自我介紹（空白就不顯示）與聯絡方式
 ABOUT_ME = ""  # 空白就不顯示「關於我」那一段
-CONTACT = "有建議或發現數字有誤，歡迎來信：<a href=\"mailto:contact@taiwandata.info\">contact@taiwandata.info</a>"
+CONTACT = "歡迎來信：<a href=\"mailto:contact@taiwandata.info\">contact@taiwandata.info</a>"
 ROOT = Path(__file__).resolve().parent.parent
 LOW = 40
 REGIONS = ["北部", "中部", "南部", "東部", "澎湖", "金門", "馬祖"]
@@ -496,7 +496,7 @@ def about_page(lang="zh"):
         title = "About | Taiwan Data"
         desc = "Taiwan Data is an independent site that turns Taiwan's government open data into tools you can read at a glance."
         bar = site_nav.nav("about", '<h1 class="sitesection">About</h1>', "en", "/about/")
-        contact = ("Suggestions, or spotted a wrong number? Email "
+        contact = ("Email us: "
                    "<a href=\"mailto:contact@taiwandata.info\">contact@taiwandata.info</a>")
         return f"""{head(title, desc, alt[1], "og.png", "en", alt)}
 <body>
