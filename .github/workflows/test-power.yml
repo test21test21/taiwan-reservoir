@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"
-          for u in https://www.taipower.com.tw/d006/loadGraph/loadGraph/data/genary.json https://www.taipower.com.tw/d006/loadGraph/loadGraph/data/loadpara.json https://www.taipower.com.tw/d006/loadGraph/loadGraph/data/loadareas.json https://www.taipower.com.tw/d006/loadGraph/loadGraph/data/loadfueltype.json https://service.taipower.com.tw/data/opendata/apply/file/d006005/001.csv https://service.taipower.com.tw/data/opendata/apply/file/d006001/001.json; do
-            echo "=== $u"; curl -sS -m 40 -A "$UA" -w "\nHTTP %{http_code}\n" "$u" | head -c 1500; echo
-          done
+          for d in 001 002 003 004 005 006 007 008 009 010 011 012; do for f in 001.json 001.csv 002.csv 002.json; do
+            u=https://service.taipower.com.tw/data/opendata/apply/file/d006$d/$f
+            c=$(curl -sS -m 30 -o /tmp/x -w "%{http_code}" "$u"); echo "=== $u HTTP $c $(wc -c </tmp/x)"; [ "$c" = 200 ] && head -c 700 /tmp/x && echo && tail -c 300 /tmp/x && echo
+          done; done
