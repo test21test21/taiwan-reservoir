@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for d in 001 002 003 004 005 006 007 008 009 010 011 012; do for f in 001.json 001.csv 002.csv 002.json; do
-            u=https://service.taipower.com.tw/data/opendata/apply/file/d006$d/$f
-            c=$(curl -sS -m 30 -o /tmp/x -w "%{http_code}" "$u"); echo "=== $u HTTP $c $(wc -c </tmp/x)"; [ "$c" = 200 ] && head -c 700 /tmp/x && echo && tail -c 300 /tmp/x && echo
-          done; done
+          for f in d006002/001.json d006002/001.csv d006001/001.json; do
+            u=https://service.taipower.com.tw/data/opendata/apply/file/$f
+            c=$(curl -sS -m 30 -o /tmp/x -w "%{http_code}" "$u"); echo "=== $u HTTP $c $(wc -c </tmp/x) $(wc -l </tmp/x)"; head -c 1200 /tmp/x; echo; echo ...; tail -c 1500 /tmp/x; echo
+          done
