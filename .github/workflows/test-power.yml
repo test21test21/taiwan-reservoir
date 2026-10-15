@@ -2,12 +2,20 @@ name: test-power
 on:
   push:
     branches: [claude/project-thread-8qj6fe]
+permissions:
+  contents: write
 jobs:
   t:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python3 scripts/fetch_power.py
       - run: |
-          for f in d006002/001.json d006002/001.csv d006001/001.json; do
-            u=https://service.taipower.com.tw/data/opendata/apply/file/$f
-            c=$(curl -sS -m 30 -o /tmp/x -w "%{http_code}" "$u"); echo "=== $u HTTP $c $(wc -c </tmp/x) $(wc -l </tmp/x)"; head -c 1200 /tmp/x; echo; echo ...; tail -c 1500 /tmp/x; echo
-          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/power
+          git diff --cached --quiet || git commit -m "暫時：台電測試資料"
+          git push
