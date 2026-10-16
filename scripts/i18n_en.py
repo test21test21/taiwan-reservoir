@@ -185,6 +185,7 @@ DESTS = {
     "那霸": "Naha", "宮古島": "Miyako", "德里": "Delhi", "孟買": "Mumbai", "胡志明": "Ho Chi Minh City",
     "海防": "Hai Phong", "金蘭": "Cam Ranh", "暹粒": "Siem Reap", "曼谷": "Bangkok", "塞班": "Saipan",
     "加州安大略": "Ontario (California)", "倫敦": "London",
+    "富山": "Toyama", "成都雙流": "Chengdu Shuangliu", "華盛頓杜勒斯": "Washington Dulles",
 }
 
 # 航班頁：航空公司（民航局表上的簡稱）英文名
@@ -194,7 +195,7 @@ AIRLINES = {
     "國泰": "Cathay Pacific", "國航": "Air China", "土耳其": "Turkish Airlines", "大灣區": "Greater Bay Airlines",
     "大韓": "Korean Air", "太陽富國": "Sun PhuQuoc Airways", "宿霧太平洋": "Cebu Pacific", "山東": "Shandong Airlines",
     "廈門": "Xiamen Airlines", "德威": "T'way Air", "捷星日本": "Jetstar Japan", "新加坡": "Singapore Airlines",
-    "日本": "Japan Airlines", "日本越洋": "Japan Transocean Air", "易斯達": "Eastar Jet", "星宇": "STARLUX",
+    "日本": "Japan Airlines", "日本越洋": "Japan Transocean Air", "易斯達": "Eastar Jet", "星宇": "STARLUX", "星悅": "StarFlyer",
     "春秋": "Spring Airlines", "東方": "China Eastern", "樂桃": "Peach", "汶萊皇家": "Royal Brunei",
     "泰亞洲": "Thai AirAsia", "泰國": "Thai Airways", "泰獅": "Thai Lion Air", "泰瑞(德威)": "T'way Air",
     "泰越捷": "Thai Vietjet", "海南": "Hainan Airlines", "深圳": "Shenzhen Airlines", "澳門": "Air Macau",
