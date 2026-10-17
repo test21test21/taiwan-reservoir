@@ -61,13 +61,15 @@ a.sitesection:hover { text-decoration: underline; }
 """
 
 # 語言：(代號, 網址開頭, 顯示名稱, hreflang)
-LANGS = [("zh", "", "中文", "zh-Hant"), ("en", "/en", "English", "en"), ("ja", "/ja", "日本語", "ja")]
+# 網址資料夾：日文用國碼 jp（Shane 2026-10-17），語言代號（html lang、hreflang）仍是標準的 ja
+DIR = {"zh": "", "en": "en", "ja": "jp"}
+LANGS = [("zh", "", "中文", "zh-Hant"), ("en", "/en", "English", "en"), ("ja", "/jp", "日本語", "ja")]
 CUR = ' aria-current="true"'
 SHORT = {"zh": "中文", "en": "EN", "ja": "日本語"}
 UI = {  # 選單按鈕、語言按鈕的說明文字
     "zh": ("開啟選單", "關閉選單", "網站選單", "即將推出", "語言", "Taiwan Data 台灣數據", "/"),
     "en": ("Open menu", "Close menu", "Site menu", "Coming soon", "Language", "Taiwan Data", "/en/"),
-    "ja": ("メニューを開く", "メニューを閉じる", "サイトメニュー", "近日公開", "言語", 'Taiwan Data<span class="sn-loc"> 台湾データ</span>', "/ja/"),
+    "ja": ("メニューを開く", "メニューを閉じる", "サイトメニュー", "近日公開", "言語", 'Taiwan Data<span class="sn-loc"> 台湾データ</span>', "/jp/"),
 }
 
 

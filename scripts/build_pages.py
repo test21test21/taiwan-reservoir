@@ -355,7 +355,7 @@ FOOT = {
 
 
 def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
-    """一座水庫一頁。lang="en" 產生 /en/reservoir/<代碼>/，lang="ja" 產生 /ja/reservoir/<代碼>/。"""
+    """一座水庫一頁。lang="en" 產生 /en/reservoir/<代碼>/，lang="ja" 產生 /jp/reservoir/<代碼>/。"""
     en, ja = lang == "en", lang == "ja"
     rid = r["id"]
     tr_name = lambda x: i18n_en.name(x["id"], x["name"]) if en else i18n_ja.name(x["id"], x["name"]) if ja else x["name"]
@@ -605,11 +605,26 @@ def translate(t, pairs, what):
 
 def use_ja_font(out):
     """日文頁改用 Noto Sans JP（日文字形），其餘不變。"""
-    for f in (out / "ja").rglob("*.html"):
+    for f in (out / "jp").rglob("*.html"):
         t = f.read_text(encoding="utf-8")
         t2 = t.replace("family=Noto+Sans+TC:", "family=Noto+Sans+JP:").replace('"Noto Sans TC",', '"Noto Sans JP","Noto Sans TC",')
         if t2 != t:
             f.write_text(t2, encoding="utf-8")
+
+
+def old_ja_redirects(out):
+    """日文版原本放在 /ja/（2026-10-17 上線半小時），改成 /jp/ 後舊網址自動轉過去。"""
+    for f in (out / "jp").rglob("index.html"):
+        rel = f.parent.relative_to(out / "jp").as_posix()
+        new = f"/jp/{rel}/" if rel != "." else "/jp/"
+        d = out / "ja" / rel
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(
+            f'<!doctype html>\n<html lang="ja"><head><meta charset="utf-8">'
+            f'<link rel="canonical" href="{SITE}{new}"><meta name="robots" content="noindex">'
+            f'<meta http-equiv="refresh" content="0; url={new}">'
+            f'<script>location.replace("{new}" + location.search + location.hash)</script></head>'
+            f'<body><a href="{new}">{SITE}{new}</a></body></html>\n', encoding="utf-8")
 
 
 def main(out):
@@ -626,7 +641,7 @@ def main(out):
         return [SITE + site_nav.lang_url(k, path) for k, _, _, _ in site_nav.LANGS]
 
     urls = all_langs("/") + [f"{SITE}/reservoir/"] + all_langs("/about/")
-    for lang, d in (("zh", out / "about"), ("en", out / "en/about"), ("ja", out / "ja/about")):
+    for lang, d in (("zh", out / "about"), ("en", out / "en/about"), ("ja", out / "jp/about")):
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(about_page(lang), encoding="utf-8")
 
@@ -635,11 +650,11 @@ def main(out):
     if home.exists():
         t = home.read_text(encoding="utf-8")
         for lang, pairs, what in (("en", i18n_en.HOME_HTML, "英文版首頁"), ("ja", i18n_ja.HOME_HTML, "日文版首頁")):
-            (out / lang).mkdir(parents=True, exist_ok=True)
-            (out / lang / "index.html").write_text(translate(t, pairs, what), encoding="utf-8")
+            (out / site_nav.DIR[lang]).mkdir(parents=True, exist_ok=True)
+            (out / site_nav.DIR[lang] / "index.html").write_text(translate(t, pairs, what), encoding="utf-8")
     updated_en = en_time(latest.get("generated_at"))
     for r in named:
-        for lang, base in (("zh", out / "reservoir"), ("en", out / "en/reservoir"), ("ja", out / "ja/reservoir")):
+        for lang, base in (("zh", out / "reservoir"), ("en", out / "en/reservoir"), ("ja", out / "jp/reservoir")):
             d = base / r["id"]
             d.mkdir(parents=True, exist_ok=True)
             page = reservoir_page(r, info.get(r["id"]), hist.get(r["id"], []), alert, by_region[r["region"]],
@@ -662,8 +677,8 @@ def main(out):
                      f'<div><b>{T.REGIONS.get(g, g)}</b><ul class="links">' + "".join(
                          f'<li><a href="{x["id"]}/">{e(T.name(x["id"], x["name"]))}</a></li>' for x in by_region[g])
                      + "</ul></div>" for g in REGIONS if by_region.get(g))))
-            (out / lang / "reservoir").mkdir(parents=True, exist_ok=True)
-            (out / lang / "reservoir/index.html").write_text(t, encoding="utf-8")
+            (out / site_nav.DIR[lang] / "reservoir").mkdir(parents=True, exist_ok=True)
+            (out / site_nav.DIR[lang] / "reservoir/index.html").write_text(t, encoding="utf-8")
         urls += all_langs("/reservoir/")[1:]
 
     sections = {
@@ -682,10 +697,10 @@ def main(out):
     pages = [
         ("index.html", site_nav.nav("home", "", "zh", "/")),
         ("en/index.html", site_nav.nav("home", "", "en", "/")),
-        ("ja/index.html", site_nav.nav("home", "", "ja", "/")),
+        ("jp/index.html", site_nav.nav("home", "", "ja", "/")),
         ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">水庫水情</h1>', "zh", "/reservoir/")),
         ("en/reservoir/index.html", ""),
-        ("ja/reservoir/index.html", ""),
+        ("jp/reservoir/index.html", ""),
     ]
     for f, bar in pages:
         if (out / f).exists():
@@ -704,6 +719,7 @@ def main(out):
         idx.write_text(idx.read_text(encoding="utf-8").replace("<!--RESERVOIR_LINKS-->", groups), encoding="utf-8")
 
     use_ja_font(out)
+    old_ja_redirects(out)
     (out / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         + "".join(f"  <url><loc>{u}</loc><lastmod>{lastmod}</lastmod></url>\n" for u in urls)

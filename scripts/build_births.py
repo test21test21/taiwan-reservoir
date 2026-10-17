@@ -28,10 +28,10 @@ COUNTIES = [
 ]
 SLUG = dict(COUNTIES)
 
-# 外文版：build() 產生 /en/births/、/ja/births/ 時用 set_lang() 換語言，下面的 tr() 就回該語言
+# 外文版：build() 產生 /en/births/、/jp/births/ 時用 set_lang() 換語言，下面的 tr() 就回該語言
 LANG, EN, JA = "zh", False, False
 MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-PREFIX = {"zh": "", "en": "en/", "ja": "ja/"}  # 各語言網址開頭
+PREFIX = {"zh": "", "en": "en/", "ja": "jp/"}  # 各語言網址開頭
 
 
 def set_lang(lang):
@@ -533,7 +533,7 @@ def page_data(data, name):
 
 
 def build(out, head, nav):
-    """nav(lang, path)：頂欄。中文頁放在 births/，英文頁放在 en/births/，日文頁放在 ja/births/。"""
+    """nav(lang, path)：頂欄。中文頁放在 births/，英文頁放在 en/births/，日文頁放在 jp/births/。"""
     if not DATA.exists():
         return []
     data = load()
