@@ -209,7 +209,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 (function () {
   "use strict";
   var LOW = 40;
-  // 英文版（/en/reservoir/）、日文版（/ja/reservoir/）：build_pages.py 會在 <html lang="en">、<html lang="ja"> 的頁面放入 window.I18N（名稱對照、介面文字）
+  // 英文版（/en/reservoir/）、日文版（/jp/reservoir/）：build_pages.py 會在 <html lang="en">、<html lang="ja"> 的頁面放入 window.I18N（名稱對照、介面文字）
   var LG = document.documentElement.lang, EN = LG === "en", JA = LG === "ja", TR = EN || JA, I18N = window.I18N || {};
   function L(zh, en, ja) { return EN ? en : JA ? ja : zh; }
   function t(s) { return TR && I18N.txt && I18N.txt[s] != null ? I18N.txt[s] : s; }

@@ -1,4 +1,4 @@
-"""日文版用的名稱對照：結構和 i18n_en.py 一樣，build 時產生 /ja/ 底下的頁面。
+"""日文版用的名稱對照：結構和 i18n_en.py 一樣，build 時產生 /jp/ 底下的頁面。
 
 用詞原則（每一項的出處見下面 GLOSSARY，也會輸出成 docs/ja-glossary.md 給人檢查）：
 - 水庫名：照水利署的中文名改成日文漢字，「水庫」「壩」寫「ダム」、「攔河堰」寫「堰」（日本媒體寫法，例：曽文ダム、烏山頭ダム）
@@ -103,10 +103,10 @@ OVERVIEW_HTML = [
      "<title>台湾のダム貯水率：リアルタイム貯水率と水情信号｜Taiwan Data</title>"),
     ('content="台灣各水庫即時蓄水率、有效蓄水量與官方水情燈號，北中南東一張地圖看懂，每小時更新，資料來自經濟部水利署。"',
      'content="台湾各地のダムのリアルタイム貯水率・有効貯水量と、公式の水情信号（給水制限）を1枚の地図で。経済部水利署のオープンデータから毎時更新。"'),
-    ('<link rel="canonical" href="https://taiwandata.info/reservoir/">', '<link rel="canonical" href="https://taiwandata.info/ja/reservoir/">'),
+    ('<link rel="canonical" href="https://taiwandata.info/reservoir/">', '<link rel="canonical" href="https://taiwandata.info/jp/reservoir/">'),
     ('<meta property="og:locale" content="zh_TW">', '<meta property="og:locale" content="ja_JP">'),
     ('content="台灣水庫水情：即時蓄水率與水情燈號｜Taiwan Data"', 'content="台湾のダム貯水率：リアルタイム貯水率と水情信号｜Taiwan Data"'),
-    ('content="https://taiwandata.info/reservoir/"', 'content="https://taiwandata.info/ja/reservoir/"'),
+    ('content="https://taiwandata.info/reservoir/"', 'content="https://taiwandata.info/jp/reservoir/"'),
     ('aria-label="水情燈號地圖"', 'aria-label="水情信号の地図"'),
     ("<h2>水庫蓄水與官方水情燈號</h2>", "<h2>ダムの貯水状況と公式の水情信号</h2>"),
     ('aria-label="各縣市官方水情燈號與水庫蓄水率地圖"', 'aria-label="県・市別の公式水情信号とダム貯水率の地図"'),
@@ -129,7 +129,7 @@ OVERVIEW_HTML = [
     ('<div>水情燈號以 <a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">經濟部水利署公告</a> 為準。水庫圓點的藍色深淺只代表蓄水率，和燈號無關。</div>',
      '<div>水情信号は<a id="src-link" href="https://www.wra.gov.tw/EarlyWarning.aspx?n=18804&amp;sms=9114" target="_blank" rel="noopener">経済部水利署の発表</a>が正式な情報です。ダムの円の青の濃さは貯水率だけを表し、信号とは関係ありません。</div>'),
     ('<div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。<a href="../about/">關於本站</a></div>',
-     f'<div>{FOOT}<a href="/ja/about/">このサイトについて</a></div>'),
+     f'<div>{FOOT}<a href="/jp/about/">このサイトについて</a></div>'),
 ]
 
 # 首頁（index.html）的文字：(中文, 日文)，中文那一欄和 i18n_en.HOME_HTML 一樣
@@ -139,10 +139,10 @@ HOME_HTML = [
     ("<title>Taiwan Data 台灣數據：一眼看懂台灣的即時數字</title>", "<title>Taiwan Data 台湾データ：台湾の最新データをひと目で</title>"),
     ('content="把政府開放資料整理成一眼看懂的工具：台灣水庫即時蓄水率與水情燈號、每月出生與死亡人數、航班載客率、旅客人次，更多台灣數據陸續推出。"',
      'content="台湾政府のオープンデータをひと目でわかるツールに。ダムのリアルタイム貯水率と水情信号、毎月の出生数・死亡数、航空便の搭乗率、旅客数などを掲載し、今後も追加予定です。"'),
-    ('<link rel="canonical" href="https://taiwandata.info/">', '<link rel="canonical" href="https://taiwandata.info/ja/">'),
+    ('<link rel="canonical" href="https://taiwandata.info/">', '<link rel="canonical" href="https://taiwandata.info/jp/">'),
     ('<meta property="og:locale" content="zh_TW">', '<meta property="og:locale" content="ja_JP">'),
     ('content="Taiwan Data 台灣數據：一眼看懂台灣的即時數字"', 'content="Taiwan Data 台湾データ：台湾の最新データをひと目で"'),
-    ('<meta property="og:url" content="https://taiwandata.info/">', '<meta property="og:url" content="https://taiwandata.info/ja/">'),
+    ('<meta property="og:url" content="https://taiwandata.info/">', '<meta property="og:url" content="https://taiwandata.info/jp/">'),
     ("<h1>Taiwan Data 台灣數據</h1>", "<h1>Taiwan Data 台湾データ</h1>"),
     ('<p class="lead">把政府開放資料整理成一眼看懂的工具。</p>', '<p class="lead">台湾政府のオープンデータを、ひと目でわかるツールに。</p>'),
     ("<h2>水庫水情</h2>", "<h2>ダム貯水率</h2>"),
@@ -248,12 +248,12 @@ PORT = {"飛機桃園": "桃園空港", "飛機高雄": "高雄空港", "飛機�
 
 # 選單：(名稱, 網址)
 MENU = {
-    "home": ("ホーム", "/ja/"),
-    "reservoir": ("ダム貯水率", "/ja/reservoir/"),
-    "births": ("出生と死亡", "/ja/births/"),
-    "flights": ("航空便", "/ja/flights/"),
-    "travel": ("旅客数", "/ja/tourism/"),
-    "about": ("このサイトについて", "/ja/about/"),
+    "home": ("ホーム", "/jp/"),
+    "reservoir": ("ダム貯水率", "/jp/reservoir/"),
+    "births": ("出生と死亡", "/jp/births/"),
+    "flights": ("航空便", "/jp/flights/"),
+    "travel": ("旅客数", "/jp/tourism/"),
+    "about": ("このサイトについて", "/jp/about/"),
 }
 
 # 專有名詞與專業用詞對照，附出處。狀態：已核對＝查到日文出處實際這樣寫；常用寫法＝日本官方或媒體的通用寫法，出處還沒逐一核對；待確認＝沒有現成寫法，需要母語者確認
