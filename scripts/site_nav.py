@@ -12,6 +12,7 @@ ICONS = """<link rel="icon" href="/favicon.ico" sizes="any">
 MENU = [
     ("home", "首頁", "/"),
     ("reservoir", "水庫水情", "/reservoir/"),
+    ("power", "今日電力", "/power/"),
     ("births", "出生與死亡", "/births/"),
     ("flights", "航班", "/flights/"),
     ("travel", "旅客人次", "/tourism/"),
@@ -21,6 +22,7 @@ MENU = [
 MENU_EN = {
     "home": ("Home", "/en/"),
     "reservoir": ("Reservoirs", "/en/reservoir/"),
+    "power": ("Electricity", "/en/power/"),
     "births": ("Births &amp; deaths", "/en/births/"),
     "flights": ("Flights", "/en/flights/"),
     "travel": ("Tourism", "/en/tourism/"),

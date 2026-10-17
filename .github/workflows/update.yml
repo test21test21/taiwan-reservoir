@@ -33,6 +33,11 @@ jobs:
         if: github.event_name != 'push'
         run: python3 scripts/fetch_reservoirs.py
 
+      - name: 抓台電即時發電、備轉容量率
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: python3 scripts/fetch_power.py
+
       - name: 抓戶政司出生、死亡資料（每天一次）
         if: github.event_name != 'push'
         continue-on-error: true
