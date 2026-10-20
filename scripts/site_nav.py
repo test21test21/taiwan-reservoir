@@ -11,19 +11,19 @@ ICONS = """<link rel="icon" href="/favicon.ico" sizes="any">
 # 選單項目：(代號, 名稱, 網址)；網址空白代表即將推出
 MENU = [
     ("home", "首頁", "/"),
-    ("reservoir", "水庫水情", "/reservoir/"),
-    ("births", "出生與死亡", "/births/"),
-    ("flights", "航班", "/flights/"),
-    ("travel", "旅客人次", "/tourism/"),
+    ("reservoir", "台灣水庫水情", "/reservoir/"),
+    ("births", "台灣出生與死亡", "/births/"),
+    ("flights", "台灣航班", "/flights/"),
+    ("travel", "台灣旅客人次", "/tourism/"),
     ("about", "關於本站", "/about/"),
 ]
 # 英文版選單：(代號, 名稱, 英文網址)；英文網址空白就連到中文頁、旁邊標「中文」
 MENU_EN = {
     "home": ("Home", "/en/"),
-    "reservoir": ("Reservoirs", "/en/reservoir/"),
-    "births": ("Births &amp; deaths", "/en/births/"),
-    "flights": ("Flights", "/en/flights/"),
-    "travel": ("Tourism", "/en/tourism/"),
+    "reservoir": ("Taiwan Reservoirs", "/en/reservoir/"),
+    "births": ("Taiwan Births &amp; Deaths", "/en/births/"),
+    "flights": ("Taiwan Flights", "/en/flights/"),
+    "travel": ("Taiwan Tourism", "/en/tourism/"),
     "about": ("About", "/en/about/"),
 }
 
@@ -44,7 +44,7 @@ a.sitesection:hover { text-decoration: underline; }
 .langsw { display: inline-flex; align-items: center; gap: 4px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: none; font: inherit; font-size: 13px; font-weight: 500; line-height: 1; color: var(--fg); white-space: nowrap; cursor: pointer; }
 .langsw svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; }
 .langsw:hover { background: var(--chip); }
-@media (max-width: 480px) { .sn-loc { display: none; } .langsw { padding: 6px; } .langsw span { display: none; } .langsw svg { width: 18px; height: 18px; } }
+@media (max-width: 480px) { .sitesection { white-space: normal; font-size: 14px; line-height: 1.2; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; } .sn-loc { display: none; } .langsw { padding: 6px; } .langsw span { display: none; } .langsw svg { width: 18px; height: 18px; } }
 .langmenu { position: absolute; right: 0; top: calc(100% + 6px); list-style: none; margin: 0; padding: 6px; min-width: 132px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgba(12,30,46,.14); z-index: 60; }
 .langmenu a { display: block; padding: 8px 12px; border-radius: 8px; color: var(--fg); text-decoration: none; font-size: 15px; }
 .langmenu a:hover { background: var(--chip); }
