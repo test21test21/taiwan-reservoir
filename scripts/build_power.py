@@ -1,4 +1,4 @@
-"""今日電力頁：/power/（中文）和 /en/power/（英文），數字和圖直接寫進 HTML。
+"""今日電力頁：/power/（中文）、/en/power/（英文）、/jp/power/（日文），數字和圖直接寫進 HTML。
 
 資料：data/power/（scripts/fetch_power.py 從台電開放資料整理）
 build_pages.py 部署時呼叫 build(out, head, nav)。
@@ -12,38 +12,41 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import build_births as bb
+import i18n_ja
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data/power"
 SITE = "https://taiwandata.info"
 e = html.escape
-EN = False
+LANG, EN, JA = "zh", False, False
 MON = bb.MON
+PREFIX = bb.PREFIX
 WEEK = "一二三四五六日"
+WEEK_JA = "月火水木金土日"
 WEEK_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-# 發電類別：(代號, 中文, 英文, 顏色)，圖和長條的順序
+# 發電類別：(代號, 中文, 英文, 日文, 顏色)，圖和長條的順序
 FUELS = [
-    ("lng", "燃氣", "Gas (LNG)", "#e8833a"),
-    ("coal", "燃煤", "Coal", "#6f6f6f"),
-    ("nuclear", "核能", "Nuclear", "#d64545"),
-    ("cogen", "汽電共生", "Cogeneration", "#a87b4f"),
-    ("oil", "燃油", "Oil", "#8c5a9e"),
-    ("solar", "太陽能", "Solar", "#f2c230"),
-    ("wind", "風力", "Wind", "#2fb3a3"),
-    ("hydro", "水力", "Hydro", "#2f7fd1"),
-    ("other", "其他再生能源", "Other renewables", "#6dbb4a"),
-    ("storage", "儲能", "Storage", "#c25b9a"),
+    ("lng", "燃氣", "Gas (LNG)", "LNG火力", "#e8833a"),
+    ("coal", "燃煤", "Coal", "石炭火力", "#6f6f6f"),
+    ("nuclear", "核能", "Nuclear", "原子力", "#d64545"),
+    ("cogen", "汽電共生", "Cogeneration", "コージェネ", "#a87b4f"),
+    ("oil", "燃油", "Oil", "石油火力", "#8c5a9e"),
+    ("solar", "太陽能", "Solar", "太陽光", "#f2c230"),
+    ("wind", "風力", "Wind", "風力", "#2fb3a3"),
+    ("hydro", "水力", "Hydro", "水力", "#2f7fd1"),
+    ("other", "其他再生能源", "Other renewables", "その他再エネ", "#6dbb4a"),
+    ("storage", "儲能", "Storage", "蓄電（揚水・電池）", "#c25b9a"),
 ]
 RENEW = {"solar", "wind", "hydro", "other"}
 
 # 台電供電燈號（依備轉容量率、備轉容量）
 LIGHTS = [
-    ("G", "綠燈", "供電充裕", "Green", "Ample supply", "#2e9e5b"),
-    ("Y", "黃燈", "供電吃緊", "Yellow", "Tight supply", "#e2b600"),
-    ("O", "橘燈", "供電警戒", "Orange", "Supply warning", "#f08a24"),
-    ("R", "紅燈", "限電警戒", "Red", "Rationing warning", "#d93c3c"),
-    ("B", "黑燈", "限電準備", "Black", "Rationing ready", "#222222"),
+    ("G", "綠燈", "供電充裕", "Green", "Ample supply", "#2e9e5b", "緑", "供給に余裕"),
+    ("Y", "黃燈", "供電吃緊", "Yellow", "Tight supply", "#e2b600", "黄", "需給ひっ迫"),
+    ("O", "橘燈", "供電警戒", "Orange", "Supply warning", "#f08a24", "橙", "需給警戒"),
+    ("R", "紅燈", "限電警戒", "Red", "Rationing warning", "#d93c3c", "赤", "電力制限警戒"),
+    ("B", "黑燈", "限電準備", "Black", "Rationing ready", "#222222", "黒", "電力制限準備"),
 ]
 
 # 主要電廠英文名；沒列到的英文頁顯示中文
@@ -59,25 +62,66 @@ PLANTS_EN = {
     "其它購電風力": "Other wind (purchased)", "彰濱光": "Changbin Solar", "南鹽光": "Nanyan Solar",
 }
 
+# 日文固定文字：依英文查（tr 沒給日文時用）
+JA_TXT = {
+    " (": "（", ")": "）", " (solar ": "（太陽光 ", " · coal ": "・石炭 ", " · gas ": "・LNG ", " · renewables ": "・再エネ ",
+    ", renewables ": "、再エネ ", ": ": "：", ": operating reserve ": "：予備率 ", ": peak demand ": "：最大電力 ",
+    " (same day last year ": "（前年同日 ", "1 year": "1年", "90 days": "90日", "All": "すべて", "h": "時",
+    "Daily operating reserve at peak": "日別のピーク時予備率", "Daily peak demand": "日別最大電力",
+    "Electricity used each month": "月別の電力使用量", "Generation mix by hour today": "今日の時間別電源構成",
+    "Homes and businesses": "民生用（家庭・業務）", "Industry": "産業用",
+    "Hover or tap a bar for each month (TWh)": "棒にカーソルを合わせるかタップすると月別の数値を表示（単位：億kWh）",
+    "Hover or tap a bar for that hour (GW)": "棒にカーソルを合わせるかタップすると時間別の数値を表示（単位：万kW）",
+    "Hover or tap the chart to see each day (GW)": "グラフにカーソルを合わせるかタップすると日別の数値を表示（単位：万kW）",
+    "Hover or tap the chart to see each day": "グラフにカーソルを合わせるかタップすると日別の数値を表示",
+    "Lights follow Taipower’s rules: reserve margin 10% or more is green, 6–10% yellow, under 6% orange; reserve of 0.9 GW or less is red, 0.5 GW or less black. Figures in GW.":
+        "ランプは台湾電力の基準による：予備率10%以上は緑、6～10%は黄、6%未満は橙、予備力90万kW以下は赤、50万kW以下は黒。単位：万kW。",
+    "Load": "稼働率", "Monthly industrial and residential use": "月別の産業用・民生用電力",
+    "Next 7 days (Taipower forecast)": "今後1週間（台湾電力の見通し）", "Operating reserve each day": "日別の予備率",
+    "Output (GW)": "出力（万kW）", "Past year": "直近1年", "Peak demand each day": "日別の最大電力", "Peak demand": "最大電力",
+    "Period": "期間", "Plant": "発電所", "Power demand right now": "いまの電力需要", "Power plants right now": "発電所別のいまの出力",
+    "Power supply light": "電力需給ランプ", "Reserve ": "予備力 ", "Reserve": "予備率",
+    "Reserve margin at each day’s peak (Taipower actuals). Dashed lines mark the yellow (10%) and orange (6%) thresholds.":
+        "毎日のピーク時の予備率（台湾電力の実績）。破線は黄（10%）と橙（6%）の境目。",
+    "Same day a year earlier": "前年同日", "Sum of Taipower daily industrial and residential use; complete months only.":
+        "台湾電力の日別の産業用・民生用電力量の合計。データがそろった月のみ。",
+    "Sum of net output of all generating units. Taipower updates every 10 minutes; this page refreshes hourly. Private plants are included with their fuel type.":
+        "全発電機の送電端出力の合計。台湾電力は10分ごとに更新、このページは1時間ごとに更新。民間発電所（IPP）は同じ燃料に含む。",
+    "Today’s generation, hour by hour": "今日の時間別発電量", "Type": "種類",
+    "Units at the same plant are combined. Load = output ÷ installed capacity.": "同じ発電所の発電機は合算。稼働率＝出力÷設備容量。",
+    "We record the generation mix every hour; the chart appears once today has 3 hours of records.":
+        "当サイトは1時間ごとに電源構成を記録しています。今日の記録が3時間分たまるとグラフを表示します。",
+    "operating reserve": "予備率",
+}
 
-def tr(zh, en):
+
+def set_lang(lang):
+    global LANG, EN, JA
+    LANG, EN, JA = lang, lang == "en", lang == "ja"
+    bb.set_lang(lang)
+
+
+def tr(zh, en, ja=None):
+    """日文沒給的話用 JA_TXT 依英文查（固定文字）。"""
+    if JA:
+        return ja if ja is not None else JA_TXT[en]
     return en if EN else zh
 
 
 def fuel_name(k):
-    for key, zh, en, _ in FUELS:
+    for key, zh, en, ja, _ in FUELS:
         if key == k:
-            return en if EN else zh
+            return en if EN else ja if JA else zh
     return k
 
 
 def gw(mw, d=1):
-    """發電量：中文寫萬瓩、英文寫 GW（台電、新聞都用萬瓩）。"""
+    """發電量：中文寫萬瓩、日文寫万kW、英文寫 GW（台電、新聞都用萬瓩）。"""
     return f"{mw / 1000:,.{d}f}" if EN else f"{mw / 10:,.{d}f}"
 
 
 def unit():
-    return tr("萬瓩", "GW")
+    return tr("萬瓩", "GW", "万kW")
 
 
 def light_of(rate, reserve):
@@ -98,11 +142,13 @@ def lamp(li):
 
 
 def light_text(li):
-    return f"{li[3]} · {li[4]}" if EN else f"{li[1]}・{li[2]}"
+    return f"{li[3]} · {li[4]}" if EN else f"{li[6]}・{li[7]}" if JA else f"{li[1]}・{li[2]}"
 
 
 def ddate(d, week=True):
-    w = WEEK_EN[d.weekday()] if EN else WEEK[d.weekday()]
+    w = WEEK_EN[d.weekday()] if EN else WEEK_JA[d.weekday()] if JA else WEEK[d.weekday()]
+    if JA:
+        return f"{d.month}/{d.day}（{w}）" if week else f"{d.year}年{d.month}月{d.day}日"
     if EN:
         return f"{w} {MON[d.month - 1]} {d.day}" if week else f"{MON[d.month - 1]} {d.day}, {d.year}"
     return f"{d.month}/{d.day}（{w}）" if week else f"{d.year} 年 {d.month} 月 {d.day} 日"
@@ -192,7 +238,7 @@ CSS = """
 .mix span { display:block; height:100%; }
 .hbars { list-style:none; margin:4px 0 0; padding:0; display:grid; gap:6px; }
 .hbars li { display:grid; grid-template-columns:7.5em 1fr auto; align-items:center; gap:8px; font-size:14px; }
-html[lang="en"] .hbars li { grid-template-columns:10em 1fr auto; }
+html[lang="en"] .hbars li, html[lang="ja"] .hbars li { grid-template-columns:10em 1fr auto; }
 .hbars .nm { display:flex; align-items:center; gap:6px; overflow:hidden; white-space:nowrap; }
 .hbars .nm i { width:10px; height:10px; border-radius:3px; flex:none; }
 .hbars .track { height:14px; background:var(--chip); border-radius:4px; overflow:hidden; }
@@ -332,7 +378,7 @@ def month_use(daily):
     svg = ""
     g = lo
     while g <= hi + 1e-9:
-        lab = f"{g / 10:g}" if EN else f"{g:g}"  # 英文：十億度（TWh）
+        lab = f"{g / 10:g}" if EN else f"{g:g}"  # 英文：十億度（TWh）；中文、日文：億度（億kWh）
         svg += (f'<line x1="{L}" x2="{W - R}" y1="{Y(g):.1f}" y2="{Y(g):.1f}" class="g"/>'
                 f'<text x="{L - 5}" y="{Y(g) + 4:.1f}" text-anchor="end">{lab}</text>')
         g += step
@@ -349,6 +395,7 @@ def month_use(daily):
     svg += "".join(
         f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="'
         + (f"{lab(k)}: {(m[k][0] + m[k][1]) / 1000:.1f} TWh (industry {m[k][0] / 1000:.1f}, homes and businesses {m[k][1] / 1000:.1f})" if EN
+           else f"{lab(k)}：{(m[k][0] + m[k][1]) / 100:,.1f} 億kWh（産業用 {m[k][0] / 100:,.1f}、民生用 {m[k][1] / 100:,.1f}）" if JA
            else f"{lab(k)}：{(m[k][0] + m[k][1]) / 100:,.1f} 億度（工業 {m[k][0] / 100:,.1f}、民生 {m[k][1] / 100:,.1f}）")
         + '"/>' for i, k in enumerate(months))
     return svg, months[-1]
@@ -377,7 +424,7 @@ def today_chart(hourly, day):
     for r, v, t in zip(rows, vals, tot):
         h = int(r["time"][11:13])
         acc = 0.0
-        for k, zh, en, c in FUELS:
+        for k, zh, en, ja, c in FUELS:
             if v[k] <= 0:
                 continue
             y0, y1 = Y(sc(acc)), Y(sc(acc + v[k]))
@@ -403,19 +450,21 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
     ren = sum(tot[k] for k in RENEW)
     order = sorted([f for f in FUELS if tot.get(f[0], 0) > 0.5], key=lambda f: -tot[f[0]])
 
-    when = (f"{MON[tday.month - 1]} {tday.day}, {t[11:16]}" if EN else f"{tday.month} 月 {tday.day} 日 {t[11:16]}")
-    mix = "".join(f'<span style="width:{tot[k] / gen * 100:.2f}%;background:{c}" title="{e(fuel_name(k))}"></span>' for k, _, _, c in order)
+    when = (f"{MON[tday.month - 1]} {tday.day}, {t[11:16]}" if EN else f"{tday.month}月{tday.day}日 {t[11:16]}" if JA
+            else f"{tday.month} 月 {tday.day} 日 {t[11:16]}")
+    mix = "".join(f'<span style="width:{tot[k] / gen * 100:.2f}%;background:{c}" title="{e(fuel_name(k))}"></span>' for k, _, _, _, c in order)
     bars = "".join(
         f'<li><span class="nm"><i style="background:{c}"></i>{e(fuel_name(k))}</span>'
         f'<span class="track"><span class="fill" style="width:{tot[k] / tot[order[0][0]] * 100:.1f}%;background:{c}"></span></span>'
-        f'<span class="val">{gw(tot[k], 2 if EN else 1)}<small>{tot[k] / gen * 100:.1f}%</small></span></li>' for k, _, _, c in order)
+        f'<span class="val">{gw(tot[k], 2 if EN else 1)}<small>{tot[k] / gen * 100:.1f}%</small></span></li>' for k, _, _, _, c in order)
     charge = -tot.get("storage_load", 0)
     hero = (f'<section class="box hero"><h2>{tr("現在用電", "Power demand right now")}</h2>'
             f'<div class="v">{gw(load)}<small>{unit()}</small></div>'
             f'<div class="sub">{when}{tr("・再生能源 ", " · renewables ")}<b>{ren / gen * 100:.1f}%</b>'
             f'{tr("・燃氣 ", " · gas ")}<b>{tot["lng"] / gen * 100:.1f}%</b>{tr("・燃煤 ", " · coal ")}<b>{tot["coal"] / gen * 100:.1f}%</b></div>'
             f'<div class="mix" aria-hidden="true">{mix}</div><ul class="hbars">{bars}</ul>'
-            + (f'<p class="note">{tr(f"另有 {gw(charge)} 萬瓩用來替儲能充電（抽蓄、電池），已從用電扣除。", f"Another {gw(charge, 2)} GW is charging storage (pumped hydro, batteries) and is not counted as demand.")}</p>' if charge > 0.5 else "")
+            + (f'<p class="note">{tr(f"另有 {gw(charge)} 萬瓩用來替儲能充電（抽蓄、電池），已從用電扣除。", f"Another {gw(charge, 2)} GW is charging storage (pumped hydro, batteries) and is not counted as demand.",
+                                      f"このほか {gw(charge)} 万kW を蓄電（揚水・電池）の充電に使っており、需要からは除いています。")}</p>' if charge > 0.5 else "")
             + f'<p class="note">{tr("各類機組淨發電量加總，台電每 10 分鐘更新，本站每小時抓一次。民營電廠併入同燃料。", "Sum of net output of all generating units. Taipower updates every 10 minutes; this page refreshes hourly. Private plants are included with their fuel type.")}</p></section>')
 
     # 供電燈號：昨天實際、未來一週預估
@@ -429,13 +478,13 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
             for fd, x in forecast if fd > d and x.get("rate") is not None)
         light_box = (
             f'<section class="box hero"><h2>{tr("供電燈號", "Power supply light")}</h2>'
-            f'<div class="sub">{tr(f"{ddate(d)}尖峰時段", f"Peak hours, {ddate(d)}")}</div>'
+            f'<div class="sub">{tr(f"{ddate(d)}尖峰時段", f"Peak hours, {ddate(d)}", f"{ddate(d)}のピーク時")}</div>'
             f'<div class="lightnow">{lamp(li)}<b>{e(light_text(li))}</b></div>'
             f'<div class="v" style="margin-top:6px">{r:.2f}<small>% {tr("備轉容量率", "operating reserve")}</small></div>'
             f'<div class="sub">{tr("備轉容量 ", "Reserve ")}<b>{gw(res * 10)}</b> {unit()}</div>'
             + (f'<table class="fc"><thead><tr><th>{tr("未來一週（台電預估）", "Next 7 days (Taipower forecast)")}</th><th>{tr("備轉容量率", "Reserve")}</th>'
-               f'<th class="n">{tr("尖峰用電", "Peak demand")}</th><th class="n rs">{tr("備轉容量", "Reserve")}</th></tr></thead><tbody>{fc_rows}</tbody></table>' if fc_rows else "")
-            + '<p class="note">' + "　".join(f'{lamp(x)} {x[1] if not EN else x[3]}' for x in LIGHTS) + "</p>"
+               f'<th class="n">{tr("尖峰用電", "Peak demand")}</th><th class="n rs">{tr("備轉容量", "Reserve", "予備力")}</th></tr></thead><tbody>{fc_rows}</tbody></table>' if fc_rows else "")
+            + '<p class="note">' + "　".join(f'{lamp(x)} {x[3] if EN else x[6] if JA else x[1]}' for x in LIGHTS) + "</p>"
             + f'<p class="note">{tr("燈號依台電標準：備轉容量率 10% 以上綠燈、6～10% 黃燈、6% 以下橘燈；備轉容量 90 萬瓩以下紅燈、50 萬瓩以下黑燈。單位：萬瓩。", "Lights follow Taipower’s rules: reserve margin 10% or more is green, 6–10% yellow, under 6% orange; reserve of 0.9 GW or less is red, 0.5 GW or less black. Figures in GW.")}</p></section>')
 
     blocks = []
@@ -452,7 +501,7 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
                       + f'<p class="note">{tr("每天用電尖峰時段的備轉容量率（台電公布的實績）。虛線是黃燈（10%）和橘燈（6%）的界線。", "Reserve margin at each day’s peak (Taipower actuals). Dashed lines mark the yellow (10%) and orange (6%) thresholds.")}</p></section>')
 
     tc = today_chart(hourly, t[:10])
-    leg = "".join(f'<span class="sq" style="background:{c}"></span>{e(fuel_name(k))}' for k, _, _, c in FUELS if tot.get(k, 0) > 0.5)
+    leg = "".join(f'<span class="sq" style="background:{c}"></span>{e(fuel_name(k))}' for k, _, _, _, c in FUELS if tot.get(k, 0) > 0.5)
     blocks.append(
         f'<section class="box"><h2>{tr("今天每小時的發電", "Today’s generation, hour by hour")}</h2>'
         + (f'<p class="legend">{leg}</p><p class="tip">{tr("滑過或點長條看每小時數字（單位：萬瓩）", "Hover or tap a bar for that hour (GW)")}</p>'
@@ -469,7 +518,8 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
             blocks.append(f'<section class="box"><h2>{tr("每天的尖峰用電", "Peak demand each day")}</h2>{leg}'
                           f'<p class="tip">{tr("滑過或點圖看每天數字（單位：萬瓩）", "Hover or tap the chart to see each day (GW)")}</p>'
                           f'<svg class="chart bd" viewBox="0 0 {W} {H}" role="img" aria-label="{e(tr("每日尖峰負載", "Daily peak demand"))}">{pc}</svg>'
-                          f'<p class="note">{tr(f"台電每日尖峰負載，目前公布到 {ddate(daily[-1][0], False)}。", f"Taipower daily peak load, published up to {ddate(daily[-1][0], False)}.")}</p></section>')
+                          f'<p class="note">{tr(f"台電每日尖峰負載，目前公布到 {ddate(daily[-1][0], False)}。", f"Taipower daily peak load, published up to {ddate(daily[-1][0], False)}.",
+                              f"台湾電力の日別最大電力。{ddate(daily[-1][0], False)}まで公表済み。")}</p></section>')
         mu, mlast = month_use(daily)
         if mu:
             blocks.append(f'<section class="box"><h2>{tr("每月用電量", "Electricity used each month")}</h2>'
@@ -482,24 +532,24 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
     pl = plants(units)
     prow = ""
     for i, a in enumerate(pl):
-        c = next((c for k, _, _, c in FUELS if k == a["fuel"]), "#999")
+        c = next((c for k, _, _, _, c in FUELS if k == a["fuel"]), "#999")
         nm = PLANTS_EN.get(a["name"], a["name"]) if EN else a["name"]
         cap = f'{a["mw"] / a["cap"] * 100:.0f}%' if a["cap"] and a["mw"] <= a["cap"] * 1.2 else "–"
         prow += (f'<tr{" hidden" if i >= 15 else ""} class="{"x" if i >= 15 else ""}"><td class="r">{i + 1}</td><td><i style="background:{c}"></i>{e(nm)}</td>'
                  f'<td>{e(fuel_name(a["fuel"]))}</td><td class="n">{gw(a["mw"])}</td><td class="n cap">{cap}</td>'
-                 f'<td class="nt">{e("、".join(sorted(a["notes"]))) if not EN else ""}</td></tr>')
+                 f'<td class="nt">{e("、".join(sorted(a["notes"]))) if not (EN or JA) else ""}</td></tr>')
     blocks.append(
         f'<section class="box wide"><h2>{tr("各電廠現在發電", "Power plants right now")}</h2>'
         f'<div class="plwrap"><table class="pl"><thead><tr><th></th><th>{tr("電廠", "Plant")}</th><th>{tr("類別", "Type")}</th>'
-        f'<th class="n">{tr("發電（萬瓩）", "Output (GW)")}</th><th class="n cap">{tr("出力", "Load")}</th><th>{"" if EN else "備註"}</th></tr></thead>'
+        f'<th class="n">{tr("發電（萬瓩）", "Output (GW)")}</th><th class="n cap">{tr("出力", "Load")}</th><th>{"" if EN or JA else "備註"}</th></tr></thead>'
         f'<tbody>{prow}</tbody></table></div>'
         + (f'<button type="button" class="seg-more" onclick="this.parentNode.querySelectorAll(\'tr.x\').forEach(function(r){{r.hidden=false}});this.remove()" '
            f'style="margin-top:8px;font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 14px;cursor:pointer">'
-           f'{tr(f"看全部 {len(pl)} 座", f"Show all {len(pl)}")}</button>' if len(pl) > 15 else "")
+           f'{tr(f"看全部 {len(pl)} 座", f"Show all {len(pl)}", f"全 {len(pl)} か所を見る")}</button>' if len(pl) > 15 else "")
         + f'<p class="note">{tr("同一電廠的機組合併計算；出力＝發電÷裝置容量。備註為台電標示（歲修、檢修、環保停機等）。", "Units at the same plant are combined. Load = output ÷ installed capacity.")}</p></section>')
 
     path = "power/"
-    zh_url, en_url = f"{SITE}/{path}", f"{SITE}/en/{path}"
+    url = f"{SITE}/{PREFIX[LANG]}{path}"
     rtxt = f"{reserve[-1][2]:.2f}%" if reserve else ""
     if EN:
         title = "Taiwan Electricity Today: Live Power Demand, Operating Reserve and Energy Mix | Taiwan Data"
@@ -508,16 +558,22 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
         foot = ("<div>Source: Taiwan Power Company (Taipower) open data: live generation by unit, daily operating reserve, daily supply and demand, "
                 "and the 7-day forecast. This page refreshes hourly.</div>\n"
                 "    <div>An independent site, not affiliated with the government. All figures come from government open data.</div>")
+    elif JA:
+        title = "台湾の電力需給：リアルタイムの電力需要・予備率・電源構成｜Taiwan Data"
+        desc = (f"台湾のいまの電力需要 {gw(load)} 万kW、台湾電力の需給ランプと昨日の予備率（{rtxt}）、今後1週間の見通し、"
+                f"LNG・石炭・太陽光・風力・水力のリアルタイム電源構成（再エネ {ren / gen * 100:.1f}%）と発電所別の出力。1時間ごとに更新。")
+        foot = ("<div>出典：台湾電力公司（台湾電力）オープンデータ（発電機別リアルタイム出力、日別予備率、過去の電力需給、今後1週間の需給見通し）。このページは1時間ごとに更新します。</div>\n"
+                f"    <div>{i18n_ja.FOOT}</div>")
     else:
         title = "今日電力：台灣即時用電、備轉容量率、供電燈號、發電來源｜Taiwan Data 台灣數據"
         desc = (f"台灣現在用電 {gw(load)} 萬瓩，昨天尖峰備轉容量率 {rtxt}。台電供電燈號、未來一週預估、"
                 f"燃氣、燃煤、太陽能、風力、水力即時發電佔比（再生能源 {ren / gen * 100:.1f}%）與各電廠發電，每小時更新。")
         foot = ("<div>資料來源：台灣電力公司開放資料（各機組即時發電量、每日備轉容量率、過去電力供需資訊、未來一週電力供需預測）。本頁每小時更新。</div>\n"
                 "    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>")
-    html_ = f"""{head(title, desc, en_url if EN else zh_url, "og.png", "en" if EN else "zh", (zh_url, en_url))}
+    html_ = f"""{head(title, desc, url, "og.png", LANG, "/" + path)}
 <body>
 <style>{CSS}</style>
-{nav("en" if EN else "zh", "/" + path if EN else "/en/" + path)}
+{nav(LANG, "/" + path)}
 <div class="wrap">
   <div class="top">{hero}{light_box}</div>
   <div class="grid">{"".join(blocks)}</div>
@@ -529,21 +585,20 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
 </body>
 </html>
 """
-    d = Path(out) / ("en" if EN else "") / path
+    d = Path(out) / PREFIX[LANG] / path
     d.mkdir(parents=True, exist_ok=True)
     (d / "index.html").write_text(html_, encoding="utf-8")
-    return en_url if EN else zh_url
+    return url
 
 
 def build(out, head, nav):
-    """nav(lang, alt)：頂欄。"""
-    global EN
+    """nav(lang, path)：頂欄。"""
     if not (DATA / "latest.json").exists():
         return []
     data = load()
     urls = []
-    for EN in (False, True):
-        bb.EN = EN
+    for lang in ("zh", "en", "ja"):
+        set_lang(lang)
         urls.append(page(out, head, nav, *data))
-    EN = bb.EN = False
+    set_lang("zh")
     return urls

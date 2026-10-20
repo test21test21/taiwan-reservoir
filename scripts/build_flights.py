@@ -12,19 +12,27 @@ from pathlib import Path
 import build_births as bb
 import geo
 import i18n_en
+import i18n_ja
 import worldmap
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data/flights"
 SITE = "https://taiwandata.info"
 e = html.escape
-EN = False
+LANG, EN, JA = "zh", False, False
 MON = bb.MON
+PREFIX = bb.PREFIX
 SCOPES = ["ALL", "TPE", "KHH", "TSA", "RMQ"]  # 航線表、載客率圖可以選的機場
 
 
-def tr(zh, en):
-    return en if EN else zh
+def set_lang(lang):
+    global LANG, EN, JA
+    LANG, EN, JA = lang, lang == "en", lang == "ja"
+    bb.set_lang(lang)
+
+
+def tr(zh, en, ja):
+    return en if EN else ja if JA else zh
 
 
 def n(x):
@@ -32,10 +40,10 @@ def n(x):
 
 
 def wan(x):
-    """6,524,635 → 中文「652.5 萬」、英文「6.52M」"""
+    """6,524,635 → 中文「652.5 萬」、英文「6.52M」、日文「652.5万」"""
     if EN:
         return f"{x / 1e6:.2f}M" if x >= 1e6 else f"{x / 1e3:.0f}k" if x >= 1e4 else n(x)
-    return f"{x / 1e4:,.1f} 萬" if x >= 1e4 else n(x)
+    return f"{x / 1e4:,.1f}{'万' if JA else ' 萬'}" if x >= 1e4 else n(x)
 
 
 def pct(now, before):
@@ -46,20 +54,20 @@ def pct(now, before):
 
 
 def ym_label(ym):
-    return f"{MON[int(ym[5:]) - 1]} {int(ym[:4])}" if EN else f"{int(ym[:4])} 年 {int(ym[5:])} 月"
+    return bb.ym_label(ym)
 
 
 def ap(code):
     zh, en = i18n_en.AIRPORTS.get(code, (code, code))
-    return en if EN else zh
+    return en if EN else i18n_ja.AIRPORTS.get(code, zh) if JA else zh
 
 
 def dest(x):
-    return i18n_en.DESTS.get(x, x) if EN else x
+    return i18n_en.DESTS.get(x, x) if EN else i18n_ja.DESTS.get(x, x) if JA else x
 
 
 def airline(x):
-    return i18n_en.AIRLINES.get(x, x) if EN else x
+    return i18n_en.AIRLINES.get(x, x) if EN else i18n_ja.AIRLINES.get(x, x) if JA else x
 
 
 def read(path):
@@ -168,7 +176,8 @@ html[lang="en"] .hbars li { grid-template-columns:9em 1fr auto; }
 
 JS = """<script>
 (function () {
-  var EN = document.documentElement.lang === "en";
+  var LG = document.documentElement.lang, EN = LG === "en", JA = LG === "ja";
+  function L(zh, en, ja) { return EN ? en : JA ? ja : zh; }
   function f(x) { return x.toLocaleString("en-US"); }
   // 圖表：滑過／點，在圖上方顯示數字
   document.querySelectorAll("svg.bd").forEach(function (svg) {
@@ -195,7 +204,7 @@ JS = """<script>
   var st = { p: D.P[0][0], s: "ALL", o: "pax", all: false };
   var rbody = document.getElementById("rt-routes"), abody = document.getElementById("rt-airlines");
   var more = document.getElementById("rt-more"), note = document.getElementById("rt-note");
-  function nm(list, i) { return (EN ? list[1][i] : null) || list[0][i]; }
+  function nm(list, i) { return (EN || JA ? list[1][i] : null) || list[0][i]; }
   function lfCell(p, s) {
     var v = s ? p / s * 100 : 0;
     return '<td class="n lfc">' + v.toFixed(1) + '%<i><b style="width:' + Math.min(100, v).toFixed(0) + '%"></b></i></td>';
@@ -220,7 +229,7 @@ JS = """<script>
     var lim = st.all ? 1e9 : 20, h = "";
     routes.slice(0, lim).forEach(function (a, i) {
       h += '<tr class="main" data-i="' + i + '"><td class="r">' + (i + 1) + "</td><td>" + nm(D.dn, a.k) +
-        (a.reg === 1 ? '<span class="tag">' + (EN ? "China" : "兩岸") + "</span>" : "") + '</td><td class="n">' + f(a.p) +
+        (a.reg === 1 ? '<span class="tag">' + L("兩岸", "China", "中国大陸") + "</span>" : "") + '</td><td class="n">' + f(a.p) +
         "</td>" + lfCell(a.p, a.s) + '<td class="n fl">' + f(a.f) + "</td></tr>";
       a.sub.sort(function (x, y) { return y[5] - x[5]; }).forEach(function (r) {
         h += '<tr class="sub" data-of="' + i + '" hidden><td></td><td>' + nm(D.an, r[2]) + '</td><td class="n">' + f(r[5]) + "</td>" +
@@ -229,7 +238,7 @@ JS = """<script>
     });
     rbody.innerHTML = h;
     more.hidden = routes.length <= 20;
-    more.textContent = st.all ? (EN ? "Show top 20" : "只看前 20 名") : (EN ? "Show all " + routes.length + " destinations" : "看全部 " + routes.length + " 個航點");
+    more.textContent = st.all ? L("只看前 20 名", "Show top 20", "上位20位だけ表示") : L("看全部 " + routes.length + " 個航點", "Show all " + routes.length + " destinations", "全" + routes.length + "就航地を表示");
     h = "";
     lines.slice(0, st.all ? 1e9 : 20).forEach(function (a, i) {
       var d = {}; a.sub.forEach(function (r) { d[r[1]] = 1; });
@@ -238,8 +247,9 @@ JS = """<script>
     });
     abody.innerHTML = h;
     drawMap();
-    note.textContent = st.o === "pax" ? "" : (EN ? "Only routes and airlines with at least " + f(D.min[st.p]) + " flights in this period."
-      : "只列這段期間至少 " + f(D.min[st.p]) + " 個航班的航點和航空公司。");
+    note.textContent = st.o === "pax" ? "" : L("只列這段期間至少 " + f(D.min[st.p]) + " 個航班的航點和航空公司。",
+      "Only routes and airlines with at least " + f(D.min[st.p]) + " flights in this period.",
+      "この期間に " + f(D.min[st.p]) + " 便以上ある就航地・航空会社だけを表示しています。");
   }
   // 航線地圖：線越粗旅客越多，顏色是載客率；點城市看各航空公司
   var svg = document.getElementById("rt-map"), ov = svg.querySelector(".ov"), info = document.getElementById("rt-info");
@@ -248,12 +258,13 @@ JS = """<script>
   function showInfo(a) {
     if (!a) {
       var tp = 0; cur.forEach(function (x) { tp += x.p; });
-      info.innerHTML = '<span class="muted">' + (EN ? cur.length + " destinations, " + f(tp) + " passengers. Tap a city to see its airlines."
-        : "共 " + cur.length + " 個航點、旅客 " + f(tp) + " 人次。點地圖上的城市看各航空公司。") + "</span>";
+      info.innerHTML = '<span class="muted">' + L("共 " + cur.length + " 個航點、旅客 " + f(tp) + " 人次。點地圖上的城市看各航空公司。",
+        cur.length + " destinations, " + f(tp) + " passengers. Tap a city to see its airlines.",
+        "就航地 " + cur.length + " か所、旅客 " + f(tp) + " 人。地図上の都市をタップすると航空会社別に表示します。") + "</span>";
       return;
     }
-    var h = "<h3>" + nm(D.dn, a.k) + "</h3><div>" + (EN ? "Passengers " : "旅客 ") + f(a.p) + (EN ? " · load factor " : "・載客率 ") +
-      (a.p / a.s * 100).toFixed(1) + "%" + (EN ? " · flights " : "・航班 ") + f(a.f) + "</div>";
+    var h = "<h3>" + nm(D.dn, a.k) + "</h3><div>" + L("旅客 ", "Passengers ", "旅客 ") + f(a.p) + L("・載客率 ", " · load factor ", "・搭乗率 ") +
+      (a.p / a.s * 100).toFixed(1) + "%" + L("・航班 ", " · flights ", "・便数 ") + f(a.f) + "</div>";
     var top = a.sub.slice().sort(function (x, y) { return y[5] - x[5]; }), mx = top[0][5] || 1;
     h += '<ul class="hbars">' + top.slice(0, 8).map(function (r) {
       return '<li><span class="nm">' + nm(D.an, r[2]) + '</span><span class="track"><span class="fill" style="width:' + (r[5] / mx * 100).toFixed(1) +
@@ -344,12 +355,12 @@ def scale(hi, ticks=4):
 
 
 def axis(v):
-    """座標軸：中文「600 萬」、英文「6M」"""
+    """座標軸：中文「600 萬」、英文「6M」、日文「600万」"""
     if v == 0:
         return "0"
     if EN:
         return f"{v / 1e6:g}M" if v >= 1e6 else f"{v / 1e3:g}k"
-    return f"{v / 1e4:g} 萬" if v >= 1e4 else n(v)
+    return f"{v / 1e4:g}{'万' if JA else ' 萬'}" if v >= 1e4 else n(v)
 
 
 def frame(lo, hi, step, Y):
@@ -388,7 +399,8 @@ def pax_bars(seg, months):
     for i, m in enumerate(months):
         s = seg[m]
         t = tr(f"{ym_label(m)}：共 {n(tot[i])} 人次（國際 {n(s['pax_intl'])}、兩岸 {n(s['pax_cross'])}、國內 {n(s['pax_dom'])}）",
-               f"{ym_label(m)}: {n(tot[i])} passengers (international {n(s['pax_intl'])}, China {n(s['pax_cross'])}, domestic {n(s['pax_dom'])})")
+               f"{ym_label(m)}: {n(tot[i])} passengers (international {n(s['pax_intl'])}, China {n(s['pax_cross'])}, domestic {n(s['pax_dom'])})",
+               f"{ym_label(m)}：計 {n(tot[i])} 人（国際線 {n(s['pax_intl'])}、中国大陸線 {n(s['pax_cross'])}、国内線 {n(s['pax_dom'])}）")
         svg += f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="{e(t)}"/>'
     return svg
 
@@ -420,7 +432,7 @@ def lf_chart(lf, routes, scope):
         svg += f'<path d="{" ".join(("M" if i == 0 else "L") + f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(s))}" class="line {cls}"/>'
     svg += f'<circle cx="{X(len(months) - 1):.1f}" cy="{Y(series[0][1][-1]):.1f}" r="4" class="dot b"/>'
     svg += f'<text x="{X(len(months) - 1) + 8:.1f}" y="{Y(series[0][1][-1]) + 4:.1f}" class="lab">{series[0][1][-1]:.1f}%</text>'
-    labels = [(i, tr(f"{int(m[5:])}月", MON[int(m[5:]) - 1])) for i, m in enumerate(months)] if len(months) <= 12 else month_ticks(months)
+    labels = [(i, tr(f"{int(m[5:])}月", MON[int(m[5:]) - 1], f"{int(m[5:])}月")) for i, m in enumerate(months)] if len(months) <= 12 else month_ticks(months)
     svg += bb.xlabels(X, labels)
     cw = (X(1) - X(0)) if len(months) > 1 else W - L - R
     for i, m in enumerate(months):
@@ -428,13 +440,14 @@ def lf_chart(lf, routes, scope):
         in_lf = x["in_pax"] / x["in_seats"] * 100 if x["in_seats"] else 0
         out_lf = x["out_pax"] / x["out_seats"] * 100 if x["out_seats"] else 0
         t = tr(f"{ym_label(m)}：載客率 {x['lf']:.1f}%（入境 {in_lf:.1f}%、出境 {out_lf:.1f}%），{n(x['flights'])} 個航班、{n(x['pax'])} 人次",
-               f"{ym_label(m)}: {x['lf']:.1f}% full (arrivals {in_lf:.1f}%, departures {out_lf:.1f}%), {n(x['flights'])} flights, {n(x['pax'])} passengers")
+               f"{ym_label(m)}: {x['lf']:.1f}% full (arrivals {in_lf:.1f}%, departures {out_lf:.1f}%), {n(x['flights'])} flights, {n(x['pax'])} passengers",
+               f"{ym_label(m)}：搭乗率 {x['lf']:.1f}%（到着 {in_lf:.1f}%、出発 {out_lf:.1f}%）、{n(x['flights'])} 便、{n(x['pax'])} 人")
         svg += f'<rect x="{X(i) - cw / 2:.1f}" y="{T}" width="{cw:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="{e(t)}"/>'
-    legend = (f'<p class="legend"><span class="k b"></span>{tr("每月載客率", "Monthly load factor")}'
-              + (f'<span class="k d"></span>{tr(f"{int(months[0][:4]) - 1} 年全年平均 {avg:.1f}%", f"{int(months[0][:4]) - 1} average {avg:.1f}%")}' if avg else "")
+    legend = (f'<p class="legend"><span class="k b"></span>{tr("每月載客率", "Monthly load factor", "月別搭乗率")}'
+              + (f'<span class="k d"></span>{tr(f"{int(months[0][:4]) - 1} 年全年平均 {avg:.1f}%", f"{int(months[0][:4]) - 1} average {avg:.1f}%", f"{int(months[0][:4]) - 1}年の年間平均 {avg:.1f}%")}' if avg else "")
               + "</p>")
     return (f'<div data-pane="{scope}"{"" if scope == "ALL" else " hidden"}>{legend}'
-            f'<svg class="chart bd" viewBox="0 0 {W} {H}" role="img" aria-label="{e(tr(f"{ap(scope)}國際及兩岸定期航班每月載客率", f"Monthly load factor, {ap(scope)}"))}">{svg}</svg></div>')
+            f'<svg class="chart bd" viewBox="0 0 {W} {H}" role="img" aria-label="{e(tr(f"{ap(scope)}國際及兩岸定期航班每月載客率", f"Monthly load factor, {ap(scope)}", f"{ap(scope)}の国際線・中国大陸線定期便の月別搭乗率"))}">{svg}</svg></div>')
 
 
 def airport_list(airports, last):
@@ -466,22 +479,22 @@ def route_data(routes, periods):
                 ai[r["airline"]] = len(an); an.append(r["airline"])
             packed[key].setdefault(r["scope"], []).append(
                 [0 if r["region"] == "intl" else 1, di[r["dest"]], ai[r["airline"]], int(r["flights"]), int(r["seats"]), int(r["pax"])])
-    return {"dn": [dn, [i18n_en.DESTS.get(x) for x in dn]], "an": [an, [i18n_en.AIRLINES.get(x) for x in an]], "D": packed,
+    T = i18n_ja if JA else i18n_en  # 中文頁也帶英文名（不會用到）
+    return {"dn": [dn, [T.DESTS.get(x) for x in dn]], "an": [an, [T.AIRLINES.get(x) for x in an]], "D": packed,
             "xy": [worldmap.xy(*geo.DEST[x]) if x in geo.DEST else None for x in dn],
             "o": {c: worldmap.xy(*geo.AIRPORT[c]) for c in SCOPES}}
 
 
 def build(out, head, nav):
-    """nav(lang, alt)：頂欄。"""
-    global EN
+    """nav(lang, path)：頂欄。"""
     if not (DATA / "segments.csv").exists():
         return []
     data = load()
     urls = []
-    for EN in (False, True):
-        bb.EN = EN
+    for lang in ("zh", "en", "ja"):
+        set_lang(lang)
         urls.append(page(out, head, nav, *data))
-    EN = bb.EN = False
+    set_lang("zh")
     return urls
 
 
@@ -495,69 +508,69 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
         in_lf = x["in_pax"] / x["in_seats"] * 100 if x["in_seats"] else 0
         out_lf = x["out_pax"] / x["out_seats"] * 100 if x["out_seats"] else 0
         return (f'<section class="box hero"><h2>{title}</h2>'
-                f'<div class="v">{x["pax"] / x["seats"] * 100:.1f}<small>% {tr("載客率", "full")}</small></div>{sub}'
-                f'<dl class="split"><div><dt>{tr("航班", "Flights")}</dt><dd>{n(x["flights"])}</dd></div>'
-                f'<div><dt>{tr("座位", "Seats")}</dt><dd>{wan(x["seats"])}</dd></div>'
-                f'<div><dt>{tr("載客", "Passengers")}</dt><dd>{wan(x["pax"])}</dd></div></dl>'
-                f'<p class="note">{tr(f"入境 {in_lf:.1f}%・出境 {out_lf:.1f}%。國際及兩岸定期航班。", f"Arrivals {in_lf:.1f}% · departures {out_lf:.1f}%. Scheduled international and China flights.")}</p></section>')
+                f'<div class="v">{x["pax"] / x["seats"] * 100:.1f}<small>% {tr("載客率", "full", "搭乗率")}</small></div>{sub}'
+                f'<dl class="split"><div><dt>{tr("航班", "Flights", "便数")}</dt><dd>{n(x["flights"])}</dd></div>'
+                f'<div><dt>{tr("座位", "Seats", "座席数")}</dt><dd>{wan(x["seats"])}</dd></div>'
+                f'<div><dt>{tr("載客", "Passengers", "旅客数")}</dt><dd>{wan(x["pax"])}</dd></div></dl>'
+                f'<p class="note">{tr(f"入境 {in_lf:.1f}%・出境 {out_lf:.1f}%。國際及兩岸定期航班。", f"Arrivals {in_lf:.1f}% · departures {out_lf:.1f}%. Scheduled international and China flights.", f"到着 {in_lf:.1f}%・出発 {out_lf:.1f}%。国際線・中国大陸線の定期便。")}</p></section>')
 
     cur = lfa.get(last)
     avg = year_lf(routes, y - 1, "ALL")
-    hero = stat(tr(f"{ym_label(last)}・航班載客率", f"{ym_label(last)}: how full the flights were"), cur,
-                f'<div class="yoy">{tr(f"{y - 1} 年平均", f"{y - 1} average")} <b>{avg:.1f}%</b></div>' if avg else "") if cur else ""
+    hero = stat(tr(f"{ym_label(last)}・航班載客率", f"{ym_label(last)}: how full the flights were", f"{ym_label(last)}・航空便の搭乗率"), cur,
+                f'<div class="yoy">{tr(f"{y - 1} 年平均", f"{y - 1} average", f"{y - 1}年の平均")} <b>{avg:.1f}%</b></div>' if avg else "") if cur else ""
     ytd_m = [f"{y}-{i:02d}" for i in range(1, m + 1)]
     ytd_box = ""
     if m > 1 and all(mm in lfa for mm in ytd_m):
         agg = {k: sum(lfa[mm][k] for mm in ytd_m) for k in ("flights", "seats", "pax", "in_pax", "in_seats", "out_pax", "out_seats")}
-        ytd_box = stat(tr(f"{y} 年 1～{m} 月累計", f"{y} so far (Jan–{MON[m - 1]})"), agg, "")
+        ytd_box = stat(tr(f"{y} 年 1～{m} 月累計", f"{y} so far (Jan–{MON[m - 1]})", f"{y}年1～{m}月の累計"), agg, "")
 
     blocks = []
     # 航點／航空公司排行（最重要，放最前面）
-    periods = [(last, tr(f"{y} 年 {m} 月", f"{MON[m - 1]} {y}"))]
+    periods = [(last, tr(f"{y} 年 {m} 月", f"{MON[m - 1]} {y}", f"{y}年{m}月"))]
     yk = f"{y}-ytd"
     if yk in routes and ytd_through.get(yk, 0) > 1:
         t = ytd_through[yk]
-        periods.append((yk, tr(f"今年 1～{t} 月", f"Jan–{MON[t - 1]}")))
+        periods.append((yk, tr(f"今年 1～{t} 月", f"Jan–{MON[t - 1]}", f"今年1～{t}月")))
     if str(y - 1) in routes:
-        periods.append((str(y - 1), tr(f"{y - 1} 全年", f"{y - 1}")))
+        periods.append((str(y - 1), tr(f"{y - 1} 全年", f"{y - 1}", f"{y - 1}年（通年）")))
     periods = [p for p in periods if p[0] in routes]
     rd = route_data(routes, periods)
     rd["P"] = periods
     months_in = {last: 1, yk: ytd_through.get(yk, 1), str(y - 1): 12}
     rd["min"] = {k: 30 * months_in.get(k, 1) for k, _ in periods}
-    th = (f'<tr><th></th><th>{tr("航點", "Destination")}</th><th class="n">{tr("旅客", "Passengers")}</th>'
-          f'<th class="n">{tr("載客率", "Load factor")}</th><th class="n fl">{tr("航班", "Flights")}</th></tr>')
-    tha = (f'<tr><th></th><th>{tr("航空公司", "Airline")}</th><th class="n">{tr("旅客", "Passengers")}</th>'
-           f'<th class="n">{tr("載客率", "Load factor")}</th><th class="n fl">{tr("航點", "Routes")}</th></tr>')
+    th = (f'<tr><th></th><th>{tr("航點", "Destination", "就航地")}</th><th class="n">{tr("旅客", "Passengers", "旅客数")}</th>'
+          f'<th class="n">{tr("載客率", "Load factor", "搭乗率")}</th><th class="n fl">{tr("航班", "Flights", "便数")}</th></tr>')
+    tha = (f'<tr><th></th><th>{tr("航空公司", "Airline", "航空会社")}</th><th class="n">{tr("旅客", "Passengers", "旅客数")}</th>'
+           f'<th class="n">{tr("載客率", "Load factor", "搭乗率")}</th><th class="n fl">{tr("航點", "Routes", "就航地数")}</th></tr>')
     blocks.append(
-        f'<section class="box wide" id="routes"><h2>{tr("航線地圖與熱門航點", "Route map and top destinations")}</h2>'
-        + seg_buttons('data-st="p" aria-label="' + tr("期間", "Period") + '"', periods, periods[0][0])
-        + seg_buttons('data-st="s" aria-label="' + tr("機場", "Airport") + '"', [(c, ap(c) if c != "ALL" else tr("全部", "All")) for c in SCOPES], "ALL")
-        + seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view") + '"', [("asia", tr("亞洲", "Asia")), ("world", tr("全球", "World"))], "asia")
-        + worldmap.svg("rt-map", tr("台灣飛往各城市的航線地圖", "Map of routes from Taiwan"))
-        + '<div class="wmleg"><span>' + tr("線越粗旅客越多；顏色是載客率：", "Thicker line = more passengers. Colour = load factor:") + "</span>"
+        f'<section class="box wide" id="routes"><h2>{tr("航線地圖與熱門航點", "Route map and top destinations", "路線地図と人気の就航地")}</h2>'
+        + seg_buttons('data-st="p" aria-label="' + tr("期間", "Period", "期間") + '"', periods, periods[0][0])
+        + seg_buttons('data-st="s" aria-label="' + tr("機場", "Airport", "空港") + '"', [(c, ap(c) if c != "ALL" else tr("全部", "All", "すべて")) for c in SCOPES], "ALL")
+        + seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view", "地図の範囲") + '"', [("asia", tr("亞洲", "Asia", "アジア")), ("world", tr("全球", "World", "世界"))], "asia")
+        + worldmap.svg("rt-map", tr("台灣飛往各城市的航線地圖", "Map of routes from Taiwan", "台湾から各都市への路線地図"))
+        + '<div class="wmleg"><span>' + tr("線越粗旅客越多；顏色是載客率：", "Thicker line = more passengers. Colour = load factor:", "線が太いほど旅客が多く、色は搭乗率：") + "</span>"
         + "".join(f'<span><i style="background:{c}"></i>{t}</span>' for c, t in
-                  [("#7fc8ff", tr("70% 以下", "under 70%")), ("#ffe17a", "70–80%"), ("#ffa940", "80–90%"), ("#ff5c5c", tr("90% 以上", "90%+"))])
+                  [("#7fc8ff", tr("70% 以下", "under 70%", "70%未満")), ("#ffe17a", "70–80%"), ("#ffa940", "80–90%"), ("#ff5c5c", tr("90% 以上", "90%+", "90%以上"))])
         + '</div><div class="wminfo" id="rt-info" aria-live="polite"></div>'
-        + seg_buttons('data-st="o" aria-label="' + tr("排序", "Sort") + '"',
-                      [("pax", tr("旅客最多", "Most passengers")), ("hi", tr("最滿", "Fullest")), ("lo", tr("最空", "Emptiest"))], "pax")
+        + seg_buttons('data-st="o" aria-label="' + tr("排序", "Sort", "並べ替え") + '"',
+                      [("pax", tr("旅客最多", "Most passengers", "旅客が多い順")), ("hi", tr("最滿", "Fullest", "搭乗率が高い順")), ("lo", tr("最空", "Emptiest", "搭乗率が低い順"))], "pax")
         + f'<p class="note" id="rt-note"></p><div class="tables">'
-        + f'<div><h3>{tr("航點（點一下看各航空公司）", "Destinations (tap for airlines)")}</h3><table class="rt">{th}<tbody id="rt-routes"></tbody></table>'
+        + f'<div><h3>{tr("航點（點一下看各航空公司）", "Destinations (tap for airlines)", "就航地（タップで航空会社別）")}</h3><table class="rt">{th}<tbody id="rt-routes"></tbody></table>'
         + f'<button type="button" class="more" id="rt-more" hidden></button></div>'
-        + f'<div><h3>{tr("航空公司", "Airlines")}</h3><table class="rt">{tha}<tbody id="rt-airlines"></tbody></table></div></div>'
-        + f'<p class="note">{tr("國際及兩岸定期航班，含所有機場進出（入境＋出境）。載客率＝載客人數÷座位數。", "Scheduled international and China flights, arrivals plus departures. Load factor = passengers ÷ seats.")}</p></section>')
+        + f'<div><h3>{tr("航空公司", "Airlines", "航空会社")}</h3><table class="rt">{tha}<tbody id="rt-airlines"></tbody></table></div></div>'
+        + f'<p class="note">{tr("國際及兩岸定期航班，含所有機場進出（入境＋出境）。載客率＝載客人數÷座位數。", "Scheduled international and China flights, arrivals plus departures. Load factor = passengers ÷ seats.", "国際線・中国大陸線の定期便、全空港の到着＋出発。搭乗率＝旅客数÷座席数。")}</p></section>')
 
     # 載客率
     scopes = [c for c in SCOPES if lf.get(c)]
     blocks.append(
-        f'<section class="box"><h2>{tr("定期航班載客率", "How full are the flights")}</h2>'
-        + seg_buttons('data-swap aria-label="' + tr("機場", "Airport") + '"', [(c, ap(c) if c != "ALL" else tr("全部", "All")) for c in scopes], "ALL")
-        + f'<p class="tip">{tr("滑過或點圖看每月數字", "Hover or tap the chart to see each month")}</p>'
+        f'<section class="box"><h2>{tr("定期航班載客率", "How full are the flights", "定期便の搭乗率")}</h2>'
+        + seg_buttons('data-swap aria-label="' + tr("機場", "Airport", "空港") + '"', [(c, ap(c) if c != "ALL" else tr("全部", "All", "すべて")) for c in scopes], "ALL")
+        + f'<p class="tip">{tr("滑過或點圖看每月數字", "Hover or tap the chart to see each month", "グラフにカーソルを合わせるかタップすると、各月の数値を表示")}</p>'
         + "".join(lf_chart(lf, routes, c) for c in scopes)
-        + f'<p class="note">{tr("國際及兩岸定期航班。", "Scheduled international and China flights.")}</p></section>')
+        + f'<p class="note">{tr("國際及兩岸定期航班。", "Scheduled international and China flights.", "国際線・中国大陸線の定期便。")}</p></section>')
 
     path = "flights/"
-    zh_url, en_url = f"{SITE}/{path}", f"{SITE}/en/{path}"
+    url = f"{SITE}/{PREFIX[LANG]}{path}"
     top_dest = sorted(defaultdict_sum(routes.get(last, []), "ALL").items(), key=lambda x: -x[1])[:3]
     lf_txt = f"{cur['pax'] / cur['seats'] * 100:.1f}%" if cur else ""
     if EN:
@@ -569,6 +582,13 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
                 "statistics (open data). Figures cover scheduled "
                 "international and China flights. Checked daily; the CAA usually publishes each month's figures near the end of the following month.</div>\n"
                 "    <div>An independent site, not affiliated with the government. All figures come from government open data.</div>")
+    elif JA:
+        title = f"台湾の航空便搭乗率：{ym_label(last)}の路線別・航空会社別ランキング｜Taiwan Data"
+        desc = (f"交通部民用航空局の最新統計：{ym_label(last)}の国際線・中国大陸線定期便の搭乗率は {lf_txt}。"
+                f"人気の就航地（{'、'.join(dest(d) for d, _ in top_dest)}…）と航空会社の旅客数・搭乗率ランキングを、空港別、搭乗率の高い順・低い順で。")
+        foot = ("<div>出典：交通部民用航空局「民航運輸統計」オープンデータ。数値は国際線・中国大陸線の定期便です。"
+                "毎日確認しており、民用航空局は通常、翌月末に前月分を発表します。</div>\n"
+                f"    <div>{i18n_ja.FOOT}</div>")
     else:
         title = f"台灣航班載客率：{ym_label(last)}各航線、航空公司排行｜Taiwan Data 台灣數據"
         desc = (f"民航局最新統計：{ym_label(last)}國際及兩岸定期航班載客率 {lf_txt}。"
@@ -576,10 +596,10 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
         foot = ("<div>資料來源：交通部民用航空局「民航運輸統計」開放資料。數字為國際及兩岸定期航班。"
                 "每天檢查一次，民航局通常在次月月底公布上個月數字。</div>\n"
                 "    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>")
-    html_ = f"""{head(title, desc, en_url if EN else zh_url, "og.png", "en" if EN else "zh", (zh_url, en_url))}
+    html_ = f"""{head(title, desc, url, "og.png", LANG, "/" + path)}
 <body>
 <style>{CSS}</style>
-{nav("en" if EN else "zh", "/" + path if EN else "/en/" + path)}
+{nav(LANG, "/" + path)}
 <div class="wrap">
   <div class="top">{hero}{ytd_box}</div>
   <div class="grid">{"".join(blocks)}</div>
@@ -593,10 +613,10 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
 </body>
 </html>
 """
-    d = Path(out) / ("en" if EN else "") / path
+    d = Path(out) / PREFIX[LANG] / path
     d.mkdir(parents=True, exist_ok=True)
     (d / "index.html").write_text(html_, encoding="utf-8")
-    return en_url if EN else zh_url
+    return url
 
 
 def defaultdict_sum(rows, scope):
