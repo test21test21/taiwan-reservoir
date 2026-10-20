@@ -485,7 +485,7 @@ def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
 
     image = "reservoir/og.png"
     if en:
-        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">Reservoirs</a>', "en", path)
+        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">Taiwan Reservoirs</a>', "en", path)
         top = (f'<nav class="crumb"><a href="../">Taiwan reservoirs</a> › {e(region)}</nav>\n'
                f'  <h1>{e(name)}</h1>\n'
                f'  <p class="lead">{e(region)} · observed {e(when)} · updated {e(updated)}</p>')
@@ -495,8 +495,8 @@ def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
                 "1 million m³ = 1 billion litres.</div>\n"
                 f"    <div>{FOOT[lang]}</div>")
     elif ja:
-        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">ダム貯水率</a>', "ja", path)
-        top = (f'<nav class="crumb"><a href="../../">Taiwan Data 台湾データ</a> › <a href="../">ダム貯水率</a> › {e(region)}</nav>\n'
+        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">台湾のダム貯水率</a>', "ja", path)
+        top = (f'<nav class="crumb"><a href="../../">Taiwan Data 台湾データ</a> › <a href="../">台湾のダム貯水率</a> › {e(region)}</nav>\n'
                f'  <h1>{e(name)}のリアルタイム貯水率</h1>\n'
                f'  <p class="lead">{e(region)}・{e(when)} 観測・更新 {e(updated)}</p>')
         cta = "台湾全体のダム地図を見る"
@@ -504,8 +504,8 @@ def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
                 "貯水率＝有効貯水量 ÷ 有効貯水容量。1万m³は約1万トンの水です。</div>\n"
                 f"    <div>{FOOT[lang]}</div>")
     else:
-        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">水庫水情</a>', "zh", path)
-        top = (f'<nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">水庫水情</a> › {e(region)}</nav>\n'
+        bar = site_nav.nav("reservoir", '<a class="sitesection" href="../">台灣水庫水情</a>', "zh", path)
+        top = (f'<nav class="crumb"><a href="../../">Taiwan Data 台灣數據</a> › <a href="../">台灣水庫水情</a> › {e(region)}</nav>\n'
                f'  <h1>{e(name)}即時蓄水率</h1>\n'
                f'  <p class="lead">{e(region)}・{e(when)} 觀測・資料更新 {e(updated)}</p>')
         cta = "看全台水庫地圖"
@@ -666,7 +666,7 @@ def main(out):
     idx = out / "reservoir/index.html"
     if idx.exists():
         src = idx.read_text(encoding="utf-8")
-        for lang, T, section, what in (("en", i18n_en, "Reservoirs", "英文版總覽頁"), ("ja", i18n_ja, "ダム貯水率", "日文版總覽頁")):
+        for lang, T, section, what in (("en", i18n_en, "Taiwan Reservoirs", "英文版總覽頁"), ("ja", i18n_ja, "台湾のダム貯水率", "日文版總覽頁")):
             t = translate(src, T.OVERVIEW_HTML, what)
             i18n = {"txt": T.TXT, "regions": T.REGIONS, "counties": T.COUNTIES,
                     "lights": T.LIGHTS, "res": T.RESERVOIRS, "legend": getattr(T, "LEGEND", None)}
@@ -682,9 +682,9 @@ def main(out):
         urls += all_langs("/reservoir/")[1:]
 
     sections = {
-        "births": {"zh": "出生與死亡", "en": "Births &amp; Deaths", "ja": "出生と死亡"},
-        "flights": {"zh": "航班", "en": "Flights", "ja": "航空便"},
-        "travel": {"zh": "旅客人次", "en": "Tourism", "ja": "旅客数"},
+        "births": {"zh": "台灣出生與死亡", "en": "Taiwan Births &amp; Deaths", "ja": "台湾の出生と死亡"},
+        "flights": {"zh": "台灣航班", "en": "Taiwan Flights", "ja": "台湾の航空便"},
+        "travel": {"zh": "台灣旅客人次", "en": "Taiwan Tourism", "ja": "台湾の旅客数"},
     }
 
     def section_nav(key):
@@ -698,7 +698,7 @@ def main(out):
         ("index.html", site_nav.nav("home", "", "zh", "/")),
         ("en/index.html", site_nav.nav("home", "", "en", "/")),
         ("jp/index.html", site_nav.nav("home", "", "ja", "/")),
-        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">水庫水情</h1>', "zh", "/reservoir/")),
+        ("reservoir/index.html", site_nav.nav("reservoir", '<h1 class="sitesection">台灣水庫水情</h1>', "zh", "/reservoir/")),
         ("en/reservoir/index.html", ""),
         ("jp/reservoir/index.html", ""),
     ]
