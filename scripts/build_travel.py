@@ -371,7 +371,7 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
     if months:
         last = months[-1]
         ly, lm = int(last[:4]), int(last[5:])
-        items = [(tr("國際", "International", "国際線"), "intl", "pax_intl"), (tr("兩岸", "China", "中国大陸線"), "cross", "pax_cross"),
+        items = [(tr("國際", "International", "国際線"), "intl", "pax_intl"), (tr("兩岸", "Mainland China", "中国大陸線"), "cross", "pax_cross"),
                  (tr("國內", "Domestic", "国内線"), "dom", "pax_dom")]
         keys = ["pax"] + [k for _, _, k in items]
 
@@ -405,7 +405,7 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
         recent = months[-24:]
         bars_box = (f'<section class="box"><h2>{tr("每月機場旅客", "Airport passengers per month", "空港の月別旅客数")}</h2>'
                     f'<p class="legend"><i class="sq" style="background:var(--intl)"></i>{tr("國際", "International", "国際線")}'
-                    f'<i class="sq" style="background:var(--cross)"></i>{tr("兩岸", "China", "中国大陸線")}<i class="sq" style="background:var(--dom)"></i>{tr("國內", "Domestic", "国内線")}</p>'
+                    f'<i class="sq" style="background:var(--cross)"></i>{tr("兩岸", "Mainland China", "中国大陸線")}<i class="sq" style="background:var(--dom)"></i>{tr("國內", "Domestic", "国内線")}</p>'
                     f'<p class="tip">{tr("滑過或點長條看當月數字", "Hover or tap a bar to see that month", "棒にカーソルを合わせるかタップすると、その月の数値を表示")}</p>'
                     f'<svg class="chart bd" viewBox="0 0 {bb.W} {bb.H}" role="img" aria-label="{tr("每月機場旅客人次", "Airport passengers per month", "空港の月別旅客数")}">{bf.pax_bars(seg, recent)}</svg></section>')
 

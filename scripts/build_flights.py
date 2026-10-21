@@ -229,7 +229,7 @@ JS = """<script>
     var lim = st.all ? 1e9 : 20, h = "";
     routes.slice(0, lim).forEach(function (a, i) {
       h += '<tr class="main" data-i="' + i + '"><td class="r">' + (i + 1) + "</td><td>" + nm(D.dn, a.k) +
-        (a.reg === 1 ? '<span class="tag">' + L("兩岸", "China", "中国大陸") + "</span>" : "") + '</td><td class="n">' + f(a.p) +
+        (a.reg === 1 ? '<span class="tag">' + L("兩岸", "Mainland China", "中国大陸") + "</span>" : "") + '</td><td class="n">' + f(a.p) +
         "</td>" + lfCell(a.p, a.s) + '<td class="n fl">' + f(a.f) + "</td></tr>";
       a.sub.sort(function (x, y) { return y[5] - x[5]; }).forEach(function (r) {
         h += '<tr class="sub" data-of="' + i + '" hidden><td></td><td>' + nm(D.an, r[2]) + '</td><td class="n">' + f(r[5]) + "</td>" +
@@ -399,7 +399,7 @@ def pax_bars(seg, months):
     for i, m in enumerate(months):
         s = seg[m]
         t = tr(f"{ym_label(m)}：共 {n(tot[i])} 人次（國際 {n(s['pax_intl'])}、兩岸 {n(s['pax_cross'])}、國內 {n(s['pax_dom'])}）",
-               f"{ym_label(m)}: {n(tot[i])} passengers (international {n(s['pax_intl'])}, China {n(s['pax_cross'])}, domestic {n(s['pax_dom'])})",
+               f"{ym_label(m)}: {n(tot[i])} passengers (international {n(s['pax_intl'])}, mainland China {n(s['pax_cross'])}, domestic {n(s['pax_dom'])})",
                f"{ym_label(m)}：計 {n(tot[i])} 人（国際線 {n(s['pax_intl'])}、中国大陸線 {n(s['pax_cross'])}、国内線 {n(s['pax_dom'])}）")
         svg += f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="{e(t)}"/>'
     return svg
@@ -512,7 +512,7 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
                 f'<dl class="split"><div><dt>{tr("航班", "Flights", "便数")}</dt><dd>{n(x["flights"])}</dd></div>'
                 f'<div><dt>{tr("座位", "Seats", "座席数")}</dt><dd>{wan(x["seats"])}</dd></div>'
                 f'<div><dt>{tr("載客", "Passengers", "旅客数")}</dt><dd>{wan(x["pax"])}</dd></div></dl>'
-                f'<p class="note">{tr(f"入境 {in_lf:.1f}%・出境 {out_lf:.1f}%。國際及兩岸定期航班。", f"Arrivals {in_lf:.1f}% · departures {out_lf:.1f}%. Scheduled international and China flights.", f"到着 {in_lf:.1f}%・出発 {out_lf:.1f}%。国際線・中国大陸線の定期便。")}</p></section>')
+                f'<p class="note">{tr(f"入境 {in_lf:.1f}%・出境 {out_lf:.1f}%。國際及兩岸定期航班。", f"Arrivals {in_lf:.1f}% · departures {out_lf:.1f}%. Scheduled international and mainland China flights.", f"到着 {in_lf:.1f}%・出発 {out_lf:.1f}%。国際線・中国大陸線の定期便。")}</p></section>')
 
     cur = lfa.get(last)
     avg = year_lf(routes, y - 1, "ALL")
@@ -558,7 +558,7 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
         + f'<div><h3>{tr("航點（點一下看各航空公司）", "Destinations (tap for airlines)", "就航地（タップで航空会社別）")}</h3><table class="rt">{th}<tbody id="rt-routes"></tbody></table>'
         + f'<button type="button" class="more" id="rt-more" hidden></button></div>'
         + f'<div><h3>{tr("航空公司", "Airlines", "航空会社")}</h3><table class="rt">{tha}<tbody id="rt-airlines"></tbody></table></div></div>'
-        + f'<p class="note">{tr("國際及兩岸定期航班，含所有機場進出（入境＋出境）。載客率＝載客人數÷座位數。", "Scheduled international and China flights, arrivals plus departures. Load factor = passengers ÷ seats.", "国際線・中国大陸線の定期便、全空港の到着＋出発。搭乗率＝旅客数÷座席数。")}</p></section>')
+        + f'<p class="note">{tr("國際及兩岸定期航班，含所有機場進出（入境＋出境）。載客率＝載客人數÷座位數。", "Scheduled international and mainland China flights, arrivals plus departures. Load factor = passengers ÷ seats.", "国際線・中国大陸線の定期便、全空港の到着＋出発。搭乗率＝旅客数÷座席数。")}</p></section>')
 
     # 載客率
     scopes = [c for c in SCOPES if lf.get(c)]
@@ -567,7 +567,7 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
         + seg_buttons('data-swap aria-label="' + tr("機場", "Airport", "空港") + '"', [(c, ap(c) if c != "ALL" else tr("全部", "All", "すべて")) for c in scopes], "ALL")
         + f'<p class="tip">{tr("滑過或點圖看每月數字", "Hover or tap the chart to see each month", "グラフにカーソルを合わせるかタップすると、各月の数値を表示")}</p>'
         + "".join(lf_chart(lf, routes, c) for c in scopes)
-        + f'<p class="note">{tr("國際及兩岸定期航班。", "Scheduled international and China flights.", "国際線・中国大陸線の定期便。")}</p></section>')
+        + f'<p class="note">{tr("國際及兩岸定期航班。", "Scheduled international and mainland China flights.", "国際線・中国大陸線の定期便。")}</p></section>')
 
     path = "flights/"
     url = f"{SITE}/{PREFIX[LANG]}{path}"
@@ -575,12 +575,12 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
     lf_txt = f"{cur['pax'] / cur['seats'] * 100:.1f}%" if cur else ""
     if EN:
         title = f"Taiwan Flight Load Factors by Route and Airline, {ym_label(last)} | Taiwan Data"
-        desc = (f"How full were flights to and from Taiwan in {ym_label(last)}? Scheduled international and China flights were {lf_txt} full. "
+        desc = (f"How full were flights to and from Taiwan in {ym_label(last)}? Scheduled international and mainland China flights were {lf_txt} full. "
                 f"Rankings of the busiest, fullest and emptiest routes ({', '.join(dest(d) for d, _ in top_dest)}…) and airlines, "
                 "by airport, from Civil Aeronautics Administration data.")
         foot = ("<div>Source: Civil Aeronautics Administration (CAA), Ministry of Transportation and Communications, civil aviation "
                 "statistics (open data). Figures cover scheduled "
-                "international and China flights. Checked daily; the CAA usually publishes each month's figures near the end of the following month.</div>\n"
+                "international and mainland China flights. Checked daily; the CAA usually publishes each month's figures near the end of the following month.</div>\n"
                 "    <div>An independent site, not affiliated with the government. All figures come from government open data.</div>")
     elif JA:
         title = f"台湾の航空便搭乗率：{ym_label(last)}の路線別・航空会社別ランキング｜Taiwan Data"
