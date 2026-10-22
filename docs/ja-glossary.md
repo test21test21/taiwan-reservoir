@@ -77,7 +77,7 @@
 | 30601 | 虎頭埤水庫 | 虎頭埤ダム | Hutoupi Reservoir |
 | 30602 | 鹽水埤水庫 | 塩水埤ダム | Yanshuipi Reservoir |
 | 30802 | 阿公店水庫 | 阿公店ダム | Agongdian Reservoir |
-| 30803 |  | 鳳山ダム | Fengshan Reservoir |
+| 30803 | 鳳山水庫 | 鳳山ダム | Fengshan Reservoir |
 | 31002 | 甲仙攔河堰 | 甲仙堰 | Jiaxian Weir |
 | 31201 | 牡丹水庫 | 牡丹ダム | Mudan Reservoir |
 | 31301 | 成功水庫 | 成功ダム | Chenggong Reservoir |
