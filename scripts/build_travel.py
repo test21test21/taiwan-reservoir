@@ -354,15 +354,15 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
     pre = totals.get(2019)
 
     def one(label, cls, v, before, pre_v):
-        rec = (f'<div class="yoy">{tr("疫情前 2019 年的", "", "コロナ前の2019年の")} <b>{v / pre_v * 100:.0f}%</b>{tr("", " of 2019, before Covid", "")}</div>'
+        rec = (f'<div class="yoy">{tr("疫情前 2019 年的", "", "コロナ前の2019年の")} <b>{v / pre_v * 100:.0f}%</b>{tr("", " of the 2019 (pre-Covid) level", "")}</div>'
                if pre_v and y > 2019 else "")
         return (f'<div><div class="k"><i style="background:var(--{cls})"></i>{label}</div>'
                 f'<div class="v">{n(v)}<small>{tr("人次", "", "人")}</small></div>'
                 f'<div class="yoy">{tr("比前一年", "vs previous year", "前年比")} <b>{pct(v, before)}</b></div>{rec}</div>')
 
-    hero = (f'<section class="box"><h2>{tr(f"{y} 年全年", f"All of {y}", f"{y}年（通年）")}</h2><div class="duo">'
+    hero = (f'<section class="box"><h2>{tr(f"{y} 年全年", f"Full year {y}", f"{y}年（通年）")}</h2><div class="duo">'
             f'{one(tr("來台旅客", "Visitors to Taiwan", "訪台客"), "in", ti, pi, pre and pre[0])}'
-            f'{one(tr("國人出國", "Taiwanese going abroad", "台湾人の出国"), "out", to, po, pre and pre[1])}</div>'
+            f'{one(tr("國人出國", "Outbound trips by Taiwanese", "台湾人の出国"), "out", to, po, pre and pre[1])}</div>'
             f'<p class="note">{tr("觀光署每年公布一次全年統計。", "Published once a year by the Tourism Administration.", "交通部観光署が年1回、通年の統計を発表します。")}</p></section>')
 
     # 機場旅客（民航局，每月）：左邊單月（可選），右邊今年累計
@@ -371,7 +371,7 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
     if months:
         last = months[-1]
         ly, lm = int(last[:4]), int(last[5:])
-        items = [(tr("國際", "International", "国際線"), "intl", "pax_intl"), (tr("兩岸", "China", "中国大陸線"), "cross", "pax_cross"),
+        items = [(tr("國際", "International", "国際線"), "intl", "pax_intl"), (tr("兩岸", "Mainland China", "中国大陸線"), "cross", "pax_cross"),
                  (tr("國內", "Domestic", "国内線"), "dom", "pax_dom")]
         keys = ["pax"] + [k for _, _, k in items]
 
@@ -392,20 +392,20 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
             for p in pick_m)
         opts = "".join(f'<option value="{p}"{" selected" if p == last else ""}>{ym_full(p)}</option>' for p in reversed(pick_m))
         latest = (f'<section class="box"><h2><select id="mpick" aria-label="{tr("月份", "Month", "月")}">{opts}</select>'
-                  f'{tr("・全台機場旅客", " · passengers at Taiwan airports", "・台湾の空港の旅客数")}</h2>{panes}'
+                  f'{tr("・全台機場旅客", " · airport passengers in Taiwan", "・台湾の空港の旅客数")}</h2>{panes}'
                   f'<p class="note">{tr("含入境、出境及過境旅客；民航局每月公布。", "Arrivals, departures and transit; published monthly by the Civil Aeronautics Administration.", "到着・出発・乗り継ぎの旅客を含む。民用航空局が毎月発表。")}</p></section>')
         ytd = {k: sum(seg[f"{ly}-{i:02d}"][k] for i in range(1, lm + 1)) for k in keys} if all(f"{ly}-{i:02d}" in seg for i in range(1, lm + 1)) else None
         if ytd:
-            ytd_box = (f'<section class="box"><h2>{tr(f"{ly} 年 1～{lm} 月累計・全台機場旅客", f"{ly} so far (Jan–{MON[lm - 1]}): passengers at Taiwan airports", f"{ly}年1～{lm}月の累計・台湾の空港の旅客数")}</h2>'
+            ytd_box = (f'<section class="box"><h2>{tr(f"{ly} 年 1～{lm} 月累計・全台機場旅客", f"Year to date (Jan–{MON[lm - 1]} {ly}): airport passengers", f"{ly}年1～{lm}月の累計・台湾の空港の旅客数")}</h2>'
                        + block(ytd, ytd_prev(seg, ly - 1, lm, keys), tr("比去年同期", "vs same period last year", "前年同期比"))
                        + f'<p class="note">{tr("今年到最新月份的合計。", "Total from January to the latest month.", "1月から最新月までの合計。")}</p></section>')
         air_box = (f'<section class="box"><h2>{tr(f"各機場旅客（{ly} 年 {lm} 月）", f"Passengers by airport ({MON[lm - 1]} {ly})", f"空港別の旅客数（{ly}年{lm}月）")}</h2>'
-                   f'<p class="note" style="margin:0 0 6px">{tr("右邊是比去年同月", "Right: change from a year earlier", "右側は前年同月比")}</p>'
+                   f'<p class="note" style="margin:0 0 6px">{tr("右邊是比去年同月", "Right: change vs. the same month last year", "右側は前年同月比")}</p>'
                    f'<ul class="hbars in">{bf.airport_list(airports, last)}</ul></section>')
         recent = months[-24:]
         bars_box = (f'<section class="box"><h2>{tr("每月機場旅客", "Airport passengers per month", "空港の月別旅客数")}</h2>'
                     f'<p class="legend"><i class="sq" style="background:var(--intl)"></i>{tr("國際", "International", "国際線")}'
-                    f'<i class="sq" style="background:var(--cross)"></i>{tr("兩岸", "China", "中国大陸線")}<i class="sq" style="background:var(--dom)"></i>{tr("國內", "Domestic", "国内線")}</p>'
+                    f'<i class="sq" style="background:var(--cross)"></i>{tr("兩岸", "Mainland China", "中国大陸線")}<i class="sq" style="background:var(--dom)"></i>{tr("國內", "Domestic", "国内線")}</p>'
                     f'<p class="tip">{tr("滑過或點長條看當月數字", "Hover or tap a bar to see that month", "棒にカーソルを合わせるかタップすると、その月の数値を表示")}</p>'
                     f'<svg class="chart bd" viewBox="0 0 {bb.W} {bb.H}" role="img" aria-label="{tr("每月機場旅客人次", "Airport passengers per month", "空港の月別旅客数")}">{bf.pax_bars(seg, recent)}</svg></section>')
 
@@ -415,18 +415,19 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
     labels = [(i, str(yy)) for i, yy in enumerate(yrs) if (yy % 10 == 0 and yy < yrs[-1] - 4) or i == len(yrs) - 1]
     trend = bb.box(
         tr(f"歷年來台與出國人次（{yrs[0]}～{y}）", f"Visitors and trips abroad, {yrs[0]}–{y}", f"訪台客数と出国者数の推移（{yrs[0]}～{y}年）"),
-        f'<p class="legend"><span class="k b"></span>{tr("來台旅客", "Visitors to Taiwan", "訪台客")}<span class="k d"></span>{tr("國人出國", "Taiwanese abroad", "台湾人の出国")}</p>',
+        f'<p class="legend"><span class="k b"></span>{tr("來台旅客", "Visitors to Taiwan", "訪台客")}<span class="k d"></span>{tr("國人出國", "Outbound trips", "台湾人の出国")}</p>',
         bb.lines_chart(len(yrs), [("b", [totals[yy][0] for yy in yrs]), ("d", [totals[yy][1] for yy in yrs])], labels, tips, zero=True),
         tr("歷年來台旅客與國人出國人次折線圖", "Visitors to Taiwan and trips abroad by year", "訪台客数と台湾人の出国者数の推移の折れ線グラフ"),
         tr("滑過或點圖看每年數字", "Hover or tap the chart to see each year", "グラフにカーソルを合わせるかタップすると、各年の数値を表示")).replace(" 萬<", "萬<")
 
     # 名稱對照（中文頁顯示中文，英文頁顯示英文）
+    EN_FIX = {"China": "Mainland China", "Korea": "South Korea"}  # 觀光署英文名太簡略
     names = {}
     for d in (inbound, outbound):
         for yy in d:
             for p in d[yy]:
                 zh, en = split_name(p)
-                names[p] = en if EN else i18n_ja.PLACES.get(zh, zh) if JA else zh
+                names[p] = EN_FIX.get(en, en) if EN else i18n_ja.PLACES.get(zh, zh) if JA else zh
     for k in PURPOSE_EN:
         names[k] = PURPOSE_EN[k] if EN else i18n_ja.PURPOSE.get(k, k) if JA else k
     for k, (zh, en) in PORT.items():
@@ -438,10 +439,10 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
     years = sorted(set(ib) & set(ob), reverse=True)
     pick = (f'<div class="yearpick"><label for="ypick">{tr("看哪一年：", "Year:", "年を選択：")}</label><select id="ypick">'
             + "".join(f'<option value="{yy}"{" selected" if yy == y else ""}>{yy}</option>' for yy in years)
-            + f'</select><span>{tr("下面四張圖跟著換；右邊是比前一年", "The four charts below follow; right column is change from the year before", "下の4つのグラフが切り替わります。右側は前年比")}</span></div>')
+            + f'</select><span>{tr("下面四張圖跟著換；右邊是比前一年", "Applies to the four charts below. Right column: change vs. the previous year.", "下の4つのグラフが切り替わります。右側は前年比")}</span></div>')
 
     def hbox(title, key, d, cls, limit, note=""):
-        return (f'<section class="box"><h2>{title}（<span class="j-year">{y}</span>）</h2>'
+        return (f'<section class="box"><h2>{title}{tr("（", " (", "（")}<span class="j-year">{y}</span>{tr("）", ")", "）")}</h2>'
                 f'<ul class="hbars {cls}" data-set="{key}" data-n="{limit}">{bars_html(d.get(y, {}), d.get(y - 1), names, limit)}</ul>'
                 + (f'<p class="note">{note}</p>' if note else "") + "</section>")
 

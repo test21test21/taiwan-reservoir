@@ -122,8 +122,11 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .tmap text { font-size:22px; fill:var(--fg); font-family:var(--f-body); pointer-events:none; }
 .mleg { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:13px; color:var(--muted); margin:6px 0 0; }
 .mleg span { display:inline-flex; align-items:center; gap:4px; }
+.mleg .u { flex-basis:100%; font-size:12px; }
 .mleg i { width:14px; height:14px; border-radius:3px; display:inline-block; }
-@media (min-width:1360px) { .grid > .mapbox { grid-row:span 2; } .tmap { max-height:600px; } }
+.bd .xs { display:none; }
+@media (max-width:600px) { .bd .xl { display:none; } .bd .xs { display:inline; } }
+@media (min-width:1360px) { .grid { align-items:stretch; } .grid > .mapbox { grid-row:span 2; } .tmap { max-height:600px; } }
 .tip a { color:var(--fg); font-weight:500; }
 .tip { font-size:13px; color:var(--muted); margin:2px 0 0; min-height:1.6em; }
 """
@@ -179,36 +182,60 @@ JS = """<script>
   }
   document.getElementById("mpick").addEventListener("change", function () { setMonth(D.m.indexOf(this.value)); });
 
-  // 各縣市地圖：依選的月份和「出生／死亡／出生減死亡」上色（分 5 級，每級縣市數差不多）
+  // 各縣市地圖：各縣市人口差很多，所以看「每千人」比率（近 12 個月合計 ÷ 人口 × 1000，就是一年的粗出生率／粗死亡率）
+  // 顏色：最低到最高平均切 5 級，數字取到 0.5，圖例一看就懂
   var RAMP = { b: ["#d6e6f7", "#a9cbef", "#6fa6e3", "#3a7fd0", "#1c5aa6"], d: ["#f8dcc8", "#f1b88f", "#e48e55", "#cf6526", "#9c4518"] };
   var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
   var tipDef = tip.textContent, picked = null;
-  function val(c) { var a = D.c[c] && D.c[c][cur]; if (!a) return null; return key === "b" ? B(a) : key === "d" ? Dd(a) : B(a) - Dd(a); }
+  function sum12(c, g) {  // 到所選月份為止 12 個月的合計；不足 12 個月就按比例放大
+    var t = 0, k = 0;
+    for (var i = Math.max(0, cur - 11); i <= cur; i++) { var a = D.c[c] && D.c[c][i]; if (a) { t += g(a); k++; } }
+    return k ? t * 12 / k : null;
+  }
+  function rates(c) {
+    var p = D.p[c] && D.p[c][cur], b = sum12(c, B), d = sum12(c, Dd);
+    if (!p || b === null) return null;
+    return { b: b / p * 1000, d: d / p * 1000, g: (b - d) / p * 1000 };
+  }
+  function val(c) { var r = rates(c); return r ? r[key] : null; }
+  function r1(x) { return x.toFixed(1); }
   function paint() {
-    var vals = [], ramp = RAMP[key === "b" ? "b" : "d"];
-    shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); if (v !== null) vals.push(key === "g" ? Math.max(0, -v) : v); });
-    vals.sort(function (a, b) { return a - b; });
-    var br = [1, 2, 3, 4].map(function (q) { return vals[Math.floor(vals.length * q / 5)]; });
-    function cls(v) { var k = 0; while (k < 4 && v >= br[k]) k++; return k; }
-    shapes.forEach(function (s) {
-      var v = val(s.getAttribute("data-c"));
-      s.style.fill = v === null ? "" : key === "g" && v > 0 ? "#6fa6e3" : ramp[cls(key === "g" ? -v : v)];
-    });
-    var edges = [vals[0]].concat(br, [vals[vals.length - 1]]);
-    function sg(v) { return (key === "g" && v ? "−" : "") + f(v); }
-    leg.innerHTML = ramp.map(function (c, k) {
-      return '<span><i style="background:' + c + '"></i>' + sg(edges[k]) + "～" + sg(edges[k + 1]) + "</span>";
-    }).join("") + (key === "g" ? '<span><i style="background:#6fa6e3"></i>' + (EN ? "More births than deaths" : JA ? "出生が死亡より多い" : "出生比死亡多") + '</span>' : "");
+    var vals = [];
+    shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); if (v !== null) vals.push(v); });
+    var lo = Math.floor(Math.min.apply(null, vals) * 2) / 2, hi = Math.ceil(Math.max.apply(null, vals) * 2) / 2;
+    var ramp, edges, colorOf;
+    if (key === "g") {  // 自然增加率：負的（死亡比出生多）用橘色分 4 級，正的用藍色
+      var neg = Math.min(lo, -0.5), st = Math.ceil(-neg / 4 * 2) / 2;
+      var O = RAMP.d.slice(0, 4);  // 淺到深：越負越深
+      colorOf = function (v) { return v >= 0 ? "#3a7fd0" : O[Math.min(3, Math.floor(-v / st))]; };
+    } else {
+      var step = Math.max(0.5, Math.ceil((hi - lo) / 5 * 2) / 2);
+      ramp = RAMP[key];
+      edges = [0, 1, 2, 3, 4, 5].map(function (k) { return lo + k * step; });
+      colorOf = function (v) { return ramp[Math.min(4, Math.floor((v - lo) / step))]; };
+    }
+    shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); s.style.fill = v === null ? "" : colorOf(v); });
+    function sg(v) { return (v < 0 ? "−" : "") + r1(Math.abs(v)); }
+    var html = "";
+    if (key === "g") {
+      for (var k = 3; k >= 0; k--) html += '<span><i style="background:' + colorOf(-(k + 0.5) * st) + '"></i>' + sg(-(k + 1) * st) + "～" + sg(-k * st) + "</span>";
+      html += '<span><i style="background:#3a7fd0"></i>' + (EN ? "0 or more" : JA ? "0以上" : "0 以上") + "</span>";
+    } else {
+      html = ramp.map(function (c, k) { return '<span><i style="background:' + c + '"></i>' + r1(edges[k]) + "～" + r1(edges[k + 1]) + "</span>"; }).join("");
+    }
+    leg.innerHTML = html + '<span class="u">' + (EN ? "per 1,000 people, last 12 months" : JA ? "人口千人あたり・直近12か月" : "每千人・近 12 個月") + "</span>";
     if (picked) show(picked);
   }
   function show(s) {
     var c = s.getAttribute("data-c"), nm = s.getAttribute("data-n") || c, a = D.c[c] && D.c[c][cur];
     if (!a) { tip.textContent = nm + (EN ? ": no data" : JA ? "：データなし" : "：沒有資料"); return; }
-    var g = B(a) - Dd(a), sg = (g < 0 ? "−" : "+") + f(Math.abs(g));
+    var r = rates(c), u = s.getAttribute("data-u");
+    if (!r) { tip.textContent = nm + (EN ? ": no data" : JA ? "：データなし" : "：沒有資料"); return; }
+    var g = (r.g < 0 ? "−" : "+") + r1(Math.abs(r.g));
     tip.innerHTML = EN
-      ? "<b>" + nm + "</b> " + lab(D.m[cur]) + ": " + f(B(a)) + " births, " + f(Dd(a)) + " deaths (" + sg + ")  <a href='" + s.getAttribute("data-u") + "'>Open " + nm + " ›</a>"
-      : JA ? "<b>" + nm + "</b> " + lab(D.m[cur]) + "：出生 " + f(B(a)) + "、死亡 " + f(Dd(a)) + "（" + sg + "）　<a href='" + s.getAttribute("data-u") + "'>" + nm + "のページへ ›</a>"
-      : "<b>" + nm + "</b> " + lab(D.m[cur]) + "：出生 " + f(B(a)) + "、死亡 " + f(Dd(a)) + "（" + sg + "）　<a href='" + s.getAttribute("data-u") + "'>看" + nm + " ›</a>";
+      ? "<b>" + nm + "</b> per 1,000 people, last 12 months: " + r1(r.b) + " births, " + r1(r.d) + " deaths (" + g + ")  <a href='" + u + "'>Open " + nm + " ›</a>"
+      : JA ? "<b>" + nm + "</b> 人口千人あたり（直近12か月）：出生 " + r1(r.b) + "、死亡 " + r1(r.d) + "（" + g + "）　<a href='" + u + "'>" + nm + "のページへ ›</a>"
+      : "<b>" + nm + "</b> 每千人（近 12 個月）：出生 " + r1(r.b) + "、死亡 " + r1(r.d) + "（" + g + "）　<a href='" + u + "'>看" + nm + " ›</a>";
   }
   shapes.forEach(function (s) {
     s.addEventListener("mouseenter", function () { show(s); });
@@ -245,6 +272,16 @@ def load():
                 for i in range(4):
                     a[i] += v[i]
     return data
+
+
+def load_pop():
+    """回傳 {縣市: {月份: 人口}}，地圖算每千人比率用。"""
+    pop = defaultdict(dict)
+    with DATA.open(encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            if r.get("population"):
+                pop[r["county"].replace("台", "臺")][r["month"]] = int(r["population"])
+    return pop
 
 
 def n(x):
@@ -311,10 +348,16 @@ def frame(lo, hi, step, Y):
 
 
 def xlabels(X, labels):
-    k = max(i for i, _ in labels) if labels else 0
-    return "".join(
-        f'<text x="{X(i):.1f}" y="{H - 8}" text-anchor="{"start" if i == 0 and X(i) - L < 12 else "end" if i == k and W - R - X(i) < 12 else "middle"}">{t}</text>'
-        for i, t in labels)
+    """labels：[(索引, 文字)] 或 [(索引, 文字, 手機上的短文字)]；有短文字時置中，手機改顯示短文字。"""
+    k = max(x[0] for x in labels) if labels else 0
+    out = ""
+    for i, t, *sm in labels:
+        if sm:
+            out += (f'<text class="xl" x="{X(i):.1f}" y="{H - 8}" text-anchor="middle">{t}</text>'
+                    f'<text class="xs" x="{X(i):.1f}" y="{H - 8}" text-anchor="middle">{sm[0]}</text>')
+            continue
+        out += f'<text x="{X(i):.1f}" y="{H - 8}" text-anchor="{"start" if i == 0 and X(i) - L < 12 else "end" if i == k and W - R - X(i) < 12 else "middle"}">{t}</text>'
+    return out
 
 
 def box(title, legend, svg, aria, default_tip, extra=""):
@@ -444,7 +487,7 @@ def page_body(name, d):
         for i in range(1, 13):
             parts = [f"{yy}{tr(' 年 ', ': ', '年 ')}{n(fn(d[f'{yy}-{i:02d}']))}" for yy in yrs if f"{yy}-{i:02d}" in d]
             tips.append(tr(f"{i} 月{word}：", f"{MON[i - 1]} {word}: ", f"{i}月の{word}：") + tr("、", ", ", "、").join(parts))
-        labels = [(i - 1, tr(f"{i}月", MON[i - 1], f"{i}月")) for i in (1, 3, 5, 7, 9, 11)]
+        labels = [(i - 1, tr(f"{i}月", MON[i - 1], f"{i}月"), tr(str(i), MON[i - 1][0], str(i))) for i in range(1, 13)]  # 每個月都標；手機只標數字
         return box(title, legend, lines_chart(12, series[::-1], labels, tips), tr(f"{where}{title}折線圖", f"{where}{title}", f"{where}{title}の折れ線グラフ"),
                    tr("滑過或點圖看每月數字", "Hover or tap the chart to see each month", "グラフにカーソルを合わせるかタップすると、各月の数値を表示"))
 
@@ -494,9 +537,9 @@ def map_box(data, last, current, prefix):
         f'data-n="{cname(c)}" data-u="{prefix}{SLUG[c]}/" tabindex="0"/><text x="109" y="{yy + 53}" text-anchor="middle">{tr(c[:2], cname(c), c[:2])}</text>'
         for c, yy in ISLANDS)
     seg = (f'<div class="seg" role="group" aria-label="{tr("地圖顯示", "Map shows", "地図の表示")}">'
-           f'<button type="button" data-k="b" aria-pressed="true">{tr("出生", "Births", "出生")}</button>'
-           f'<button type="button" data-k="d" aria-pressed="false">{tr("死亡", "Deaths", "死亡")}</button>'
-           f'<button type="button" data-k="g" aria-pressed="false">{tr("出生減死亡", "Births − deaths", "出生－死亡")}</button></div>')
+           f'<button type="button" data-k="b" aria-pressed="true">{tr("出生率", "Birth rate", "出生率")}</button>'
+           f'<button type="button" data-k="d" aria-pressed="false">{tr("死亡率", "Death rate", "死亡率")}</button>'
+           f'<button type="button" data-k="g" aria-pressed="false">{tr("自然增加率", "Natural increase", "自然増加率")}</button></div>')
     return (f'<section class="box mapbox"><h2>{tr("各縣市地圖（", "By county (", "県・市別の地図（")}<span class="j-mapmonth">{ym_label(last)}</span>{tr("）", ")", "）")}</h2>{seg}'
             f'<p class="tip" id="maptip">{tr("滑過或點縣市看數字，再點一次進入該縣市", "Hover or tap a county for its numbers; tap again to open it", "県・市にカーソルを合わせるかタップすると数値を表示、もう一度タップでその県・市のページへ")}</p>'
             f'<svg class="tmap" viewBox="0 0 {shapes["width"]} {shapes["height"]}" role="img" aria-label="{tr("各縣市出生、死亡人數地圖", "Map of births and deaths by county", "県・市別の出生数・死亡数の地図")}">'
@@ -528,7 +571,9 @@ def page_data(data, name):
     """給網頁 JS 用：最近 48 個月（選月份要 36 個月＋去年同月），這一頁的數字和各縣市數字。"""
     months = sorted(data["全台"])[-48:]
     pack = lambda dd: [dd.get(mm) for mm in months]
-    return json.dumps({"m": months, "t": pack(data[name]), "c": {c: pack(data.get(c, {})) for c, _ in COUNTIES}},
+    pop = load_pop()
+    return json.dumps({"m": months, "t": pack(data[name]), "c": {c: pack(data.get(c, {})) for c, _ in COUNTIES},
+                       "p": {c: [pop[c].get(mm) for mm in months] for c, _ in COUNTIES}},
                       ensure_ascii=False, separators=(",", ":"))
 
 
