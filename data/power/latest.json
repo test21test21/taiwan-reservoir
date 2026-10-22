@@ -1,0 +1,1621 @@
+{
+"time": "2026-10-15T21:10",
+"units": [
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#1",
+"cap": 742.7,
+"mw": 685.7,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#2",
+"cap": 742.7,
+"mw": 669.3,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#3",
+"cap": 724.7,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#4",
+"cap": 724.7,
+"mw": 632.1,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#5",
+"cap": 724.7,
+"mw": 650.5,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#6",
+"cap": 724.7,
+"mw": 608.7,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#7",
+"cap": 913.1,
+"mw": 889.7,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#8",
+"cap": 1123.6,
+"mw": 1055.9,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大潭CC#9",
+"cap": 1123.6,
+"mw": 1088.9,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "通霄CC#1",
+"cap": 892.6,
+"mw": 721.2,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "通霄CC#2",
+"cap": 892.6,
+"mw": 700.0,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "通霄CC#3",
+"cap": 892.6,
+"mw": 698.5,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "通霄CC#6",
+"cap": 321.2,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "通霄GT#9",
+"cap": 180.9,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "台中CC#1(註10)",
+"cap": null,
+"mw": 1281.5,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "台中CC#2(註10)",
+"cap": null,
+"mw": 1288.3,
+"note": "新機組試俥"
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達新CC#1",
+"cap": 1300.0,
+"mw": 1226.8,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達新CC#2(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達新CC#3(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達CC#1",
+"cap": 445.2,
+"mw": 110.9,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達CC#2",
+"cap": 445.2,
+"mw": 111.9,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達CC#3",
+"cap": 445.2,
+"mw": 110.1,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達CC#4",
+"cap": 445.2,
+"mw": 214.8,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "興達CC#5",
+"cap": 445.2,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "南部CC#1",
+"cap": 288.8,
+"mw": 234.5,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "南部CC#2",
+"cap": 288.8,
+"mw": 237.4,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "南部CC#3",
+"cap": 288.8,
+"mw": 238.8,
+"note": ""
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "南部CC#4",
+"cap": 251.4,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大林#5",
+"cap": null,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "燃氣",
+"fuel": "lng",
+"name": "大林#6",
+"cap": 550.0,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "海湖#1",
+"cap": 450.0,
+"mw": 397.6,
+"note": ""
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "海湖#2",
+"cap": 450.0,
+"mw": 0.0,
+"note": "部分故障"
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "新桃#1",
+"cap": 630.0,
+"mw": 635.4,
+"note": ""
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "國光#1",
+"cap": 480.0,
+"mw": 0.0,
+"note": "合約限制"
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "星彰#1",
+"cap": 506.9,
+"mw": 0.0,
+"note": "合約限制"
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "星元#1",
+"cap": 549.1,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "嘉惠#1",
+"cap": 700.0,
+"mw": 689.0,
+"note": ""
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "嘉惠#2",
+"cap": 510.0,
+"mw": 0.0,
+"note": "合約限制"
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "豐德#1",
+"cap": 506.9,
+"mw": 397.8,
+"note": ""
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "豐德#2",
+"cap": 506.9,
+"mw": 395.5,
+"note": ""
+},
+{
+"type": "民營電廠-燃氣",
+"fuel": "lng",
+"name": "豐德#3",
+"cap": 1100.0,
+"mw": 1087.2,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "林口#1",
+"cap": 800.0,
+"mw": 753.6,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "林口#2",
+"cap": 800.0,
+"mw": 761.8,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "林口#3",
+"cap": 800.0,
+"mw": 758.3,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#3",
+"cap": 550.0,
+"mw": 471.2,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#4",
+"cap": 550.0,
+"mw": 490.1,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#5",
+"cap": 550.0,
+"mw": 475.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#6",
+"cap": 550.0,
+"mw": 484.7,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#7",
+"cap": 550.0,
+"mw": 0.0,
+"note": "環保停機"
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#8",
+"cap": 550.0,
+"mw": 483.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#9",
+"cap": 550.0,
+"mw": 476.7,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "台中#10",
+"cap": 550.0,
+"mw": 471.7,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "興達#1(註15)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "興達#2(註15)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "興達#3(註15)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "興達#4(註12)",
+"cap": 550.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "大林#1",
+"cap": 800.0,
+"mw": 757.0,
+"note": ""
+},
+{
+"type": "燃煤",
+"fuel": "coal",
+"name": "大林#2",
+"cap": 800.0,
+"mw": 757.0,
+"note": ""
+},
+{
+"type": "民營電廠-燃煤",
+"fuel": "coal",
+"name": "和平#1",
+"cap": 648.6,
+"mw": 590.7,
+"note": ""
+},
+{
+"type": "民營電廠-燃煤",
+"fuel": "coal",
+"name": "和平#2",
+"cap": 660.0,
+"mw": 593.4,
+"note": ""
+},
+{
+"type": "汽電共生",
+"fuel": "cogen",
+"name": "汽電共生",
+"cap": 627.3,
+"mw": 1757.5,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "協和#3",
+"cap": 500.0,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "協和#4",
+"cap": 500.0,
+"mw": 124.6,
+"note": "友善降載減排"
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "澎湖尖山(註4)",
+"cap": 129.8,
+"mw": 58.7,
+"note": "部分歲修"
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "核二Gas1",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "核二Gas2",
+"cap": null,
+"mw": 5.8,
+"note": "測試運轉"
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "核三Gas1",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "核三Gas2",
+"cap": null,
+"mw": 37.9,
+"note": "測試運轉"
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "台中Gas1&2",
+"cap": 140.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "台中Gas3&4",
+"cap": 140.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "金門塔山(註4)",
+"cap": 113.3,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "馬祖珠山(註4)",
+"cap": 28.6,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "燃料油",
+"fuel": "oil",
+"name": "離島其它(註4)",
+"cap": 44.2,
+"mw": null,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "彰濱光",
+"cap": 100.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "南鹽光",
+"cap": 150.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "其它台電自有",
+"cap": 24.3,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "崙尾光",
+"cap": null,
+"mw": 0.0,
+"note": "新增設備測試運轉"
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "天衝光",
+"cap": null,
+"mw": 0.0,
+"note": "新增設備測試運轉"
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "天篷光",
+"cap": 80.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "寶興光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "聯華光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "向陽光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "星崴光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "碩力光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "天英光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "志光光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "永堯光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "昱昶光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "星崙光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "新和光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": "故障"
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "生利光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "廷和光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "星股光(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "太陽能",
+"fuel": "solar",
+"name": "其它購電太陽能",
+"cap": 15037.7,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "觀園",
+"cap": 30.0,
+"mw": 4.2,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "台中港",
+"cap": 35.0,
+"mw": 3.5,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "王功",
+"cap": 23.0,
+"mw": 3.7,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "彰工",
+"cap": 86.2,
+"mw": 16.2,
+"note": "部分檢修"
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "雲麥",
+"cap": 46.0,
+"mw": 5.2,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "四湖",
+"cap": 28.0,
+"mw": 2.5,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "其它台電自有",
+"cap": 84.7,
+"mw": 21.8,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "苗栗大鵬",
+"cap": 42.0,
+"mw": 1.2,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "鹿威彰濱",
+"cap": 55.2,
+"mw": 8.1,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "觀威觀音&桃威新屋",
+"cap": 48.3,
+"mw": 5.0,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "中威大安",
+"cap": 75.9,
+"mw": 4.6,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "創維風",
+"cap": 49.2,
+"mw": 15.9,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "新源崙背",
+"cap": 25.2,
+"mw": 5.1,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "彰品風(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "其它購電風力",
+"cap": 178.4,
+"mw": 8.5,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "離岸一期",
+"cap": 109.2,
+"mw": 48.7,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "離岸二期(註10)",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "海洋竹南",
+"cap": 128.0,
+"mw": 9.9,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "海能風",
+"cap": 376.0,
+"mw": 73.9,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "沃一風",
+"cap": 605.2,
+"mw": 466.5,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "沃二風",
+"cap": 294.8,
+"mw": 206.9,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "沃四風(註10)",
+"cap": null,
+"mw": 399.0,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "沃南風",
+"cap": 337.1,
+"mw": 183.1,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "芳一風",
+"cap": 96.0,
+"mw": 60.5,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "芳二風",
+"cap": 499.2,
+"mw": 247.2,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "允湖",
+"cap": 320.0,
+"mw": 75.6,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "允西",
+"cap": 320.0,
+"mw": 104.7,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "中能風",
+"cap": 294.5,
+"mw": 151.5,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "龍A風(註10)",
+"cap": null,
+"mw": 180.1,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "龍B風(註10)",
+"cap": null,
+"mw": 124.4,
+"note": ""
+},
+{
+"type": "風力",
+"fuel": "wind",
+"name": "龍三風(註10)",
+"cap": null,
+"mw": 0.0,
+"note": "通訊異常"
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "德基#1",
+"cap": 78.0,
+"mw": 58.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "德基#2",
+"cap": 78.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "德基#3",
+"cap": 78.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "青山#1",
+"cap": 92.0,
+"mw": 24.6,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "青山#2",
+"cap": 92.0,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "青山#3",
+"cap": 92.0,
+"mw": 22.8,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "青山#4",
+"cap": 92.0,
+"mw": 24.6,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "谷關#1",
+"cap": 54.4,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "谷關#2",
+"cap": 54.4,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "谷關#3",
+"cap": 54.4,
+"mw": 25.7,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "谷關#4",
+"cap": 54.4,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "天輪#1",
+"cap": 22.5,
+"mw": 16.2,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "天輪#2",
+"cap": 22.5,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "天輪#3",
+"cap": 22.5,
+"mw": 19.7,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "天輪#4",
+"cap": 22.5,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "天輪#5",
+"cap": 105.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "馬鞍#1",
+"cap": 66.7,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "馬鞍#2",
+"cap": 66.7,
+"mw": 23.3,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "卓蘭#1",
+"cap": 40.0,
+"mw": 40.6,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "卓蘭#2",
+"cap": 40.0,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "萬大#1",
+"cap": 10.4,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "萬大#2",
+"cap": 10.4,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "萬大#3",
+"cap": 15.3,
+"mw": 4.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "萬大#4",
+"cap": 19.7,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "松林#1&2",
+"cap": 20.9,
+"mw": 2.7,
+"note": "部分檢修"
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "大觀一#1",
+"cap": 22.0,
+"mw": 9.5,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "大觀一#2",
+"cap": 22.0,
+"mw": 9.1,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "大觀一#3",
+"cap": 22.0,
+"mw": 0.0,
+"note": "歲修"
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "大觀一#4",
+"cap": 22.0,
+"mw": 9.7,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "大觀一#5",
+"cap": 22.0,
+"mw": 9.6,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "鉅工#1",
+"cap": 21.8,
+"mw": 6.1,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "鉅工#2",
+"cap": 21.8,
+"mw": 7.8,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "水里#1",
+"cap": 12.8,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "立霧#1&#2",
+"cap": 32.0,
+"mw": 13.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "龍澗#1",
+"cap": 48.6,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "龍澗#2",
+"cap": 48.6,
+"mw": 30.4,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "碧海",
+"cap": 61.2,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "烏來&桂山&粗坑",
+"cap": 40.5,
+"mw": 13.4,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "北部小水力(註6)",
+"cap": 31.1,
+"mw": 18.7,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "中部小水力(註6)",
+"cap": 31.3,
+"mw": 10.4,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "南部小水力(註6)",
+"cap": 7.2,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "東部小水力(註6)",
+"cap": 54.6,
+"mw": 32.2,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "翡翠#1",
+"cap": 70.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "石門#1",
+"cap": 45.0,
+"mw": 45.8,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "石門#2",
+"cap": 45.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "曾文#1",
+"cap": 50.0,
+"mw": 49.7,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "義興#1",
+"cap": 40.0,
+"mw": 18.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "名間",
+"cap": 16.7,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "嘉南西口、烏山頭和八田",
+"cap": 13.7,
+"mw": 8.2,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "卑南",
+"cap": 2.0,
+"mw": 1.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "捷祥關山",
+"cap": 1.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "水力",
+"fuel": "hydro",
+"name": "其它購電小水力",
+"cap": 6.1,
+"mw": null,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "大觀二#1",
+"cap": 250.0,
+"mw": 145.6,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "大觀二#2",
+"cap": 250.0,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "大觀二#3",
+"cap": 250.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "大觀二#4",
+"cap": 250.0,
+"mw": 149.4,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "明潭#1",
+"cap": 267.0,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "明潭#2",
+"cap": 267.0,
+"mw": 180.0,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "明潭#3",
+"cap": 267.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "明潭#4",
+"cap": 267.0,
+"mw": 177.9,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "明潭#5",
+"cap": 267.0,
+"mw": 184.3,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "明潭#6",
+"cap": 267.0,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能",
+"fuel": "storage",
+"name": "電池(註16)",
+"cap": 858.4,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "其它再生能源",
+"fuel": "other",
+"name": "台電自有地熱",
+"cap": 0.84,
+"mw": 0.4,
+"note": ""
+},
+{
+"type": "其它再生能源",
+"fuel": "other",
+"name": "購電地熱",
+"cap": 6.449,
+"mw": 2.7,
+"note": ""
+},
+{
+"type": "其它再生能源",
+"fuel": "other",
+"name": "生質能(Biofuel)",
+"cap": 60.7,
+"mw": 28.5,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "大觀二#1",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "大觀二#2",
+"cap": null,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "大觀二#3",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "大觀二#4",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "明潭#1",
+"cap": null,
+"mw": 0.0,
+"note": "檢修"
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "明潭#2",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "明潭#3",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "明潭#4",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "明潭#5",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "明潭#6",
+"cap": null,
+"mw": 0.0,
+"note": ""
+},
+{
+"type": "儲能負載",
+"fuel": "storage_load",
+"name": "電池(註16)",
+"cap": null,
+"mw": -24.0,
+"note": ""
+}
+]
+}
