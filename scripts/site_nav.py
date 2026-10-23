@@ -12,6 +12,7 @@ ICONS = """<link rel="icon" href="/favicon.ico" sizes="any">
 MENU = [
     ("home", "首頁", "/"),
     ("reservoir", "台灣水庫水情", "/reservoir/"),
+    ("power", "台灣今日電力", "/power/"),
     ("births", "台灣出生與死亡", "/births/"),
     ("flights", "台灣航班", "/flights/"),
     ("travel", "台灣旅客人次", "/tourism/"),
@@ -21,6 +22,7 @@ MENU = [
 MENU_EN = {
     "home": ("Home", "/en/"),
     "reservoir": ("Taiwan Reservoirs", "/en/reservoir/"),
+    "power": ("Taiwan Power", "/en/power/"),
     "births": ("Taiwan Births &amp; Deaths", "/en/births/"),
     "flights": ("Taiwan Flights", "/en/flights/"),
     "travel": ("Taiwan Tourism", "/en/tourism/"),
