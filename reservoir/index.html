@@ -209,15 +209,16 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
 (function () {
   "use strict";
   var LOW = 40;
-  // 英文版（/en/reservoir/）、日文版（/jp/reservoir/）：build_pages.py 會在 <html lang="en">、<html lang="ja"> 的頁面放入 window.I18N（名稱對照、介面文字）
-  var LG = document.documentElement.lang, EN = LG === "en", JA = LG === "ja", TR = EN || JA, I18N = window.I18N || {};
-  function L(zh, en, ja) { return EN ? en : JA ? ja : zh; }
+  // 英文版（/en/reservoir/）、日文版（/jp/reservoir/）、韓文版（/kr/reservoir/）：build_pages.py 會在 <html lang="en">、"ja"、"ko" 的頁面放入 window.I18N（名稱對照、介面文字）
+  var LG = document.documentElement.lang, EN = LG === "en", JA = LG === "ja", KO = LG === "ko", TR = EN || JA || KO, I18N = window.I18N || {};
+  function L(zh, en, ja, ko) { return EN ? en : JA ? ja : KO ? ko : zh; }
   function t(s) { return TR && I18N.txt && I18N.txt[s] != null ? I18N.txt[s] : s; }
   function reg(s) { return TR && I18N.regions ? I18N.regions[s] || s : s; }
   function nm(r) { return TR && I18N.res ? I18N.res[r.id] || r.name : r.name; }
   function county(c) {
     if (EN && I18N.counties) return I18N.counties[c] || c;
     if (JA && I18N.counties) return (I18N.counties[c] || c).replace(/[県市]$/, "");
+    if (KO && I18N.counties) return (I18N.counties[c] || c).replace(/(시|현)$/, "");
     return c.replace(/[縣市]$/, "");
   }
   var TABS = ["全部", "北部", "中部", "南部", "東部", "離島"];
@@ -271,6 +272,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function short(r) {
     if (EN) return nm(r).replace(/ (Reservoir|Dam|Weir)$/, "");
     if (JA) return nm(r).replace(/ダム$/, "");
+    if (KO) return nm(r).replace(/ (저수지|댐|보)$/, "");
     return r.name.replace(/水庫$/, "").replace(/第二$/, "二");
   }
   // 蓄水量：中文用「萬噸」（萬立方公尺），英文用 million m³，日文用「万m³」
@@ -279,7 +281,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       var m = function (v) { v = v / 100; return fmt(v, v < 10 ? 2 : 1); };
       return (s != null ? m(s) + " / " : "") + (c != null ? m(c) + " million m³" : "");
     }
-    return (s != null ? fmt(s, s < 100 ? 1 : 0) + " / " : "") + (c != null ? fmt(c, c < 100 ? 1 : 0) + (JA ? " 万m³" : " 萬噸") : "");
+    return (s != null ? fmt(s, s < 100 ? 1 : 0) + " / " : "") + (c != null ? fmt(c, c < 100 ? 1 : 0) + (JA ? " 万m³" : KO ? "만 m³" : " 萬噸") : "");
   }
   function timeText(iso) {
     if (!iso) return "";
@@ -293,10 +295,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function dateText(d) { var p = d.split("-"); return EN ? MON[p[1] - 1] + " " + Number(p[2]) : Number(p[1]) + "/" + Number(p[2]); }
   // 蓄水率分四級（避開官方燈號用的綠黃橙紅）
   var BINS = [
-    { min: 80, label: L("80% 以上", "80% +", "80%以上"), color: "#2a86e8" },
+    { min: 80, label: L("80% 以上", "80% +", "80%以上", "80% 이상"), color: "#2a86e8" },
     { min: 60, label: "60–80%", color: "#5fc3f0" },
     { min: 40, label: "40–60%", color: "#a9dcf2" },
-    { min: -1, label: L("40% 以下", "Below 40%", "40%未満"), color: "#a274e8" }
+    { min: -1, label: L("40% 以下", "Below 40%", "40%未満", "40% 미만"), color: "#a274e8" }
   ];
   function binOf(p) { for (var i = 0; i < BINS.length; i++) if (p >= BINS[i].min) return BINS[i]; return BINS[BINS.length - 1]; }
 
@@ -347,7 +349,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function renderRegions() {
     var a = state.alert;
     var head = '<div class="regions-head"><h2>' + t("各區水情") + '</h2><span>' +
-      (a && a.published ? L("燈號：水利署 " + dateText(a.published) + " 公告", "Alert lights: WRA, " + dateText(a.published), "信号：水利署 " + dateText(a.published) + " 発表")
+      (a && a.published ? L("燈號：水利署 " + dateText(a.published) + " 公告", "Alert lights: WRA, " + dateText(a.published), "信号：水利署 " + dateText(a.published) + " 発表", "신호: 수리서 " + dateText(a.published) + " 발표")
         : t("燈號資料暫時讀不到")) + '</span></div>';
     var rows = AREAS.filter(function (area) { // 沒有任何水庫的區（例如東部）就不列
       return hasRes(area.tabs[0]);
@@ -373,7 +375,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
         '<i class="lamp" style="background:' + (L ? L.color : "var(--line)") + ';--glow:' + (L ? L.color + "88" : "transparent") + '"></i>' +
         '<span><span class="name">' + reg(area.name) + '</span><span class="light">' + (L ? L.label : t("燈號看官網")) + '</span></span>' +
         '<span class="res">' + res + '</span>' +
-        (al.lit.length ? '<span class="lit">' + t("亮燈：") + al.lit.join(L("、", ", ", "、")) + '</span>' : "") +
+        (al.lit.length ? '<span class="lit">' + t("亮燈：") + al.lit.join(EN || KO ? ", " : "、") + '</span>' : "") +
         '</button>';
     }).join("");
     $("regions").innerHTML = head + rows;
@@ -382,7 +384,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function renderLegend() {
     // 兩個圖例都畫在地圖海面上（renderMap）：蓄水率在左上、水情燈號在右下
     $("light-list").innerHTML = Object.keys(LIGHTS).map(function (k) {
-      return '<li><i style="background:' + LIGHTS[k].color + '"></i><b>' + LIGHTS[k].name + '</b>' + L("　", " ", "　") + LIGHTS[k].desc + '</li>';
+      return '<li><i style="background:' + LIGHTS[k].color + '"></i><b>' + LIGHTS[k].name + '</b>' + L("　", " ", "　", " ") + LIGHTS[k].desc + '</li>';
     }).join("");
     if (state.alert && state.alert.source_url) $("src-link").href = state.alert.source_url;
   }
@@ -425,7 +427,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       var sw = el("rect", { x: 0, y: y, width: 24, height: 24, rx: 5, "class": k === "N" ? "county" : "county lit", "stroke-width": 2 });
       sw.setAttribute("style", "stroke:" + LIGHTS[k].color + (k === "N" ? "" : ";fill:" + LIGHTS[k].color));
       lg.appendChild(sw);
-      lg.appendChild(el("text", { "class": "lgi", x: 34, y: y + 12 }, EN ? LIGHTS[k].name : JA && I18N.legend ? I18N.legend[k] : LIGHTS[k].name + " " + LIGHTS[k].short));
+      lg.appendChild(el("text", { "class": "lgi", x: 34, y: y + 12 }, EN ? LIGHTS[k].name : (JA || KO) && I18N.legend ? I18N.legend[k] : LIGHTS[k].name + " " + LIGHTS[k].short));
     });
     svg.appendChild(lg);
 
@@ -518,6 +520,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var diff = r.percent - r.last_year_percent;
     if (EN) return '<div class="est"><span>Same day last year <b>' + pf(r.last_year_percent) + '%</b> (' + (diff >= 0 ? "+" : "−") + pf(Math.abs(diff)) + ' pts)</span></div>';
     if (JA) return '<div class="est"><span>前年同日 <b>' + pf(r.last_year_percent) + '%</b>（' + (diff >= 0 ? "+" : "−") + pf(Math.abs(diff)) + ' ポイント）</span></div>';
+    if (KO) return '<div class="est"><span>작년 같은 날 <b>' + pf(r.last_year_percent) + '%</b> (' + (diff >= 0 ? "+" : "−") + pf(Math.abs(diff)) + '%p)</span></div>';
     return '<div class="est"><span>去年同期 <b>' + pf(r.last_year_percent) + '%</b>（' + (diff >= 0 ? "多 " : "少 ") + pf(Math.abs(diff)) + ' 個百分點）</span></div>';
   }
 
@@ -535,7 +538,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
       if (good && r.percent < LOW) chips += '<span class="chip low">' + t("偏低") + '</span> ';
       if (r.suspect) chips += '<span class="chip">' + t("官方數字疑似有誤") + '</span> ';
       return '<li class="box card' + (good ? "" : " nodata") + (state.sel === r.id ? " sel" : "") + '" id="r-' + r.id + '">' +
-        '<div class="info"><h3><a href="' + r.id + '/">' + (EN ? nm(r).replace(/ Reservoir$/, "") : JA ? nm(r) : r.name) + '</a><span class="reg">' + reg(r.region) + '</span></h3>' +
+        '<div class="info"><h3><a href="' + r.id + '/">' + (EN ? nm(r).replace(/ Reservoir$/, "") : JA || KO ? nm(r) : r.name) + '</a><span class="reg">' + reg(r.region) + '</span></h3>' +
         '<div class="sub">' + volText(r.storage, r.capacity) + '</div>' +
         (good ? lastYear(r) : "") +
         '<div class="meta"><span>' + chips + (r.observed_at ? t("觀測 ") + timeText(r.observed_at) : (r.daily_date ? t("日報 ") + (EN ? dateText(r.daily_date) : r.daily_date.slice(5).replace("-", "/")) : "")) + '</span>' +

@@ -31,6 +31,7 @@ MENU_EN = {
 
 CSS = """
 body { margin: 0; }
+html[lang="ko"] body { word-break: keep-all; overflow-wrap: anywhere; }
 .sitebar { position: sticky; top: 0; z-index: 50; background: var(--surface); border-bottom: 1px solid var(--line); }
 .sitebar-in { max-width: 1840px; margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 6px; padding-inline: max(8px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .menu-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--fg); cursor: pointer; flex: none; }
@@ -63,15 +64,16 @@ a.sitesection:hover { text-decoration: underline; }
 """
 
 # 語言：(代號, 網址開頭, 顯示名稱, hreflang)
-# 網址資料夾：日文用國碼 jp（Shane 2026-10-17），語言代號（html lang、hreflang）仍是標準的 ja
-DIR = {"zh": "", "en": "en", "ja": "jp"}
-LANGS = [("zh", "", "中文", "zh-Hant"), ("en", "/en", "English", "en"), ("ja", "/jp", "日本語", "ja")]
+# 網址資料夾：日文用國碼 jp（Shane 2026-10-17）、韓文用 kr，語言代號（html lang、hreflang）仍是標準的 ja、ko
+DIR = {"zh": "", "en": "en", "ja": "jp", "ko": "kr"}
+LANGS = [("zh", "", "中文", "zh-Hant"), ("en", "/en", "English", "en"), ("ja", "/jp", "日本語", "ja"), ("ko", "/kr", "한국어", "ko")]
 CUR = ' aria-current="true"'
-SHORT = {"zh": "中文", "en": "EN", "ja": "日本語"}
+SHORT = {"zh": "中文", "en": "EN", "ja": "日本語", "ko": "한국어"}
 UI = {  # 選單按鈕、語言按鈕的說明文字
     "zh": ("開啟選單", "關閉選單", "網站選單", "即將推出", "語言", "Taiwan Data 台灣數據", "/"),
     "en": ("Open menu", "Close menu", "Site menu", "Coming soon", "Language", "Taiwan Data", "/en/"),
     "ja": ("メニューを開く", "メニューを閉じる", "サイトメニュー", "近日公開", "言語", 'Taiwan Data<span class="sn-loc"> 台湾データ</span>', "/jp/"),
+    "ko": ("메뉴 열기", "메뉴 닫기", "사이트 메뉴", "준비 중", "언어", 'Taiwan Data<span class="sn-loc"> 대만 데이터</span>', "/kr/"),
 }
 
 
@@ -106,14 +108,15 @@ def lang_url(lang, path):
 
 def nav(current, section="", lang="zh", path=""):
     """section：網站名稱右邊、豎線後面的頁面名稱（HTML，例如 <h1 class="sitesection">…</h1>）。
-    lang："zh"、"en" 或 "ja"；path：這一頁的中文版網址（例如 /reservoir/），有的話頂欄右邊放語言選單。"""
+    lang："zh"、"en"、"ja" 或 "ko"；path：這一頁的中文版網址（例如 /reservoir/），有的話頂欄右邊放語言選單。"""
     import i18n_ja
+    import i18n_ko
     ui = UI[lang]
     items = ""
     for key, name, url in MENU:
         cur = ' aria-current="page"' if key == current else ""
         if lang != "zh":
-            name, url_l = (MENU_EN if lang == "en" else i18n_ja.MENU)[key]
+            name, url_l = (MENU_EN if lang == "en" else i18n_ja.MENU if lang == "ja" else i18n_ko.MENU)[key]
             if url_l:
                 url = url_l
             elif url:
