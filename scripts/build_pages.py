@@ -578,7 +578,7 @@ def about_page(lang="zh"):
     if lang in ("en", "ja", "ko"):
         if lang == "en":
             title = "About | Taiwan Data"
-            desc = "Taiwan Data is an independent site that turns Taiwan's government open data into tools you can read at a glance."
+            desc = "Taiwan Data is an independent site that compiles statistics from Taiwan government open data."
             bar = site_nav.nav("about", '<h1 class="sitesection">About</h1>', "en", path)
             h_about, h_contact = "About this site", "Contact"
             about = ("Taiwan Data turns Taiwan's government open data into simple tools: live reservoir levels and water alerts,\n"
@@ -586,7 +586,7 @@ def about_page(lang="zh"):
             contact = "Email us: "
         elif lang == "ko":
             title = "사이트 소개｜Taiwan Data 대만 데이터"
-            desc = "Taiwan Data 대만 데이터는 대만 정부의 공공데이터를 한눈에 볼 수 있는 도구로 정리한 개인 운영 사이트입니다."
+            desc = "Taiwan Data 대만 데이터는 대만 정부 공공데이터를 정리·집계한 개인 운영 사이트입니다."
             bar = site_nav.nav("about", '<h1 class="sitesection">사이트 소개</h1>', "ko", path)
             h_about, h_contact = "사이트 소개", "문의"
             about = ("Taiwan Data는 대만 정부의 공공데이터를 간단한 도구로 정리한 사이트입니다. 저수지 실시간 저수율과 물 수급 신호,\n"
@@ -594,7 +594,7 @@ def about_page(lang="zh"):
             contact = "이메일 문의: "
         else:
             title = "このサイトについて｜Taiwan Data 台湾データ"
-            desc = "Taiwan Data 台湾データは、台湾政府のオープンデータをひと目でわかるツールにまとめた個人運営のサイトです。"
+            desc = "Taiwan Data 台湾データは、台湾政府のオープンデータを整理・集計した個人運営のサイトです。"
             bar = site_nav.nav("about", '<h1 class="sitesection">このサイトについて</h1>', "ja", path)
             h_about, h_contact = "このサイトについて", "お問い合わせ"
             about = ("Taiwan Data は、台湾政府のオープンデータをシンプルなツールにまとめたサイトです。ダムのリアルタイム貯水率と水情信号、\n"
@@ -618,7 +618,7 @@ def about_page(lang="zh"):
 </html>
 """
     title = "關於本站｜Taiwan Data 台灣數據"
-    desc = "Taiwan Data 台灣數據是個人經營的網站，把政府開放資料整理成一眼看懂的工具。"
+    desc = "Taiwan Data 台灣數據是個人經營的網站，整理與統計台灣政府開放資料。"
     return f"""{head(title, desc, url, "og.png", "zh", path)}
 <body>
 {site_nav.nav("about", '<h1 class="sitesection">關於本站</h1>', "zh", path)}
