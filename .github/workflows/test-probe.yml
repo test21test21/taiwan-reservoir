@@ -1,0 +1,22 @@
+name: test-probe
+on:
+  push:
+    branches: [claude/project-thread-8qj6fe]
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          p() { echo "=== $1"; c=$(curl -sSL -m 120 -A "Mozilla/5.0" -o /tmp/x -w "%{http_code}" "$2"); echo "HTTP $c bytes $(wc -c </tmp/x)"; file /tmp/x; head -c ${3:-1200} /tmp/x | iconv -f utf-8 -t utf-8 -c; echo; echo ...; tail -c 600 /tmp/x | iconv -f utf-8 -t utf-8 -c; echo; }
+          p tax6671 "https://web02.mof.gov.tw/njswww/webMain.aspx?sys=220&ym=6300&kind=21&type=5&funid=i0421&cycle=41&outmode=12&compmode=00&outkind=11&fldspc=0,44,45,9,&utf=1" 3000
+          p tax16910 "https://web02.mof.gov.tw/njswww/webMain.aspx?sys=220&ym=9000&kind=21&type=3&funid=i3451&cycle=4&outmode=12&compmode=00&outkind=3&fldlst=1111&codspc0=0,34,&utf=1"
+          p tra_station "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8ae4cabf6973990e0169947ed32454b9"
+          p tra_line "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/8eab25bc488b46c68ff2fb305f276e24"
+          p tra_summary "https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/6f8b81360f184ef3bb8a0f8f24667fcd"
+          p hsr "https://www.rb.gov.tw/api/proxy/v4/file-service/Opendata%2F%E5%9B%9E%E5%82%B3%E9%99%84%E4%BB%B6-%E9%AB%98%E9%90%B5%E9%81%8B%E9%87%8F%E7%B5%B1%E8%A8%88%E8%A1%A8(%E6%9B%B4%E6%96%B0%E8%87%B311504)(CSV%E6%AA%94).csv" 2500
+          p trtc_od_list "https://data.taipei/api/dataset/63f31c7e-7fc3-418b-bd82-b95158755b4d/resource/eb481f58-1238-4cff-8caa-fa7bb20cb4f4/download" 2000
+          p trtc_station "https://data.taipei/api/dataset/1d71c478-205f-42c5-8386-35f86d74fdd1/resource/df2da2b6-a3d5-47e7-8c97-8b047d9a2bd1/download"
+          p trtc_sys "https://data.taipei/api/dataset/660e3969-c011-481c-aa24-8a949ac2d62d/resource/cf6540e6-4df2-4afa-a71c-c6efdf62318d/download"
+          p tymc "https://opendata.tycg.gov.tw/api/dataset/1a51d61b-d040-47c2-9300-9a19d99a46a4/resource/06f878b6-92e3-4b63-9960-1210d12fd27e/download"
+          p krtc_out "https://data.kcg.gov.tw/File/DirectDownload/70cde7b5-5b1d-48da-a27a-b85a6295b710"
+          p tmrt "https://newdatacenter.taichung.gov.tw/api/v1/no-auth/resource.download?rid=51c44b2f-362a-400a-bb21-1b0381283692"
