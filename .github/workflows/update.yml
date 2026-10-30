@@ -65,6 +65,10 @@ jobs:
           git push
 
       - name: 準備網站檔案
+        env:
+          # 韓國搜尋引擎的網站驗證（Naver、Daum）；沒設定就不會加
+          NAVER_SITE_VERIFICATION: ${{ secrets.NAVER_SITE_VERIFICATION }}
+          DAUM_WEBMASTER_LINE: ${{ secrets.DAUM_WEBMASTER_LINE }}
         run: |
           mkdir _site
           cp index.html og.png favicon.ico favicon-32.png apple-touch-icon.png icon-192.png _site/

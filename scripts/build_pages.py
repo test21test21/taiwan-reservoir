@@ -17,6 +17,8 @@
 import csv
 import html
 import json
+import os
+import re
 import sys
 from collections import defaultdict
 from datetime import date, datetime, timedelta
@@ -677,6 +679,27 @@ def old_ja_redirects(out):
             f'<body><a href="{new}">{SITE}{new}</a></body></html>\n', encoding="utf-8")
 
 
+
+def verify_tags():
+    """Naver 搜尋引擎的網站驗證標籤。驗證碼放在 GitHub Secrets 的 NAVER_SITE_VERIFICATION（貼整段標籤或只貼 content 都可以）。"""
+    v = os.environ.get("NAVER_SITE_VERIFICATION", "").strip()
+    m = re.search(r'content="([^"]+)"', v)
+    v = m.group(1) if m else v
+    v = re.sub(r"[^A-Za-z0-9_-]", "", v)
+    return f'\n<meta name="naver-site-verification" content="{v}">' if v else ""
+
+
+def daum_line():
+    """Daum 網站管理工具要求放在 robots.txt 的驗證行。內容放在 GitHub Secrets 的 DAUM_WEBMASTER_LINE。"""
+    v = os.environ.get("DAUM_WEBMASTER_LINE", "").strip().splitlines()
+    v = v[0].strip() if v else ""
+    if not v:
+        return ""
+    if not v.startswith("#"):
+        v = "#DaumWebMasterTool:" + v
+    return "\n" + re.sub(r"[^\x21-\x7e]", "", v) + "\n"
+
+
 def main(out):
     out = Path(out)
     latest, info, hist, alert = load()
@@ -761,7 +784,7 @@ def main(out):
     for f, bar in pages:
         if (out / f).exists():
             t = (out / f).read_text(encoding="utf-8")
-            t = (t.replace("<!--SITE_ICONS-->", site_nav.ICONS).replace("<!--SITE_NAV-->", bar).replace("<!--I18N-->", "")
+            t = (t.replace("<!--SITE_ICONS-->", site_nav.ICONS + verify_tags()).replace("<!--SITE_NAV-->", bar).replace("<!--I18N-->", "")
                  .replace("<!--HREFLANG-->", hreflang("/reservoir/" if "reservoir" in f else "/")))
             (out / f).write_text(t, encoding="utf-8")
 
@@ -777,11 +800,16 @@ def main(out):
     use_ja_font(out)
     use_ko_font(out)
     old_ja_redirects(out)
-    (out / "sitemap.xml").write_text(
-        '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + "".join(f"  <url><loc>{u}</loc><lastmod>{lastmod}</lastmod></url>\n" for u in urls)
-        + "</urlset>\n", encoding="utf-8")
-    (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n", encoding="utf-8")
+    def sitemap(name, us):
+        (out / name).write_text(
+            '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + "".join(f"  <url><loc>{u}</loc><lastmod>{lastmod}</lastmod></url>\n" for u in us)
+            + "</urlset>\n", encoding="utf-8")
+    sitemap("sitemap.xml", urls)
+    # 韓文頁另外一份，給 Naver、Daum 提交用
+    sitemap("sitemap-kr.xml", [u for u in urls if u.startswith(f"{SITE}/kr/")])
+    (out / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\n{daum_line()}\nSitemap: {SITE}/sitemap.xml\nSitemap: {SITE}/sitemap-kr.xml\n", encoding="utf-8")
     print(f"{len(named)} 座水庫頁、sitemap {len(urls)} 個網址")
 
 
