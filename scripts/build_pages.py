@@ -31,6 +31,7 @@ import build_travel
 import i18n_en
 import i18n_ja
 import i18n_ko
+import indexnow
 import site_nav
 
 SITE = "https://taiwandata.info"
@@ -808,6 +809,7 @@ def main(out):
     sitemap("sitemap.xml", urls)
     # 韓文頁另外一份，給 Naver、Daum 提交用
     sitemap("sitemap-kr.xml", [u for u in urls if u.startswith(f"{SITE}/kr/")])
+    indexnow.write_key(out)  # IndexNow 驗證檔，部署後 scripts/indexnow.py 會通知搜尋引擎
     (out / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\n{daum_line()}\nSitemap: {SITE}/sitemap.xml\nSitemap: {SITE}/sitemap-kr.xml\n", encoding="utf-8")
     print(f"{len(named)} 座水庫頁、sitemap {len(urls)} 個網址")

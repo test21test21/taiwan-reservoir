@@ -83,3 +83,11 @@ jobs:
           path: _site
       - id: deploy
         uses: actions/deploy-pages@v4
+
+      # 通知 Naver、Bing 等搜尋引擎有哪些頁面（IndexNow，不需要帳號）；每天一次，或程式有更新時
+      - name: 通知搜尋引擎（IndexNow）
+        continue-on-error: true
+        run: |
+          if [ "$(date -u +%H)" = "01" ] || [ "${{ github.event_name }}" != "schedule" ]; then
+            python3 scripts/indexnow.py _site/sitemap.xml
+          fi
