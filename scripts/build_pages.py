@@ -10,6 +10,7 @@
 - _site/about/index.html：關於本站
 - _site/births/：出生與死亡，全台＋各縣市一頁（scripts/build_births.py）
 - _site/power/：台灣今日電力（scripts/build_power.py）
+- _site/tax/：台灣稅收與所得（scripts/build_tax.py）
 - _site/flights/：航班（scripts/build_flights.py）
 - _site/tourism/：旅客人次（scripts/build_travel.py）
 - _site/sitemap.xml、_site/robots.txt
@@ -25,6 +26,7 @@ from pathlib import Path
 import build_births
 import build_flights
 import build_power
+import build_tax
 import build_travel
 import i18n_en
 import i18n_ja
@@ -735,6 +737,7 @@ def main(out):
 
     sections = {
         "power": {"zh": "台灣今日電力", "en": "Taiwan Power", "ja": "台湾の電力", "ko": "대만 전력"},
+        "tax": {"zh": "台灣稅收與所得", "en": "Taiwan Taxes &amp; Income", "ja": "台湾の税収と所得", "ko": "대만 세수·소득"},
         "births": {"zh": "台灣出生與死亡", "en": "Taiwan Births &amp; Deaths", "ja": "台湾の出生と死亡", "ko": "대만 출생·사망"},
         "flights": {"zh": "台灣航班", "en": "Taiwan Flights", "ja": "台湾の航空便", "ko": "대만 항공편"},
         "travel": {"zh": "台灣旅客人次", "en": "Taiwan Tourism", "ja": "台湾の旅客数", "ko": "대만 여객 수"},
@@ -744,6 +747,7 @@ def main(out):
         return lambda lang, path: site_nav.nav(key, f'<h1 class="sitesection">{sections[key][lang]}</h1>', lang, path)
     urls += build_births.build(out, head, section_nav("births"))
     urls += build_power.build(out, head, section_nav("power"))
+    urls += build_tax.build(out, head, section_nav("tax"))
     urls += build_flights.build(out, head, section_nav("flights"))
     urls += build_travel.build(out, head, section_nav("travel"))
 

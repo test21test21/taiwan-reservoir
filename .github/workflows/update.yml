@@ -38,6 +38,14 @@ jobs:
         continue-on-error: true
         run: python3 scripts/fetch_power.py
 
+      - name: 抓財政部稅收、綜合所得資料（每天一次）
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: |
+          if [ "$(date -u +%H)" = "01" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python3 scripts/fetch_tax.py
+          fi
+
       - name: 抓戶政司出生、死亡資料（每天一次）
         if: github.event_name != 'push'
         continue-on-error: true
