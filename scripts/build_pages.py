@@ -701,6 +701,21 @@ def daum_line():
     return "\n" + re.sub(r"[^\x21-\x7e]", "", v) + "\n"
 
 
+def recent_missing(have, days=30):
+    """水利署偶爾幾小時到幾天沒給某些水庫（例如鳳山水庫、馬祖的水庫）。
+    近 30 天快照裡有、這次沒有的水庫，取最後一次的資料，讓它的個別頁面照常存在（頁面上會寫觀測時間）。"""
+    found = {}
+    for p in sorted((ROOT / "data/snapshots").glob("*.json"), reverse=True)[:days]:
+        try:
+            rs = json.loads(p.read_text(encoding="utf-8")).get("reservoirs", [])
+        except (ValueError, OSError):
+            continue
+        for r in rs:
+            if r.get("name") and r.get("id") and r["id"] not in have and r["id"] not in found:
+                found[r["id"]] = r
+    return list(found.values())
+
+
 def main(out):
     out = Path(out)
     latest, info, hist, alert = load()
@@ -728,7 +743,8 @@ def main(out):
             (out / site_nav.DIR[lang]).mkdir(parents=True, exist_ok=True)
             (out / site_nav.DIR[lang] / "index.html").write_text(translate(t, pairs, what), encoding="utf-8")
     updated_en = en_time(latest.get("generated_at"))
-    for r in named:
+    kept = recent_missing({x["id"] for x in named})
+    for r in named + kept:
         for lang, base in (("zh", out / "reservoir"), ("en", out / "en/reservoir"), ("ja", out / "jp/reservoir"), ("ko", out / "kr/reservoir")):
             d = base / r["id"]
             d.mkdir(parents=True, exist_ok=True)
@@ -812,7 +828,7 @@ def main(out):
     indexnow.write_key(out)  # IndexNow 驗證檔，部署後 scripts/indexnow.py 會通知搜尋引擎
     (out / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\n{daum_line()}\nSitemap: {SITE}/sitemap.xml\nSitemap: {SITE}/sitemap-kr.xml\n", encoding="utf-8")
-    print(f"{len(named)} 座水庫頁、sitemap {len(urls)} 個網址")
+    print(f"{len(named) + len(kept)} 座水庫頁（{len(kept)} 座這次水利署沒給，用最近一次的資料）、sitemap {len(urls)} 個網址")
 
 
 if __name__ == "__main__":
