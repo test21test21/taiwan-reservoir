@@ -130,7 +130,7 @@ def line_chart(vals, w=140, h=44):
     pts = [(3 + i * (w - 9) / (len(vals) - 1), 5 + (h - 12) * (1 - (v - lo) / span)) for i, v in enumerate(vals)]
     d = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
     x, y = pts[-1]
-    return (f'<svg class="chart" viewBox="0 0 {w} {h}" aria-hidden="true"><path class="base" d="M0 {h - .5}H{w}"/>'
+    return (f'<svg class="chart" viewBox="0 0 {w} {h}" preserveAspectRatio="none" aria-hidden="true"><path class="base" d="M0 {h - .5}H{w}"/>'
             f'<polygon class="area" points="3,{h - 1} {d} {x:.1f},{h - 1}"/><polyline class="ln" points="{d}"/>'
             f'<circle class="pt" cx="{x:.1f}" cy="{y:.1f}" r="3.2"/></svg>')
 
@@ -147,7 +147,7 @@ def bar_chart(vals, w=140, h=44):
     for i, v in enumerate(vals):
         bh = max(1.5, (h - 4) * v / hi)
         out.append(f'<rect class="{"last" if i == n - 1 else "b"}" x="{i * (bw + gap):.1f}" y="{h - bh:.1f}" width="{bw:.1f}" height="{bh:.1f}" rx="1"/>')
-    return f'<svg class="chart" viewBox="0 0 {w} {h}" aria-hidden="true">{"".join(out)}</svg>'
+    return f'<svg class="chart" viewBox="0 0 {w} {h}" preserveAspectRatio="none" aria-hidden="true">{"".join(out)}</svg>'
 
 
 def region_map(t):
@@ -269,8 +269,11 @@ def page(lang="zh", theme="calm"):
 
 
 CSS = """
+:root { --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif; --f-head:var(--f-body); --f-num:var(--f-body); --r-card:14px; }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+.hero h1, h2, .nm b, .foot b { font-family:var(--f-head); }
+.num, .facts .big { font-family:var(--f-num); }
+body { margin:0; background:var(--bg); color:var(--text); font-family:var(--f-body);
   font-size:15px; line-height:1.6; font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; }
 a { color:inherit; }
 .w { max-width:1320px; margin:0 auto; padding-inline:max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right)); }
@@ -403,3 +406,128 @@ THEMES = {
 @media (min-width:1100px) { .ctx { border-right:1px solid var(--line); } }
 """,
 }
+
+
+# ---- 第二輪：八種字型搭配（Shane 2026-11-01「再給我八種，字體是只有一種選項嗎」）
+FONTS = {  # Google Fonts 的 css2 參數
+    "calm": "Noto+Sans+TC:wght@400;500;700", "modern": "Noto+Sans+TC:wght@400;500;700", "tech": "Noto+Sans+TC:wght@400;500;700",
+    "clean": "Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700",
+    "report": "Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "carbon": "IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700",
+    "humane": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "round": "Huninn&family=Manrope:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700",
+    "terminal": "JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "magazine": "Cactus+Classical+Serif&family=DM+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700",
+    "oecd": "Source+Sans+3:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700",
+}
+SANS = '"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif'
+CARDS = """
+.grid { gap:24px; }
+@media (min-width:1100px) { .topics { padding-left:0; } .ctx { padding-right:24px; } }
+.ctx { background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:24px !important; align-self:start; }
+.thead { display:none; }
+.rows { margin-top:18px; display:grid; gap:12px; border:0 !important; }
+.row { border:1px solid var(--line); border-radius:var(--r-card); background:var(--surface); }
+.row:hover { background:var(--surface); border-color:var(--line-strong); }
+@media (max-width:760px) { .ctx { padding:14px 16px !important; } .row { padding:18px 14px; } }
+"""
+TILES = CARDS + """
+@media (min-width:761px) {
+  .rows { grid-template-columns:1fr 1fr; gap:14px; }
+  .row { grid-template-columns:44px minmax(0, 1fr) 32px; grid-template-areas:"ic nm go" "fig fig fig" "viz viz viz" "when when when"; gap:0 14px; align-items:start; padding:22px 22px 18px; }
+  .row:first-child { grid-column:1 / -1; grid-template-columns:44px minmax(0, 1fr) minmax(0, 1.25fr) 32px; grid-template-areas:"ic nm viz go" ". fig viz ." ". when viz ."; }
+  .ic { grid-area:ic; } .nm { grid-area:nm; } .go { grid-area:go; }
+  .fig { grid-area:fig; margin-top:18px; } .viz { grid-area:viz; margin-top:16px; } .viz .chart { height:56px; } .viz .pt { display:none; }
+  .when { grid-area:when; margin-top:10px; font-size:12.5px; color:var(--muted); }
+  .row:first-child .viz { margin-top:0; align-self:center; } .row:first-child .viz .chart { height:96px; } }
+"""
+THEMES.update({
+    "clean": """
+:root { --f-body:"Inter",""" + SANS + """; --f-num:"Inter",sans-serif;
+  --bg:#f6f8fb; --surface:#ffffff; --fg:#0b1220; --ink:#0b1220; --text:#344054; --muted:#667085; --line:#e7ebf0; --line-strong:#cfd6e0;
+  --chip:#f2f4f7; --accent:#1570ef; --on-accent:#fff; --hover:#fff; --ic-bg:#eff5ff; --ic-fg:#1570ef; --bar:#d1e0ff; --area:rgba(21,112,239,.08);
+  --up:#067647; --up-bg:#ecfdf3; --down:#b42318; --down-bg:#fef3f2; --sea:#eef4fb; --land:#ffffff; --land-line:#cfd9e6; --grat:#dbe4ef;
+  --maplab:#667085; --tw:#1570ef; --foot-bg:#ffffff; --r-sm:10px; --r-card:16px; }
+.num { font-weight:600; letter-spacing:-.02em; } .hero h1 { letter-spacing:0; }
+""" + TILES,
+    "report": """
+:root { --f-head:"Noto Serif TC",serif; --f-num:"Noto Serif TC",serif;
+  --bg:#ffffff; --surface:#ffffff; --fg:#13294b; --ink:#13294b; --text:#2f3b4c; --muted:#5f6b7a; --line:#e5e7eb; --line-strong:#13294b;
+  --chip:#f1f3f6; --accent:#13294b; --on-accent:#fff; --hover:#f7f8fa; --ic-bg:transparent; --ic-fg:#13294b; --bar:#c9d1dc; --area:rgba(19,41,75,.06);
+  --up:#21633b; --up-bg:#e9f2ec; --down:#9b2c24; --down-bg:#f8ebe9; --sea:#f6f7f9; --land:#e3e7ec; --land-line:#ffffff; --grat:#d6dbe2;
+  --maplab:#5f6b7a; --tw:#13294b; --foot-bg:#f6f7f9; --r-sm:0px; }
+.hero .w { border-bottom:3px double var(--ink); padding-bottom:26px; } .hero { padding-bottom:0; }
+.eyebrow { color:var(--muted); } .thead { border-bottom-width:2px; } .row { border-bottom-color:#d5dae1; }
+.num { font-weight:700; font-size:36px; } .ic { width:36px; } .ic svg { width:28px; height:28px; }
+@media (min-width:1100px) { .ctx { border-right:1px solid var(--line); } }
+""",
+    "carbon": """
+:root { --f-body:"IBM Plex Sans",""" + SANS + """; --f-num:"IBM Plex Sans",sans-serif;
+  --bg:#f4f4f4; --surface:#ffffff; --fg:#161616; --ink:#161616; --text:#393939; --muted:#6f6f6f; --line:#e0e0e0; --line-strong:#c6c6c6;
+  --chip:#e8e8e8; --accent:#0f62fe; --on-accent:#fff; --hover:#e8e8e8; --ic-bg:#edf5ff; --ic-fg:#0f62fe; --bar:#c6c6c6; --area:rgba(15,98,254,.07);
+  --up:#198038; --up-bg:#defbe6; --down:#da1e28; --down-bg:#fff1f1; --sea:#f4f4f4; --land:#e0e0e0; --land-line:#ffffff; --grat:#d1d1d1;
+  --maplab:#6f6f6f; --tw:#0f62fe; --foot-bg:#ffffff; --r-sm:0px; --r-card:0px; }
+.ctx, .topics { background:#fff; padding:24px !important; }
+@media (min-width:1100px) { .grid { gap:16px; } .topics { padding-left:24px; } }
+.thead { background:#e0e0e0; border:0; margin-top:20px; padding:12px 20px; color:#161616; font-weight:600; letter-spacing:0; }
+.ic { border-radius:0; } .go { border-radius:0; } .chip { border-radius:2px; } .num { font-weight:500; font-size:36px; }
+.row:hover .go { background:#0f62fe; }
+@media (max-width:760px) { .topics { padding:16px !important; } .ctx { border:0; } }
+""",
+    "humane": """
+:root { --f-head:"LXGW WenKai TC",serif; --f-num:"DM Sans",sans-serif;
+  --bg:#faf8f3; --surface:#fffdf9; --fg:#2b2724; --ink:#2b2724; --text:#3f3a35; --muted:#7a7168; --line:#ebe5da; --line-strong:#d9d0c2;
+  --chip:#f2ede4; --accent:#2f6f6a; --on-accent:#fff; --hover:#fff; --ic-bg:#e9f1ef; --ic-fg:#2f6f6a; --bar:#d3e1dd; --area:rgba(47,111,106,.08);
+  --up:#2f6f45; --up-bg:#e9f2ea; --down:#a3412f; --down-bg:#f8ebe6; --sea:#f3efe6; --land:#fffdf9; --land-line:#dcd3c3; --grat:#e4ddcf;
+  --maplab:#7a7168; --tw:#2f6f6a; --foot-bg:#f3efe6; --r-sm:10px; --r-card:16px; }
+.hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
+""" + CARDS,
+    "round": """
+:root { --f-head:"Huninn",sans-serif; --f-num:"Manrope",sans-serif;
+  --bg:#f1f5fa; --surface:#ffffff; --fg:#1e2a3b; --ink:#1e2a3b; --text:#3c4a5c; --muted:#6b7a8d; --line:#e2e8f0; --line-strong:#cdd6e2;
+  --chip:#eef2f7; --accent:#3a6ea5; --on-accent:#fff; --hover:#fff; --ic-bg:#e8f0fa; --ic-fg:#3a6ea5; --bar:#d3e0ef; --area:rgba(58,110,165,.09);
+  --up:#2d7a52; --up-bg:#e7f4ec; --down:#b5453c; --down-bg:#fbecea; --sea:#e9f0f8; --land:#ffffff; --land-line:#cfdae8; --grat:#d8e2ee;
+  --maplab:#6b7a8d; --tw:#3a6ea5; --foot-bg:#ffffff; --r-sm:16px; --r-card:22px; }
+.hero h1 { font-weight:400; letter-spacing:.04em; } h2, .nm b { font-weight:400; } .nm b { font-size:19px; }
+.num { font-weight:800; letter-spacing:-.02em; } .ic { border-radius:14px; }
+""" + TILES,
+    "terminal": """
+:root { --f-num:"JetBrains Mono",monospace;
+  --bg:#0d1117; --surface:#161b22; --fg:#e6edf3; --ink:#e6edf3; --text:#c9d1d9; --muted:#8b949e; --line:#21262d; --line-strong:#30363d;
+  --chip:#21262d; --accent:#58a6ff; --on-accent:#0d1117; --hover:#161b22; --ic-bg:#161b22; --ic-fg:#79c0ff; --bar:#30363d; --area:rgba(88,166,255,.08);
+  --up:#56d364; --up-bg:rgba(86,211,100,.12); --down:#ff7b72; --down-bg:rgba(255,123,114,.12); --sea:#0d1117; --land:#1c2128; --land-line:#0d1117; --grat:#21262d;
+  --maplab:#8b949e; --tw:#e6edf3; --foot-bg:#010409; --r-sm:6px; color-scheme:dark; }
+.eyebrow, .meta, .thead, .when, .viz .cap, .chip, .facts .note { font-family:"JetBrains Mono",""" + SANS + """; }
+.eyebrow::before { content:"$ "; color:var(--muted); }
+.num { font-weight:500; font-size:32px; letter-spacing:-.02em; } .ic { border:1px solid var(--line-strong); border-radius:8px; }
+@media (min-width:1100px) { .ctx { border-right:1px solid var(--line); } }
+""",
+    "magazine": """
+:root { --f-head:"Cactus Classical Serif",serif; --f-num:"DM Sans",sans-serif;
+  --bg:#ffffff; --surface:#ffffff; --fg:#111111; --ink:#111111; --text:#333333; --muted:#6b6b6b; --line:#e8e8e8; --line-strong:#111111;
+  --chip:#f2f2f2; --accent:#1f4e79; --on-accent:#fff; --hover:#fafafa; --ic-bg:transparent; --ic-fg:#111; --bar:#d9d9d9; --area:rgba(17,17,17,.05);
+  --up:#2a6b3f; --up-bg:#edf4ef; --down:#a33a2c; --down-bg:#f8ecea; --sea:#f7f7f7; --land:#e6e6e6; --land-line:#ffffff; --grat:#dddddd;
+  --maplab:#6b6b6b; --tw:#111111; --foot-bg:#f7f7f7; --r-sm:0px; }
+.hero { padding-top:72px; } .hero h1 { font-size:clamp(40px, 7vw, 76px); font-weight:400; letter-spacing:.04em; }
+.eyebrow { color:var(--ink); } h2 { font-weight:400; font-size:24px; } .nm b { font-weight:400; font-size:20px; }
+.ic { display:none; } .thead, .row { grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr) 132px 96px 32px; } .thead span:first-child { grid-column:auto; }
+.num { font-weight:500; font-size:40px; letter-spacing:-.02em; } .chart .ln, .chart .last, .chart .pt { stroke:#111; } .chart .last, .chart .pt { fill:#111; }
+.go { border-color:#111; } .go svg { stroke:#111; } .row:hover .go { background:#111; border-color:#111; }
+@media (max-width:1099px) { .row { grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) 124px 32px; grid-template-areas:"nm fig viz go" "nm when viz go"; } }
+@media (max-width:760px) { .row { grid-template-columns:minmax(0, 1fr) 112px; grid-template-areas:"nm go" "fig viz" "when when"; } }
+@media (min-width:1100px) { .ctx { border-right:1px solid var(--line); } }
+""",
+    "oecd": """
+:root { --f-body:"Source Sans 3",""" + SANS + """; --f-num:"Source Sans 3",sans-serif;
+  --bg:#ffffff; --surface:#ffffff; --fg:#0b2f5b; --ink:#0b2f5b; --text:#283a52; --muted:#5c6f86; --line:#dfe6ee; --line-strong:#b9c6d6;
+  --chip:#eef3f8; --accent:#0b5cad; --on-accent:#fff; --hover:#f4f7fb; --ic-bg:#0b2f5b; --ic-fg:#ffffff; --bar:#c3d3e6; --area:rgba(11,92,173,.08);
+  --up:#1f6b3d; --up-bg:#e7f2eb; --down:#a6322b; --down-bg:#f9eceb; --sea:#e8eff6; --land:#ffffff; --land-line:#c3d1e0; --grat:#d3dde8;
+  --maplab:#5c6f86; --tw:#0b2f5b; --foot-bg:#0b2f5b; --r-sm:2px; }
+.hero { border-top:4px solid var(--ink); }
+.ctx { background:#f1f5f9; padding:22px !important; align-self:start; }
+@media (min-width:1100px) { .grid { gap:40px; } .topics { padding-left:0; } }
+.num { font-weight:700; font-size:36px; } .ic { border-radius:4px; }
+.foot b { color:#fff; } .foot p { color:#c7d4e3; } .foot a { color:#fff; }
+@media (max-width:760px) { .ctx { border:0; } }
+""",
+})
