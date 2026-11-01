@@ -270,6 +270,7 @@ if(window.matchMedia("(max-width: 760px)").matches)set(false);b.addEventListener
 CSS = """
 :root { --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif; --f-head:"LXGW WenKai TC",var(--f-body); --f-num:"DM Sans",var(--f-body);
   --ink:#111111; --text:#333333; --muted:#6b6b6b; --line:#e3e3e3; --line-strong:#c8c8c8; --fill:#f2f2f2;
+  --surface:#ffffff; --fg:#111111; --chip:#f2f2f2; /* 頂端列（site_nav）用這三個 */
   --icon:#2b6a66; --up:#1e7a45; --down:#c0392b;
   --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#2b6a66; }
 /* 黑白灰：底全白、字黑灰。只有地圖、台灣小圖、主題圖示、增減百分比（和官方燈號）有顏色 */
