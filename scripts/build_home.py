@@ -85,9 +85,9 @@ def data():
 # ---------- 文字（四種語言）
 T = {
     "zh": dict(
-        title="Taiwan Data 台灣數據：台灣概覽，水庫、電力、人口、航班的最新數字",
+        title="Taiwan Data 台灣數據：用數據看台灣，水庫、電力、人口、航班的最新數字",
         desc="台灣最新的官方數字：主要水庫蓄水率、現在用電、每月出生人數、航班載客率、來台旅客人次。",
-        eyebrow="TAIWAN AT A GLANCE", h1="一眼看懂台灣", lead="水庫、電力、人口、航班、旅客的最新官方數字。",
+        eyebrow="TAIWAN DATA", h1="用數據看台灣", lead="水庫、電力、人口、航班、旅客的最新官方數字。",
         updated="資料更新", meta_src="資料來源：政府開放資料", meta_freq="每小時自動更新", ctx="地圖", tbl="探索台灣數據",
         f_loc=("位置", "東亞・西太平洋"), f_tz=("時區", "UTC+8"), f_pop="人口", f_div=("行政區", "22 個縣市"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small> 萬人</small>", pop_when=lambda m: f"{m[:4]} 年 {int(m[5:])} 月底・內政部戶政司",
@@ -137,9 +137,9 @@ T = {
         about_t="About", about="Taiwan government open data, compiled, with the date of every figure shown.", about_link="About",
         ng_t="Independent site", ng="An independent site, not affiliated with any government agency.", contact="Email us: contact@taiwandata.info"),
     "ja": dict(
-        title="Taiwan Data 台湾データ：ひと目でわかる台湾、ダム・電力・人口・航空便の最新データ",
+        title="Taiwan Data 台湾データ：データで見る台湾、ダム・電力・人口・航空便の最新統計",
         desc="台湾の最新の公式統計：主要ダムの貯水率、現在の電力使用量、毎月の出生数、航空便の搭乗率、訪台客数。",
-        eyebrow="TAIWAN AT A GLANCE", h1="ひと目でわかる台湾", lead="台湾のダム、電力、人口、航空便、旅客の最新の公式統計。",
+        eyebrow="TAIWAN DATA", h1="データで見る台湾", lead="台湾のダム、電力、人口、航空便、旅客の最新の公式統計。",
         updated="データ更新", meta_src="出典：台湾政府オープンデータ", meta_freq="毎時自動更新", ctx="地図", tbl="台湾のデータ",
         f_loc=("位置", "東アジア・西太平洋"), f_tz=("標準時", "UTC+8"), f_pop="人口", f_div=("行政区画", "22県市"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small> 万人</small>", pop_when=lambda m: f"{m[:4]}年{int(m[5:])}月末・内政部戸政司",
@@ -163,9 +163,9 @@ T = {
         about_t="このサイトについて", about="台湾政府のオープンデータを整理し、すべての数字にデータの時点を記載しています。", about_link="このサイトについて",
         ng_t="非政府サイト", ng="個人が運営するサイトで、政府機関とは関係ありません。", contact="お問い合わせ：contact@taiwandata.info"),
     "ko": dict(
-        title="Taiwan Data 대만 데이터: 한눈에 보는 대만, 저수지·전력·인구·항공편 최신 데이터",
+        title="Taiwan Data 대만 데이터: 데이터로 보는 대만, 저수지·전력·인구·항공편 최신 통계",
         desc="대만의 최신 공식 통계: 주요 저수지 저수율, 현재 전력 수요, 월별 출생아 수, 항공편 탑승률, 대만 방문객 수.",
-        eyebrow="TAIWAN AT A GLANCE", h1="한눈에 보는 대만", lead="대만 저수지, 전력, 인구, 항공편, 여객의 최신 공식 통계.",
+        eyebrow="TAIWAN DATA", h1="데이터로 보는 대만", lead="대만 저수지, 전력, 인구, 항공편, 여객의 최신 공식 통계.",
         updated="데이터 업데이트", meta_src="출처: 대만 정부 공공데이터", meta_freq="매시간 자동 업데이트", ctx="지도", tbl="대만 데이터",
         f_loc=("위치", "동아시아·서태평양"), f_tz=("시간대", "UTC+8"), f_pop="인구", f_div=("행정구역", "22개 현·시"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small>만 명</small>", pop_when=lambda m: f"{m[:4]}년 {int(m[5:])}월 말·내정부 호정사",
