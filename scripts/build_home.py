@@ -415,6 +415,9 @@ FONTS = {  # Google Fonts 的 css2 參數
     "report": "Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700",
     "carbon": "IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700",
     "humane": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "humane_teal": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "humane_navy": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "humane_white": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
     "round": "Huninn&family=Manrope:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700",
     "terminal": "JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
     "magazine": "Cactus+Classical+Serif&family=DM+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700",
@@ -480,6 +483,31 @@ THEMES.update({
   --chip:#f2ede4; --accent:#2f6f6a; --on-accent:#fff; --hover:#fff; --ic-bg:#e9f1ef; --ic-fg:#2f6f6a; --bar:#d3e1dd; --area:rgba(47,111,106,.08);
   --up:#2f6f45; --up-bg:#e9f2ea; --down:#a3412f; --down-bg:#f8ebe6; --sea:#f3efe6; --land:#fffdf9; --land-line:#dcd3c3; --grat:#e4ddcf;
   --maplab:#7a7168; --tw:#2f6f6a; --foot-bg:#f3efe6; --r-sm:10px; --r-card:16px; }
+.hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
+""" + CARDS,
+    # 人文版去掉米黃：白底、冷灰細線、淡藍灰海面，只留一個重點色
+    "humane_teal": """
+:root { --f-head:"LXGW WenKai TC",serif; --f-num:"DM Sans",sans-serif;
+  --bg:#f5f7f8; --surface:#ffffff; --fg:#1f2a30; --ink:#1f2a30; --text:#3a464d; --muted:#67737a; --line:#e3e8eb; --line-strong:#ccd4d9;
+  --chip:#eef2f4; --accent:#2b6a66; --on-accent:#fff; --hover:#fff; --ic-bg:#e7f0ef; --ic-fg:#2b6a66; --bar:#cfdedc; --area:rgba(43,106,102,.08);
+  --up:#21704a; --up-bg:#e8f3ed; --down:#b3392f; --down-bg:#fbecea; --sea:#edf2f5; --land:#ffffff; --land-line:#cdd6dc; --grat:#dbe3e8;
+  --maplab:#67737a; --tw:#2b6a66; --foot-bg:#ffffff; --r-sm:10px; --r-card:16px; }
+.hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
+""" + CARDS,
+    "humane_navy": """
+:root { --f-head:"LXGW WenKai TC",serif; --f-num:"DM Sans",sans-serif;
+  --bg:#f4f6f9; --surface:#ffffff; --fg:#1b2a3d; --ink:#1b2a3d; --text:#38475a; --muted:#647387; --line:#e2e7ee; --line-strong:#cbd3de;
+  --chip:#edf1f6; --accent:#24507f; --on-accent:#fff; --hover:#fff; --ic-bg:#e8eef6; --ic-fg:#24507f; --bar:#d0dbe8; --area:rgba(36,80,127,.08);
+  --up:#21704a; --up-bg:#e8f3ed; --down:#b3392f; --down-bg:#fbecea; --sea:#ecf1f7; --land:#ffffff; --land-line:#cbd5e1; --grat:#d9e1eb;
+  --maplab:#647387; --tw:#24507f; --foot-bg:#ffffff; --r-sm:10px; --r-card:16px; }
+.hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
+""" + CARDS,
+    "humane_white": """
+:root { --f-head:"LXGW WenKai TC",serif; --f-num:"DM Sans",sans-serif;
+  --bg:#ffffff; --surface:#ffffff; --fg:#222a2e; --ink:#222a2e; --text:#3d464b; --muted:#6b7479; --line:#e6e9eb; --line-strong:#cfd5d8;
+  --chip:#f1f3f4; --accent:#3b5a6b; --on-accent:#fff; --hover:#f8fafb; --ic-bg:#eef2f4; --ic-fg:#3b5a6b; --bar:#d5dde2; --area:rgba(59,90,107,.08);
+  --up:#21704a; --up-bg:#e8f3ed; --down:#b3392f; --down-bg:#fbecea; --sea:#f0f4f6; --land:#ffffff; --land-line:#cfd7dc; --grat:#dde4e8;
+  --maplab:#6b7479; --tw:#3b5a6b; --foot-bg:#f6f8f9; --r-sm:10px; --r-card:16px; }
 .hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
 """ + CARDS,
     "round": """
