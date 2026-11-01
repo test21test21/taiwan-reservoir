@@ -85,9 +85,9 @@ def data():
 T = {
     "zh": dict(
         title="Taiwan Data 台灣數據：台灣概覽，水庫、電力、人口、航班的最新數字",
-        desc="一頁看懂台灣最新的官方數字：主要水庫蓄水率、現在用電、每月出生人數、航班載客率、來台旅客人次，每個主題都能點進去看細節。",
-        eyebrow="TAIWAN AT A GLANCE", h1="一眼看懂台灣", lead="水、電、人口、航班、旅客：台灣最新的官方數字，每個主題都能點進去看細節。",
-        updated="資料更新", meta_src="資料來源：政府開放資料", meta_freq="每小時自動更新", ctx="位置與基本資料", tbl="探索台灣數據", tbl_sub="五個主題的最新數字，點進去看細節。",
+        desc="台灣最新的官方數字：主要水庫蓄水率、現在用電、每月出生人數、航班載客率、來台旅客人次。",
+        eyebrow="TAIWAN AT A GLANCE", h1="一眼看懂台灣", lead="水庫、電力、人口、航班、旅客的最新官方數字。",
+        updated="資料更新", meta_src="資料來源：政府開放資料", meta_freq="每小時自動更新", ctx="位置與基本資料", tbl="探索台灣數據",
         cols=("主題", "最新數字", "趨勢", "資料時間"),
         f_loc=("位置", "東亞・西太平洋"), f_tz=("時區", "UTC+8"), f_pop="人口", f_div=("行政區", "22 個縣市"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small> 萬人</small>", pop_when=lambda m: f"{m[:4]} 年 {int(m[5:])} 月底・內政部戶政司",
@@ -108,7 +108,7 @@ T = {
         src_t="資料來源", src="經濟部水利署、台灣電力公司、內政部戶政司、交通部民用航空局、交通部觀光署的開放資料。",
         about_t="關於本站", about="整理台灣政府開放資料，數字都標明資料時間。", about_link="關於本站",
         ng_t="非政府網站", ng="本站為個人經營，和任何政府機關沒有關係。", contact="歡迎來信：contact@taiwandata.info",
-        open_ctx="展開", go="看細節"),
+        open_ctx="展開"),
 }
 
 ICONS = {  # Material Icons（Apache 2.0）
@@ -254,7 +254,7 @@ def page(lang="zh", theme="calm"):
     <div class="ctx-in"><div class="mapbox">{region_map(t)}</div>{facts}</div>
   </details>
   <section class="topics">
-    <div class="th"><h2>{e(t["tbl"])}</h2><p class="sub">{e(t["tbl_sub"])}</p></div>
+    <div class="th"><h2>{e(t["tbl"])}</h2></div>
     <div class="thead"><span>{e(t["cols"][0])}</span><span>{e(t["cols"][1])}</span><span>{e(t["cols"][2])}</span><span>{e(t["cols"][3])}</span><span></span></div>
     <div class="rows">{"".join(trs)}</div>
   </section>
