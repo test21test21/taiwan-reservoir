@@ -85,10 +85,10 @@ def data():
 # ---------- 文字（四種語言）
 T = {
     "zh": dict(
-        title="Taiwan Data 台灣數據：台灣概覽，水庫、電力、人口、航班的最新數字",
+        title="Taiwan Data 台灣數據：用數據看台灣，水庫、電力、人口、航班的最新數字",
         desc="台灣最新的官方數字：主要水庫蓄水率、現在用電、每月出生人數、航班載客率、來台旅客人次。",
-        eyebrow="TAIWAN AT A GLANCE", h1="一眼看懂台灣", lead="水庫、電力、人口、航班、旅客的最新官方數字。",
-        updated="資料更新", meta_src="資料來源：政府開放資料", meta_freq="每小時自動更新", ctx="位置與基本資料", tbl="探索台灣數據",
+        eyebrow="TAIWAN DATA", h1="用數據看台灣", lead="水庫、電力、人口、航班、旅客的最新官方數字。",
+        updated="資料更新", meta_src="資料來源：政府開放資料", meta_freq="每小時自動更新", ctx="地圖", tbl="探索台灣數據",
         f_loc=("位置", "東亞・西太平洋"), f_tz=("時區", "UTC+8"), f_pop="人口", f_div=("行政區", "22 個縣市"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small> 萬人</small>", pop_when=lambda m: f"{m[:4]} 年 {int(m[5:])} 月底・內政部戶政司",
         pop_chg=lambda c: f"比一年前{'少' if c < 0 else '多'} {abs(c) / 1e4:.1f} 萬人",
@@ -113,7 +113,7 @@ T = {
         title="Taiwan Data: Taiwan at a Glance, the Latest Reservoir, Power, Population and Flight Figures",
         desc="The latest official figures for Taiwan: major reservoir storage, current power demand, monthly births, flight load factors and visitor arrivals.",
         eyebrow="TAIWAN DATA", h1="Taiwan at a Glance", lead="The latest official figures for Taiwan's reservoirs, electricity, population, flights and tourism.",
-        updated="Updated", meta_src="Source: Taiwan government open data", meta_freq="Updated hourly", ctx="Location and key facts", tbl="Explore Taiwan data",
+        updated="Updated", meta_src="Source: Taiwan government open data", meta_freq="Updated hourly", ctx="Map", tbl="Explore Taiwan data",
         f_loc=("Location", "East Asia, Western Pacific"), f_tz=("Time zone", "UTC+8"), f_pop="Population", f_div=("Divisions", "22 counties and cities"),
         pop_fmt=lambda p: f"{p / 1e6:,.2f}<small> million</small>",
         pop_when=lambda m: f"End of {calendar.month_name[int(m[5:])]} {m[:4]} · Ministry of the Interior",
@@ -137,10 +137,10 @@ T = {
         about_t="About", about="Taiwan government open data, compiled, with the date of every figure shown.", about_link="About",
         ng_t="Independent site", ng="An independent site, not affiliated with any government agency.", contact="Email us: contact@taiwandata.info"),
     "ja": dict(
-        title="Taiwan Data 台湾データ：ひと目でわかる台湾、ダム・電力・人口・航空便の最新データ",
+        title="Taiwan Data 台湾データ：データで見る台湾、ダム・電力・人口・航空便の最新統計",
         desc="台湾の最新の公式統計：主要ダムの貯水率、現在の電力使用量、毎月の出生数、航空便の搭乗率、訪台客数。",
-        eyebrow="TAIWAN AT A GLANCE", h1="ひと目でわかる台湾", lead="台湾のダム、電力、人口、航空便、旅客の最新の公式統計。",
-        updated="データ更新", meta_src="出典：台湾政府オープンデータ", meta_freq="毎時自動更新", ctx="位置と基本情報", tbl="台湾のデータ",
+        eyebrow="TAIWAN DATA", h1="データで見る台湾", lead="台湾のダム、電力、人口、航空便、旅客の最新の公式統計。",
+        updated="データ更新", meta_src="出典：台湾政府オープンデータ", meta_freq="毎時自動更新", ctx="地図", tbl="台湾のデータ",
         f_loc=("位置", "東アジア・西太平洋"), f_tz=("標準時", "UTC+8"), f_pop="人口", f_div=("行政区画", "22県市"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small> 万人</small>", pop_when=lambda m: f"{m[:4]}年{int(m[5:])}月末・内政部戸政司",
         pop_chg=lambda c: f"1年前より{abs(c) / 1e4:.1f}万人{'減少' if c < 0 else '増加'}",
@@ -163,10 +163,10 @@ T = {
         about_t="このサイトについて", about="台湾政府のオープンデータを整理し、すべての数字にデータの時点を記載しています。", about_link="このサイトについて",
         ng_t="非政府サイト", ng="個人が運営するサイトで、政府機関とは関係ありません。", contact="お問い合わせ：contact@taiwandata.info"),
     "ko": dict(
-        title="Taiwan Data 대만 데이터: 한눈에 보는 대만, 저수지·전력·인구·항공편 최신 데이터",
+        title="Taiwan Data 대만 데이터: 데이터로 보는 대만, 저수지·전력·인구·항공편 최신 통계",
         desc="대만의 최신 공식 통계: 주요 저수지 저수율, 현재 전력 수요, 월별 출생아 수, 항공편 탑승률, 대만 방문객 수.",
-        eyebrow="TAIWAN AT A GLANCE", h1="한눈에 보는 대만", lead="대만 저수지, 전력, 인구, 항공편, 여객의 최신 공식 통계.",
-        updated="데이터 업데이트", meta_src="출처: 대만 정부 공공데이터", meta_freq="매시간 자동 업데이트", ctx="위치와 기본 정보", tbl="대만 데이터",
+        eyebrow="TAIWAN DATA", h1="데이터로 보는 대만", lead="대만 저수지, 전력, 인구, 항공편, 여객의 최신 공식 통계.",
+        updated="데이터 업데이트", meta_src="출처: 대만 정부 공공데이터", meta_freq="매시간 자동 업데이트", ctx="지도", tbl="대만 데이터",
         f_loc=("위치", "동아시아·서태평양"), f_tz=("시간대", "UTC+8"), f_pop="인구", f_div=("행정구역", "22개 현·시"),
         pop_fmt=lambda p: f"{p / 1e4:,.1f}<small>만 명</small>", pop_when=lambda m: f"{m[:4]}년 {int(m[5:])}월 말·내정부 호정사",
         pop_chg=lambda c: f"1년 전보다 {abs(c) / 1e4:.1f}만 명 {'감소' if c < 0 else '증가'}",
@@ -230,51 +230,53 @@ def bar_chart(vals, w=140, h=44):
 
 
 def region_map(t):
-    """東亞地圖：world-map.json 的國界、經緯線，台灣塗主色，右下角放台灣本島放大圖。"""
+    """東亞地圖，填滿地圖卡片：卡片多高多寬都不留白。
+
+    地圖畫得比看得到的範圍大（北緯 58 度到南緯 12 度），寬度跟卡片一樣，畫面中心固定在北緯 24 度；
+    卡片比較高就多看到一點南北，比較矮就少一點。地名、比例尺、台灣本島放大圖用一般文字疊在上面，
+    字的大小固定，不會跟著地圖縮放變得太小或太大。
+    """
     import math
     w = worldmap.world()
-    W0, N0, E0, S0 = 104, 42, 144, 6
+    W0, E0, N0, S0 = 104, 144, 58, -12
     x0, y0 = worldmap.xy(N0, W0)
     x1, y1 = worldmap.xy(S0, E0)
     vw, vh = x1 - x0, y1 - y0
-    keep = {"156", "392", "410", "408", "608", "158", "704", "418", "116", "764", "104", "496", "360", "458", "096", "626", "344", "446"}
-    land = "".join(f'<path class="c" d="{w["countries"][k]}"/>' for k in sorted(keep) if k in w["countries"] and k != "158")
+    keep = {"156", "392", "410", "408", "608", "704", "418", "116", "764", "104", "496", "360", "458", "096", "626",
+            "344", "446", "643", "036", "598", "585"}
+    land = "".join(f'<path class="c" d="{w["countries"][k]}"/>' for k in sorted(keep) if k in w["countries"])
     grat = []
     for lon in (110, 120, 130, 140):
         x, _ = worldmap.xy(0, lon)
-        grat.append(f'<path class="g" d="M{x} {y0}V{y1}"/><text class="gl" x="{x + .8}" y="{y1 - 1.2}">{lon}°E</text>')
-    for lat in (10, 20, 30, 40):
+        grat.append(f'<path class="g" d="M{x} {y0}V{y1}"/>')
+    for lat in range(-10, 60, 10):
         _, y = worldmap.xy(lat, 0)
-        grat.append(f'<path class="g" d="M{x0} {y}H{x1}"/><text class="gl" x="{x0 + .8}" y="{y - .8}">{lat}°N</text>')
+        grat.append(f'<path class="g" d="M{x0} {y}H{x1}"/>')
     n = t["names"]
 
-    def lab(key, lat, lon, cls="cn"):
+    def at(lat, lon):
         x, y = worldmap.xy(lat, lon)
-        return f'<text class="{cls}" x="{x}" y="{y}">{e(n[key])}</text>'
-    tx, ty = worldmap.xy(23.7, 120.95)
-    # 台灣本島放大圖（reservoir/taiwan-map.json），放在右下角海上
+        return f"left:{(x - x0) / vw * 100:.2f}%;top:{(y - y0) / vh * 100:.2f}%"
+
+    # 地名放在卡片最矮時（高是寬的 0.7 倍，看得到北緯約 11～37 度）也看得到的位置
+    labels = (f'<span class="ml" style="{at(31, 111)}">{e(n["156"])}</span>'
+              f'<span class="ml" style="{at(33.2, 135.2)}">{e(n["392"])}</span>'
+              f'<span class="ml" style="{at(17.0, 121.2)}">{e(n["608"])}</span>'
+              f'<span class="ml sea" style="{at(27.5, 131)}">{e(n["sea"])}</span>'
+              f'<span class="ml tw" style="{at(25.0, 122.2)}">{e(n["158"])}</span>')
+    _, yc = worldmap.xy(24, 0)
     m = json.loads((ROOT / "reservoir/taiwan-map.json").read_text(encoding="utf-8"))
-    ih = 36
-    k = ih / m["height"]
-    iw = m["width"] * k
-    ix, iy = x1 - iw - 9, y1 - ih - 9
-    inset = (f'<rect class="ib" x="{ix - 3:.1f}" y="{iy - 3:.1f}" width="{iw + 6:.1f}" height="{ih + 9:.1f}"/>'
-             f'<g transform="translate({ix:.1f} {iy:.1f}) scale({k:.5f})">'
-             + "".join(f'<path class="tw-c" d="{d}"/>' for d in m["counties"].values())
-             + f'</g><text class="il" x="{ix + iw / 2:.1f}" y="{iy + ih + 4.6:.1f}">{e(t["inset"])}</text>'
-             f'<path class="lk" d="M{tx + 2.4:.1f} {ty + 2.6:.1f}L{ix - 3:.1f} {iy - 3:.1f}"/>'
-             f'<rect class="box" x="{tx - 2.2:.1f}" y="{ty - 3:.1f}" width="4.6" height="5.8"/>')
-    per_km = 0.9 * w["s"] / (111.32 * math.cos(math.radians(23.5)))
-    sx, sy = worldmap.xy(8.2, 105.2)
-    bar = (f'<g class="scale"><path d="M{sx} {sy}h{1000 * per_km:.1f}M{sx} {sy - 1}v2M{sx + 500 * per_km:.1f} {sy - 1}v2M{sx + 1000 * per_km:.1f} {sy - 1}v2"/>'
-           f'<text x="{sx}" y="{sy - 1.8}">0</text><text x="{sx + 500 * per_km:.1f}" y="{sy - 1.8}">500</text>'
-           f'<text x="{sx + 1000 * per_km:.1f}" y="{sy - 1.8}">1,000 {e(t["km"])}</text></g>')
-    return (f'<svg class="rmap" viewBox="{x0} {y0} {vw:.1f} {vh:.1f}" role="img" aria-label="{e(t["map_label"])}">'
+    inset = (f'<div class="inset"><svg viewBox="0 0 {m["width"]} {m["height"]}" aria-hidden="true">'
+             + "".join(f'<path d="{d}"/>' for d in m["counties"].values())
+             + f'</svg><span>{e(t["inset"])}</span></div>')
+    per_km = w["k"] * w["s"] / (111.32 * math.cos(math.radians(23.5)))
+    scale = (f'<div class="scl" style="width:{1000 * per_km / vw * 100:.2f}%"><b></b>'
+             f'<span style="left:0">0</span><span style="left:100%">1,000 {e(t["km"])}</span></div>')
+    return (f'<div class="mapart" style="aspect-ratio:{vw:.1f}/{vh:.1f};transform:translateY(-{(yc - y0) / vh * 100:.2f}%)">'
+            f'<svg viewBox="{x0} {y0} {vw:.1f} {vh:.1f}" role="img" aria-label="{e(t["map_label"])}">'
             f'<rect class="sea" x="{x0}" y="{y0}" width="{vw:.1f}" height="{vh:.1f}"/>'
-            + "".join(grat) + f'<g>{land}</g><path class="tw" d="{w["countries"]["158"]}"/>'
-            + lab("156", 32, 109.5) + lab("392", 34.6, 136.6, "cn") + lab("410", 37.6, 126.2, "cn s") + lab("608", 12.2, 121.2)
-            + lab("sea", 26, 131.5, "sea-t") + f'<text class="twl" x="{tx + 3.2}" y="{ty - 3.4}">{e(n["158"])}</text>'
-            + inset + bar + "</svg>")
+            + "".join(grat) + f'<g>{land}</g><path class="tw" d="{w["countries"]["158"]}"/></svg>{labels}</div>'
+            + inset + scale)
 
 
 def page(lang="zh"):
@@ -312,26 +314,29 @@ def page(lang="zh"):
             f'<span class="when">{e(when)}</span><span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span></a>')
     pop = d["population"]
     facts = (
-        f'<dl class="facts"><div><dt>{e(t["f_pop"])}</dt><dd><span class="big">{t["pop_fmt"](pop["pop"])}</span>'
+        f'<dl class="facts"><div class="pop"><dt>{e(t["f_pop"])}</dt><dd><span class="big">{t["pop_fmt"](pop["pop"])}</span>'
         f'<span class="note">{e(t["pop_when"](pop["month"]))}</span>'
         + (f'<span class="note">{e(t["pop_chg"](pop["year_change"]))}</span>' if pop["year_change"] is not None else "")
-        + f'</dd></div><div><dt>{e(t["f_loc"][0])}</dt><dd>{e(t["f_loc"][1])}</dd></div>'
-        f'<div><dt>{e(t["f_tz"][0])}</dt><dd>{e(t["f_tz"][1])}</dd></div>'
-        f'<div><dt>{e(t["f_div"][0])}</dt><dd>{e(t["f_div"][1])}</dd></div></dl>')
+        + f'</dd></div><div class="kv"><dt>{e(t["f_loc"][0])}</dt><dd>{e(t["f_loc"][1])}</dd>'
+        f'<dt>{e(t["f_tz"][0])}</dt><dd>{e(t["f_tz"][1])}</dd>'
+        f'<dt>{e(t["f_div"][0])}</dt><dd>{e(t["f_div"][1])}</dd></div></dl>')
     upd = dt(d["generated_at"]) if d.get("generated_at") else ""
     return f"""<body>
 <!--SITE_NAV-->
-<header class="hero"><div class="w">
-  <p class="eyebrow">{e(t["eyebrow"])}</p>
-  <h1>{e(t["h1"])}</h1>
-  <p class="lead">{e(t["lead"])}</p>
-  <p class="meta"><span><i class="dot"></i>{e(t["meta_freq"])}</span><span>{e(t["updated"])} {e(upd)}</span><span>{e(t["meta_src"])}</span></p>
-</div></header>
-<main class="w grid">
-  <section class="ctx">
-    <h2 class="sh"><button type="button" aria-expanded="true" aria-controls="ctx-in">{e(t["ctx"])}<span class="plus" aria-hidden="true"></span></button></h2>
-    <div class="ctx-in card" id="ctx-in"><div class="mapbox">{region_map(t)}</div>{facts}</div>
-  </section>
+<main class="w home">
+  <div class="side">
+    <header class="hero">
+      <p class="eyebrow">{e(t["eyebrow"])}</p>
+      <h1>{e(t["h1"])}</h1>
+      <p class="lead">{e(t["lead"])}</p>
+      <p class="meta"><span><i class="dot"></i>{e(t["meta_freq"])}</span><span>{e(t["updated"])} {e(upd)}</span><span>{e(t["meta_src"])}</span></p>
+      {facts}
+    </header>
+    <section class="ctx">
+      <h2 class="sh"><button type="button" aria-expanded="true" aria-controls="ctx-in">{e(t["ctx"])}<span class="plus" aria-hidden="true"></span></button></h2>
+      <div class="ctx-in" id="ctx-in"><div class="mapbox">{region_map(t)}</div></div>
+    </section>
+  </div>
   <section class="topics">
     <h2 class="sh">{e(t["tbl"])}</h2>
     <div class="rows">{"".join(trs)}</div>
@@ -353,7 +358,8 @@ CSS = """
   --ink:#111111; --text:#333333; --muted:#6b6b6b; --line:#e3e3e3; --line-strong:#c8c8c8; --fill:#f2f2f2;
   --surface:#ffffff; --fg:#111111; --chip:#f2f2f2; /* 頂端列（site_nav）用這三個 */
   --icon:#2b6a66; --up:#1e7a45; --down:#c0392b;
-  --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#2b6a66; }
+  --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#2b6a66;
+  --gap:16px; --side:clamp(360px, 23vw, 440px); --map-w:38%; }
 /* 黑白灰：底全白、字黑灰。只有地圖、台灣小圖、主題圖示、增減百分比（和官方燈號）有顏色 */
 * { box-sizing:border-box; }
 .hero h1, h2, .nm b, .foot b { font-family:var(--f-head); }
@@ -361,122 +367,144 @@ CSS = """
 body { margin:0; background:#ffffff; color:var(--text); font-family:var(--f-body);
   font-size:15px; line-height:1.6; font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; }
 a { color:inherit; }
-.w { max-width:1320px; margin:0 auto; padding-inline:max(18px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-right)); }
-@media (min-width:761px) { .w { padding-inline:40px; } }
-
-/* 開頭 */
-.hero { padding:56px 0 0; }
-.eyebrow { margin:0 0 14px; font-size:12px; font-weight:700; letter-spacing:.22em; color:var(--muted); }
-.hero h1 { margin:0; font-size:clamp(34px, 5.2vw, 54px); line-height:1.12; font-weight:700; letter-spacing:.06em; color:var(--ink); }
-.hero .lead { margin:16px 0 0; font-size:clamp(15px, 1.6vw, 18px); line-height:1.7; color:var(--muted); }
-.meta { display:flex; flex-wrap:wrap; gap:6px 22px; margin:18px 0 0; font-size:13px; color:var(--muted); }
-.meta .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ink); margin-right:7px; vertical-align:1px; }
-
-/* 兩欄：左「位置與基本資料」、右「探索台灣數據」。兩欄標題同一條線、卡片上緣同一條線、下緣同一條線 */
-.grid { display:grid; gap:40px; padding-top:48px; padding-bottom:64px; }
-@media (min-width:1100px) { .grid { grid-template-columns:360px minmax(0, 1fr); gap:0 24px; align-items:stretch; } }
-.sh { margin:0 0 16px; font-size:20px; line-height:28px; color:var(--ink); font-weight:700; letter-spacing:.04em; }
+/* 寬度和左右邊界跟頂端列、其他頁面一樣：最寬 1840px，左右各 16px */
+.w { max-width:1840px; margin:0 auto; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .card { background:#ffffff; border:1px solid var(--line); border-radius:16px; }
-.sh button { all:unset; display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; font:inherit; color:inherit; letter-spacing:inherit; }
+
+/* 版面。手機：一欄。平板（761～1279）：上面標題卡＋地圖並排，下面五張卡片。
+   桌機（1280 以上）：左欄標題卡＋地圖，右欄五張卡片；左右兩欄上緣切齊、下緣切齊（地圖填滿剩下的高度） */
+.home { display:grid; gap:28px; padding-top:20px; padding-bottom:48px; }
+.side { display:flex; flex-direction:column; gap:var(--gap); min-width:0; }
+.topics { min-width:0; }
+.sh { margin:0 0 12px; font-size:18px; line-height:26px; color:var(--ink); font-weight:700; letter-spacing:.04em; }
+@media (min-width:761px) {
+  .home { gap:var(--gap); padding-top:24px; }
+  .side { flex-direction:row; align-items:stretch; }
+  .hero { flex:1 1 0; min-width:0; }
+  .ctx { flex:0 0 var(--map-w); min-height:300px; }
+  .sh { position:absolute; width:1px; height:1px; margin:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
+@media (min-width:1024px) { .rows { column-gap:24px; } }
+@media (min-width:1280px) {
+  .home { grid-template-columns:var(--side) minmax(0, 1fr); align-items:stretch; }
+  .side { flex-direction:column; }
+  .hero { flex:none; }
+  .ctx { flex:1 1 auto; min-height:calc(var(--side) * .7); }
+  .topics { display:flex; flex-direction:column; }
+  .rows { flex:1; } }
+
+/* 標題卡 */
+.eyebrow { margin:0 0 8px; font-size:12px; line-height:20px; font-weight:700; letter-spacing:.22em; color:var(--muted); }
+.hero h1 { margin:0; font-size:min(34px, calc((100vw - 32px) / 10)); line-height:1.2; font-weight:700; letter-spacing:.06em; color:var(--ink); }
+.hero .lead { margin:10px 0 0; font-size:15px; line-height:1.7; color:var(--muted); text-wrap:balance; word-break:keep-all; }
+.meta { display:flex; flex-wrap:wrap; gap:2px 18px; margin:10px 0 0; font-size:13px; line-height:20px; color:var(--muted); }
+.meta .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ink); margin-right:7px; vertical-align:1px; }
+.facts { margin:18px 0 0; padding-top:14px; border-top:1px solid var(--line); }
+.facts .pop { padding-bottom:12px; border-bottom:1px solid var(--line); }
+.facts dt { font-size:13px; line-height:20px; color:var(--muted); }
+.facts dd { margin:2px 0 0; font-size:15px; line-height:22px; color:var(--ink); }
+.facts .kv { display:grid; grid-template-columns:max-content minmax(0, 1fr); gap:6px 20px; align-items:baseline; padding-top:12px; }
+.facts .kv dd { margin:0; }
+.facts .big { display:block; font-size:28px; line-height:34px; font-weight:700; color:var(--ink); }
+.facts .big small { font-size:14px; font-weight:500; color:var(--muted); margin-left:3px; }
+.facts .note { display:block; font-size:12.5px; line-height:20px; color:var(--muted); }
+@media (min-width:761px) {
+  .hero { background:#ffffff; border:1px solid var(--line); border-radius:16px; padding:24px; display:flex; flex-direction:column; }
+  .hero h1 { font-size:clamp(32px, 2.3vw, 42px); }
+  .hero .lead { font-size:16px; }
+  .facts { margin-top:auto; }
+  .meta + .facts { margin-top:20px; } }
+@media (min-width:1280px) { .hero h1 { font-size:min(42px, calc((var(--side) - 48px) / 10)); } } /* 日文、英文標題也排得下一行 */
+
+/* 地圖卡片：手機收合；平板、桌機填滿卡片 */
+.ctx { border:1px solid var(--line); border-radius:16px; padding:0 16px; background:#ffffff; }
+.ctx .sh { margin:0; font-size:16px; line-height:24px; }
+.sh button { all:unset; display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; font:inherit; color:inherit; letter-spacing:inherit; padding:14px 0; cursor:pointer; }
 .plus { width:20px; height:20px; position:relative; flex:none; color:var(--muted); }
 .plus::before, .plus::after { content:""; position:absolute; left:3px; right:3px; top:9px; height:1.5px; background:currentColor; }
 .plus::after { transform:rotate(0); transition:transform .2s; }
 .ctx.shut .plus::after { transform:rotate(90deg); }
-@media (min-width:761px) { .plus { display:none; } .sh button { pointer-events:none; } }
+.ctx.shut .ctx-in { display:none; }
+.ctx-in { padding:0 0 16px; }
+.mapbox { position:relative; overflow:hidden; background:var(--sea); border-radius:10px; aspect-ratio:10 / 9; container-type:size; }
+@media (min-width:761px) {
+  .ctx { padding:0; display:flex; flex-direction:column; overflow:hidden; }
+  .ctx-in { flex:1; display:flex; padding:0; }
+  .ctx.shut .ctx-in { display:flex; }
+  .mapbox { flex:1; aspect-ratio:auto; border-radius:0; } }
+.mapart { position:absolute; left:0; top:50%; width:100%; }
+.mapart svg { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.mapart .sea { fill:var(--sea); }
+.mapart .g { stroke:var(--grat); stroke-width:.25; stroke-dasharray:.8 .8; }
+.mapart .c { fill:var(--land); stroke:var(--land-line); stroke-width:.3; stroke-linejoin:round; }
+.mapart .tw { fill:var(--tw); }
+.ml { position:absolute; transform:translate(-50%, -50%); font-size:12px; line-height:16px; color:var(--maplab); letter-spacing:.12em; white-space:nowrap; pointer-events:none; }
+.ml.sea { font-style:italic; letter-spacing:.3em; }
+.ml.tw { transform:translate(0, -50%); font-size:13px; font-weight:700; color:var(--tw); }
+.inset { position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 10px 6px; background:#ffffff; border:1px solid var(--line-strong); border-radius:6px; }
+.inset svg { display:block; height:min(28cqh, 150px); aspect-ratio:720 / 1342; }
+@media (min-width:761px) { .inset svg { height:min(32cqh, 150px); } }
+.inset path { fill:var(--tw); stroke:#ffffff; stroke-width:.8; vector-effect:non-scaling-stroke; }
+.inset span { font-size:11px; line-height:16px; color:var(--maplab); white-space:nowrap; }
+.scl { position:absolute; left:14px; bottom:16px; height:20px; }
+.scl b { position:absolute; left:0; right:0; bottom:0; height:5px; border:1px solid var(--maplab); border-top:0; }
+.scl b::after { content:""; position:absolute; left:50%; bottom:0; height:5px; border-left:1px solid var(--maplab); }
+.scl span { position:absolute; top:0; transform:translateX(-50%); font-size:11px; line-height:12px; color:var(--maplab); white-space:nowrap; }
+.scl span:first-of-type { transform:none; }
 
-.ctx { display:flex; flex-direction:column; }
-.ctx-in { flex:1; display:flex; flex-direction:column; padding:20px; }
-.mapbox { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--sea); }
-.facts { flex:1; display:flex; flex-direction:column; margin:8px 0 0; }
-.facts div { flex:1 1 auto; display:grid; grid-template-columns:72px minmax(0, 1fr); gap:16px; align-content:center; align-items:baseline; padding:14px 0; border-bottom:1px solid var(--line); }
-.facts div:last-child { border-bottom:0; padding-bottom:0; }
-.facts dt { font-size:14px; color:var(--muted); }
-.facts dd { margin:0; color:var(--ink); }
-.facts .big { display:block; font-size:26px; font-weight:700; line-height:1.2; color:var(--ink); }
-.facts .big small { font-size:14px; font-weight:500; color:var(--muted); margin-left:3px; }
-.facts .note { display:block; font-size:12.5px; color:var(--muted); line-height:1.6; margin-top:2px; }
-@media (min-width:761px) and (max-width:1099px) { .ctx-in { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:0 32px; align-items:stretch; } .facts { margin:0; } .facts div:first-child { padding-top:0; } }
-
-/* 地圖 */
-.rmap { display:block; width:100%; height:auto; }
-.rmap .sea { fill:var(--sea); }
-.rmap .g { stroke:var(--grat); stroke-width:.25; stroke-dasharray:.8 .8; }
-.rmap .gl { font-size:2.9px; fill:var(--maplab); opacity:.8; letter-spacing:.1px; }
-.rmap .c { fill:var(--land); stroke:var(--land-line); stroke-width:.3; stroke-linejoin:round; }
-.rmap .tw { fill:var(--tw); }
-.rmap .cn { font-size:4.3px; fill:var(--maplab); letter-spacing:.6px; }
-.rmap .cn.s { font-size:3.7px; }
-.rmap .sea-t { font-size:3.8px; fill:var(--maplab); letter-spacing:1.2px; font-style:italic; opacity:.85; }
-.rmap .twl { font-size:4.9px; font-weight:700; fill:var(--tw); letter-spacing:.6px; }
-.rmap .ib { fill:#ffffff; stroke:var(--line-strong); stroke-width:.25; }
-.rmap .tw-c { fill:var(--tw); stroke:#ffffff; stroke-width:.8; vector-effect:non-scaling-stroke; }
-.rmap .il { font-size:3.1px; fill:var(--maplab); text-anchor:middle; letter-spacing:.3px; }
-.rmap .lk { stroke:var(--line-strong); stroke-width:.25; fill:none; }
-.rmap .box { fill:none; stroke:var(--tw); stroke-width:.3; }
-.rmap .scale path { stroke:var(--maplab); stroke-width:.3; fill:none; }
-.rmap .scale text { font-size:2.9px; fill:var(--maplab); }
-
-/* 主題卡片：每張卡片裡，第一行（圖示、名稱、數字、資料時間、箭頭）同一條基線；第二行（說明、數字名稱）同一條基線；
-   趨勢圖上緣對齊卡片內容上緣、說明文字下緣對齊最後一行 */
+/* 主題卡片。手機：圖示＋名稱在上，數字在左、趨勢圖在右，資料時間在最下面 */
 .rows { display:grid; gap:12px; }
-.row { display:grid; text-decoration:none; padding:22px 24px; column-gap:24px; row-gap:6px; align-items:baseline;
-  grid-template-columns:44px minmax(0, 1.2fr) minmax(0, 1fr) 140px 104px 32px;
-  grid-template-rows:auto auto 1fr;
-  grid-template-areas:"ic t n viz w go" ". s l viz . ." ". . c viz . ."; transition:border-color .15s; }
+.row { display:grid; text-decoration:none; padding:18px 16px; column-gap:12px; align-items:start;
+  grid-template-columns:40px minmax(0, 1fr) 70px 30px; grid-template-rows:auto auto auto auto auto auto;
+  grid-template-areas:"ic t t go" "ic s s s" "n n viz viz" "l l viz viz" "c c viz viz" "w w w w"; transition:border-color .15s; }
 .row:hover { border-color:var(--ink); }
 .row:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
 .nm, .fig { display:contents; }
-.ic { grid-area:ic; align-self:center; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; background:var(--fill); }
-.ic svg { width:22px; height:22px; fill:var(--icon); }
-.nm b { grid-area:t; font-size:19px; font-weight:700; line-height:1.35; color:var(--ink); letter-spacing:.04em; }
-.nm span { grid-area:s; font-size:13.5px; color:var(--muted); line-height:1.5; }
-.num { grid-area:n; font-size:34px; font-weight:700; line-height:1.05; color:var(--ink); white-space:nowrap; letter-spacing:-.01em; }
+.ic { grid-area:ic; align-self:center; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--fill); }
+.ic svg { width:20px; height:20px; fill:var(--icon); }
+.nm b { grid-area:t; align-self:end; font-size:17px; font-weight:700; line-height:1.35; color:var(--ink); letter-spacing:.04em; white-space:nowrap; }
+.nm span { grid-area:s; font-size:13px; color:var(--muted); line-height:1.5; }
+.num { grid-area:n; margin-top:16px; font-size:32px; font-weight:700; line-height:1.05; color:var(--ink); white-space:nowrap; letter-spacing:-.01em; }
 .num small { font-size:14px; font-weight:500; margin-left:4px; color:var(--muted); letter-spacing:0; }
-.lbl { grid-area:l; font-size:13.5px; color:var(--text); line-height:1.5; }
-.chg { grid-area:c; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; font-size:12.5px; line-height:1.6; color:var(--muted); }
+.lbl { grid-area:l; margin-top:6px; font-size:13.5px; color:var(--text); line-height:1.5; text-wrap:balance; }
+.chg { grid-area:c; margin-top:4px; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; font-size:12.5px; line-height:1.6; color:var(--muted); }
 .chip { font-size:12.5px; font-weight:700; white-space:nowrap; color:var(--ink); }
 .chip.up { color:var(--up); } .chip.down { color:var(--down); }
 .lamp { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; vertical-align:1px; }
 .lamp.green { background:#2f8a4f; } .lamp.yellow { background:#d9a300; } .lamp.orange { background:#e07b1f; }
-.viz { grid-area:viz; align-self:stretch; display:flex; flex-direction:column; min-width:0; }
-.viz .chart { display:block; width:100%; flex:1; min-height:40px; overflow:visible; }
-.viz .cap { display:block; font-size:11.5px; line-height:16px; color:var(--muted); margin-top:6px; letter-spacing:.04em; }
+.viz { grid-area:viz; margin-top:16px; align-self:stretch; display:flex; flex-direction:column; min-width:0; }
+.viz .chart { display:block; width:100%; height:0; flex:1 1 auto; min-height:44px; overflow:visible; } /* 高度由卡片的文字決定，圖只填滿 */
+.viz .cap { display:block; font-size:11.5px; line-height:16px; color:var(--muted); margin-top:6px; letter-spacing:.04em; white-space:nowrap; text-align:right; }
 .chart .base { stroke:var(--line-strong); stroke-width:1; vector-effect:non-scaling-stroke; }
 .chart .area { fill:rgba(0,0,0,.05); }
 .chart .ln { fill:none; stroke:var(--ink); stroke-width:1.75; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
 .chart .pt { fill:none; stroke:var(--ink); stroke-width:7; stroke-linecap:round; vector-effect:non-scaling-stroke; }
 .chart .b { fill:#d0d0d0; } .chart .last { fill:var(--ink); }
-.when { grid-area:w; font-size:13.5px; color:var(--text); white-space:nowrap; }
-.go { grid-area:go; align-self:center; justify-self:end; width:32px; height:32px; border-radius:50%; border:1px solid var(--line-strong); display:grid; place-items:center; transition:background .15s, border-color .15s; }
+.when { grid-area:w; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); white-space:nowrap; }
+.go { grid-area:go; align-self:center; justify-self:end; width:30px; height:30px; border-radius:50%; border:1px solid var(--line-strong); display:grid; place-items:center; transition:background .15s, border-color .15s; }
 .go svg { width:16px; height:16px; fill:none; stroke:var(--ink); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .row:hover .go { background:var(--ink); border-color:var(--ink); }
 .row:hover .go svg { stroke:#ffffff; }
-@media (max-width:1099px) {
-  .row { grid-template-columns:44px minmax(0, 1fr) minmax(0, 1fr) 132px 32px;
-    grid-template-areas:"ic t n viz go" ". s l viz ." ". w c viz ."; }
-  .when { font-size:12.5px; color:var(--muted); } }
-@media (max-width:760px) {
-  .grid { gap:28px; padding-top:36px; }
-  .ctx { border:1px solid var(--line); border-radius:16px; padding:0 16px; }
-  .ctx .sh { margin:0; font-size:16px; line-height:24px; }
-  .ctx .sh button { padding:14px 0; cursor:pointer; }
-  .ctx-in { border:0; border-radius:0; padding:0 0 16px; }
-  .ctx.shut .ctx-in { display:none; }
-  .row { padding:18px 16px; column-gap:12px; row-gap:0; align-items:start;
-    grid-template-columns:40px minmax(0, 1fr) 70px 30px; grid-template-rows:auto auto auto auto auto auto;
-    grid-template-areas:"ic t t go" "ic s s s" "n n viz viz" "l l viz viz" "c c viz viz" "w w w w"; }
-  .ic { width:40px; height:40px; } .ic svg { width:20px; height:20px; }
-  .nm b { font-size:17px; align-self:end; } .nm span { font-size:13px; }
-  .num { font-size:32px; margin-top:16px; } .lbl { margin-top:6px; } .chg { margin-top:4px; }
-  .viz { margin-top:16px; } .viz .cap { text-align:right; font-size:11px; margin-top:4px; }
-  .when { margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); }
-  .go { width:30px; height:30px; } }
+/* 平板、桌機：五張卡片共用同一組欄寬（subgrid），名稱、數字、趨勢圖在每張卡片都同一條直線上。
+   名稱和數字的欄寬照最長的那一張，剩下的寬度全給趨勢圖。資料時間放在說明下面，和增減同一行 */
+@media (min-width:761px) {
+  .rows { gap:var(--gap) 20px; grid-template-columns:max-content fit-content(320px) fit-content(260px) minmax(120px, 1fr) max-content; grid-auto-rows:1fr; }
+  .row { grid-column:1 / -1; grid-template-columns:subgrid; padding:22px 24px; row-gap:6px; align-items:baseline;
+    grid-template-rows:auto auto 1fr; grid-template-areas:"ic t n viz go" ". s l viz ." ". w c viz ."; }
+  .ic { width:44px; height:44px; } .ic svg { width:22px; height:22px; }
+  .nm b { font-size:19px; align-self:baseline; } .nm span { font-size:13.5px; }
+  .num { margin-top:0; font-size:34px; } .lbl, .chg { margin-top:0; }
+  .viz { margin-top:0; }
+  .viz .cap { text-align:left; }
+  .when { margin:0; padding:0; border:0; font-size:12.5px; }
+  .go { width:32px; height:32px; } }
+@supports not (grid-template-columns:subgrid) {
+  @media (min-width:761px) { .row { grid-template-columns:44px minmax(0, 1.1fr) minmax(0, 1fr) minmax(150px, 1.4fr) 32px; column-gap:24px; } } }
 
-/* 頁尾 */
+/* 頁尾：欄線和上面的卡片對齊 */
 .foot { background:#ffffff; border-top:1px solid var(--line); padding:30px 0 44px; }
 .foot .cols { display:grid; gap:20px; }
-@media (min-width:761px) { .foot .cols { grid-template-columns:repeat(3, minmax(0, 1fr)); gap:24px; } }
-@media (min-width:1100px) { .foot .cols { grid-template-columns:360px minmax(0, 1fr) minmax(0, 1fr); } }
+@media (min-width:761px) { .foot .cols { grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) var(--map-w); gap:24px var(--gap); } }
+@media (min-width:1280px) { .foot .cols { grid-template-columns:var(--side) minmax(0, 1fr) minmax(0, 1fr); } }
 .foot b { font-size:13px; color:var(--ink); letter-spacing:.04em; }
 .foot p { margin:6px 0 0; font-size:13px; color:var(--muted); line-height:1.75; }
 .foot a { color:var(--ink); text-decoration:none; font-weight:500; }
@@ -492,7 +520,7 @@ FONT_LINK = {
     "ko": "DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
 }
 HEAD_FONT = {"en": ':root { --f-head:"DM Sans",var(--f-body); } .hero h1, .sh, .nm b, .foot b { letter-spacing:0; } .hero h1 { letter-spacing:-.01em; } .nm b { font-size:17px; }',
-             "ja": ':root { --f-head:"Klee One",var(--f-body); } .hero h1, .sh, .nm b { font-weight:600; }',
+             "ja": ':root { --f-head:"Klee One",var(--f-body); } .hero h1, .sh, .nm b { font-weight:600; } .hero h1 { letter-spacing:.02em; }',
              "ko": ":root { --f-head:var(--f-body); }"}
 SITE = "https://taiwandata.info"
 HTML_LANG = {"zh": "zh-Hant-TW", "en": "en", "ja": "ja", "ko": "ko"}
