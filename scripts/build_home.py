@@ -418,6 +418,7 @@ FONTS = {  # Google Fonts 的 css2 參數
     "humane_teal": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
     "humane_navy": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
     "humane_white": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
+    "mono": "LXGW+WenKai+TC:wght@400;700&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
     "round": "Huninn&family=Manrope:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700",
     "terminal": "JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700",
     "magazine": "Cactus+Classical+Serif&family=DM+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700",
@@ -509,6 +510,17 @@ THEMES.update({
   --up:#21704a; --up-bg:#e8f3ed; --down:#b3392f; --down-bg:#fbecea; --sea:#f0f4f6; --land:#ffffff; --land-line:#cfd7dc; --grat:#dde4e8;
   --maplab:#6b7479; --tw:#3b5a6b; --foot-bg:#f6f8f9; --r-sm:10px; --r-card:16px; }
 .hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
+""" + CARDS,
+    # 黑白灰：底全白、字黑灰；只有地圖、台灣小圖、主題圖示、增減百分比（和官方燈號）有顏色
+    "mono": """
+:root { --f-head:"LXGW WenKai TC",serif; --f-num:"DM Sans",sans-serif;
+  --bg:#ffffff; --surface:#ffffff; --fg:#111111; --ink:#111111; --text:#333333; --muted:#6b6b6b; --line:#e3e3e3; --line-strong:#c8c8c8;
+  --chip:transparent; --accent:#111111; --on-accent:#ffffff; --hover:#ffffff; --ic-bg:#f2f2f2; --ic-fg:#2b6a66; --bar:#d0d0d0; --area:rgba(0,0,0,.05);
+  --up:#1e7a45; --up-bg:transparent; --down:#c0392b; --down-bg:transparent; --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5;
+  --maplab:#5f6b73; --tw:#2b6a66; --foot-bg:#ffffff; --r-sm:10px; --r-card:16px; }
+.hero h1 { font-weight:700; letter-spacing:.06em; } .nm b { font-size:19px; font-weight:700; } .num { font-weight:700; letter-spacing:-.01em; }
+.eyebrow { color:var(--muted); } .chip { padding-left:0; padding-right:0; }
+.row:hover { border-color:#111111; }
 """ + CARDS,
     "round": """
 :root { --f-head:"Huninn",sans-serif; --f-num:"Manrope",sans-serif;
