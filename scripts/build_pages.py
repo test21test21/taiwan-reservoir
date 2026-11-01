@@ -5,6 +5,7 @@
     python3 scripts/build_pages.py _site
 
 - _site/reservoir/<水庫代碼>/index.html：數字直接寫進 HTML（Google 不用跑 JavaScript 就看得到）
+- _site/index.html（含 en/、jp/、kr/）：首頁「台灣概覽」，由 scripts/build_home.py 產生
 - _site/index.html、_site/reservoir/index.html：放進 <!--SITE_ICONS-->、<!--SITE_NAV-->（scripts/site_nav.py）
 - _site/reservoir/index.html：把 <!--RESERVOIR_LINKS--> 換成全部水庫頁的連結
 - _site/about/index.html：關於本站
@@ -25,6 +26,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import build_births
+import build_home
 import build_flights
 import build_power
 import build_travel
@@ -734,14 +736,18 @@ def main(out):
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(about_page(lang), encoding="utf-8")
 
-    # 英文版、日文版首頁：用中文版 index.html 換掉文字
-    home = out / "index.html"
-    if home.exists():
-        t = home.read_text(encoding="utf-8")
-        for lang, pairs, what in (("en", i18n_en.HOME_HTML, "英文版首頁"), ("ja", i18n_ja.HOME_HTML, "日文版首頁"),
-                                 ("ko", i18n_ko.HOME_HTML, "韓文版首頁")):
-            (out / site_nav.DIR[lang]).mkdir(parents=True, exist_ok=True)
-            (out / site_nav.DIR[lang] / "index.html").write_text(translate(t, pairs, what), encoding="utf-8")
+    # 首頁「台灣概覽」四種語言（scripts/build_home.py）。萬一資料讀不到，退回舊首頁（index.html 換文字），不讓整個部署失敗
+    try:
+        build_home.build(out)
+    except Exception as ex:  # noqa: BLE001
+        print(f"::warning::新首頁沒建成，先用舊首頁：{ex!r}")
+        home = out / "index.html"
+        if home.exists():
+            t = home.read_text(encoding="utf-8")
+            for lang, pairs, what in (("en", i18n_en.HOME_HTML, "英文版首頁"), ("ja", i18n_ja.HOME_HTML, "日文版首頁"),
+                                     ("ko", i18n_ko.HOME_HTML, "韓文版首頁")):
+                (out / site_nav.DIR[lang]).mkdir(parents=True, exist_ok=True)
+                (out / site_nav.DIR[lang] / "index.html").write_text(translate(t, pairs, what), encoding="utf-8")
     updated_en = en_time(latest.get("generated_at"))
     kept = recent_missing({x["id"] for x in named})
     for r in named + kept:
