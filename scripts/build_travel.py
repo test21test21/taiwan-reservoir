@@ -186,12 +186,12 @@ html[lang="en"] .hbars li { grid-template-columns:9em 1fr auto; }
 .legend .sw { width:18px; height:0; border-top:2.5px solid; display:inline-block; margin-left:8px; }
 .legend .sw:first-child { margin-left:0; }
 #tmap { margin-top:12px; }
-.tm-year { position:absolute; left:12px; bottom:8px; font-size:clamp(28px,7vw,48px); font-weight:700; color:#e8eaed; line-height:1; pointer-events:none; font-variant-numeric:tabular-nums; }
-.tm-year small { display:block; font-size:13px; font-weight:400; color:#aeb4bb; margin-top:4px; }
+.tm-year { position:absolute; left:12px; bottom:8px; font-size:clamp(28px,7vw,48px); font-weight:700; color:#2e2a20; line-height:1; pointer-events:none; font-variant-numeric:tabular-nums; }
+.tm-year small { display:block; font-size:13px; font-weight:400; color:#6b6558; margin-top:4px; }
 .wm .c.has { cursor:pointer; }
-.wm .c.on { stroke:#fff; stroke-width:2; }
-.tm-dot { stroke:#1b1d20; vector-effect:non-scaling-stroke; stroke-width:1.5; cursor:pointer; }
-.tm-dot.on { stroke:#fff; stroke-width:2.5; }
+.wm .c.on { stroke:#1d2125; stroke-width:2; }
+.tm-dot { stroke:#ffffff; vector-effect:non-scaling-stroke; stroke-width:1.5; cursor:pointer; }
+.tm-dot.on { stroke:#1d2125; stroke-width:2.5; }
 .play { display:flex; align-items:center; gap:10px; margin-top:10px; }
 .play button { font:inherit; font-size:15px; border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:999px; padding:6px 14px; cursor:pointer; white-space:nowrap; min-width:5.5em; }
 .play input { flex:1; min-width:0; accent-color:var(--in); height:28px; }
@@ -246,7 +246,7 @@ JS = """<script>
   var svg = document.getElementById("tm-map"), ov = svg.querySelector(".ov"), info = document.getElementById("tm-info");
   var slider = document.getElementById("tm-slider"), playB = document.getElementById("tm-play"), yl = document.getElementById("tm-year");
   var BINS = [1e6, 3e5, 1e5, 3e4, 1e4, 1];
-  var PAL = { "in": ["#d6dac9", "#c2c5aa", "#a4ac86", "#7c8466", "#656d4a", "#414833"], out: ["#d7cab9", "#bca78b", "#a68a64", "#936639", "#7f4f24", "#582f0e"] };  // 人越多越亮；來台橄欖、出國咖啡
+  var PAL = { "in": ["#333d29", "#4f583c", "#6f7856", "#949b78", "#b9bd9f", "#d6d8c6"], out: ["#4a2709", "#6f4420", "#8f6235", "#ad855a", "#c8ab86", "#e0d0b8"] };  // 淺色地圖：人越多越深；來台橄欖、出國咖啡
   var M = { dir: "in", year: +slider.value, sel: null, timer: null };
   var paths = {}; svg.querySelectorAll(".land .c").forEach(function (p) { paths[p.getAttribute("data-id")] = p; });
   function color(v) { for (var i = 0; i < BINS.length; i++) if (v >= BINS[i]) return PAL[M.dir][i]; return null; }
@@ -480,7 +480,7 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
                 dot[p] = worldmap.xy(*geo.SMALL[zh])
     bins = [(1e6, tr("100 萬以上", "1M+", "100万以上", "100만 이상")), (3e5, tr("30～100 萬", "300k–1M", "30～100万", "30만~100만")), (1e5, tr("10～30 萬", "100k–300k", "10～30万", "10만~30만")),
             (3e4, tr("3～10 萬", "30k–100k", "3～10万", "3만~10만")), (1e4, tr("1～3 萬", "10k–30k", "1～3万", "1만~3만")), (1, tr("1 萬以下", "under 10k", "1万未満", "1만 미만"))]
-    pal_in = ["#d6dac9", "#c2c5aa", "#a4ac86", "#7c8466", "#656d4a", "#414833"]
+    pal_in = ["#333d29", "#4f583c", "#6f7856", "#949b78", "#b9bd9f", "#d6d8c6"]
     tmap = (f'<section class="box" id="tmap"><h2>{tr("世界地圖：來台旅客來源與出國目的地", "World map: visitor origins and destinations abroad", "世界地図：訪台客の居住国と台湾からの渡航先", "세계 지도: 대만 방문객 거주국과 대만인 출국 목적지")}</h2>'
             + bf.seg_buttons('data-tmdir aria-label="' + tr("方向", "Direction", "方向", "방향") + '"', [("in", tr("來台旅客來源", "Visitor origins", "訪台客の居住国", "방문객 거주국")), ("out", tr("出國目的地", "Destinations abroad", "台湾からの渡航先", "출국 목적지"))], "in")
             + bf.seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view", "地図の範囲", "지도 범위") + '"', [("asia", tr("亞洲", "Asia", "アジア", "아시아")), ("world", tr("全球", "World", "世界", "세계"))], "asia")

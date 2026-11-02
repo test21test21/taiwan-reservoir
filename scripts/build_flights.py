@@ -254,9 +254,9 @@ JS = """<script>
       "この期間に " + f(D.min[st.p]) + " 便以上ある就航地・航空会社だけを表示しています。",
       "이 기간에 " + f(D.min[st.p]) + "편 이상 운항한 취항지와 항공사만 표시합니다.");
   }
-  // 航線地圖：線越粗旅客越多，顏色是載客率；點城市看各航空公司
+  // 航線地圖：線越粗旅客越多，顏色是載客率（淺色地圖，越滿越深）；點城市看各航空公司
   var svg = document.getElementById("rt-map"), ov = svg.querySelector(".ov"), info = document.getElementById("rt-info");
-  var LFC = [[90, "#e2d6b4"], [80, "#b6ad90"], [70, "#a68a64"], [0, "#656d4a"]], sel = null, cur = [];
+  var LFC = [[90, "#414833"], [80, "#7c8466"], [70, "#a68a64"], [0, "#d0c3a4"]], sel = null, cur = [];
   function lfColor(v) { for (var i = 0; i < LFC.length; i++) if (v >= LFC[i][0]) return LFC[i][1]; }
   function showInfo(a) {
     if (!a) {
@@ -554,7 +554,7 @@ def page(out, head, nav, seg, airports, lf, routes, ytd_through):
         + worldmap.svg("rt-map", tr("台灣飛往各城市的航線地圖", "Map of routes from Taiwan", "台湾から各都市への路線地図", "대만발 노선 지도"))
         + '<div class="wmleg"><span>' + tr("線越粗旅客越多；顏色是載客率：", "Thicker line = more passengers. Colour = load factor:", "線が太いほど旅客が多く、色は搭乗率：", "선이 굵을수록 여객이 많고, 색은 탑승률:") + "</span>"
         + "".join(f'<span><i style="background:{c}"></i>{t}</span>' for c, t in
-                  [("#656d4a", tr("70% 以下", "under 70%", "70%未満", "70% 미만")), ("#a68a64", "70–80%"), ("#b6ad90", "80–90%"), ("#e2d6b4", tr("90% 以上", "90%+", "90%以上", "90% 이상"))])
+                  [("#d0c3a4", tr("70% 以下", "under 70%", "70%未満", "70% 미만")), ("#a68a64", "70–80%"), ("#7c8466", "80–90%"), ("#414833", tr("90% 以上", "90%+", "90%以上", "90% 이상"))])
         + '</div><div class="wminfo" id="rt-info" aria-live="polite"></div>'
         + seg_buttons('data-st="o" aria-label="' + tr("排序", "Sort", "並べ替え", "정렬") + '"',
                       [("pax", tr("旅客最多", "Most passengers", "旅客が多い順", "여객 많은 순")), ("hi", tr("最滿", "Fullest", "搭乗率が高い順", "탑승률 높은 순")), ("lo", tr("最空", "Emptiest", "搭乗率が低い順", "탑승률 낮은 순"))], "pax")
