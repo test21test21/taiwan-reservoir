@@ -58,12 +58,14 @@ ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島�
 
 # 出生藍、死亡橘；男藍、女粉（色盲也分得出來；深色模式另一組）
 CSS = """
-:root { --birth:#1f7ad6; --death:#cf6526; --male:#2a7fd4; --female:#d4508f; --y1:#2e9e5b; --y2:#e2a700; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; --y1:#4cbb78; --y2:#f0c43a; } }
-:root[data-theme="dark"] { --birth:#3d8fdb; --death:#d0702c; --male:#4a90e2; --female:#d9609b; --y1:#4cbb78; --y2:#f0c43a; }
+/* 全站「大地」配色（scripts/theme.py）：出生 卡其（畫線用深一階）、死亡 深咖啡、男 深橄欖、女 銅褐；跟前兩年比：去年 鼠尾草綠、前年 淺棕，今年線最粗 */
+:root { --birth:#656d4a; --birth-ln:#656d4a; --death:#582f0e; --male:#414833; --female:#936639; --y1:#c5b39a; --y2:#ddd3c0; }
+/* 出生線用橄欖綠、死亡線用深咖啡；前兩年的線用淡卡其，今年那條最顯眼 */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#a4ac86; --birth-ln:#a4ac86; --death:#b89a82; --male:#969a8f; --female:#ae8c6a; --y1:#7d705c; --y2:#544b3f; } }
+:root[data-theme="dark"] { --birth:#a4ac86; --birth-ln:#a4ac86; --death:#b89a82; --male:#969a8f; --female:#ae8c6a; --y1:#7d705c; --y2:#544b3f; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
-.top > .box, .grid > .box { margin-top:12px; }
+.top > .box, .grid > .box { margin-top:12px; min-width:0; }
 .top { margin-top:0; }
 @media (min-width:860px) { .top { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr 1fr; } .top, .grid { column-gap:16px; row-gap:0; } }
 @media (min-width:1360px) { .grid { grid-template-columns:1fr 1fr 1fr; } }
@@ -85,17 +87,18 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .duo .k { font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; }
 .duo .k i, .sex i { width:10px; height:10px; border-radius:50%; display:inline-block; }
 .duo .v { font-size:clamp(28px,8.4vw,52px); white-space:nowrap; font-weight:700; line-height:1.1; }
+@media (min-width:860px) { .duo .v { font-size:clamp(28px,4.6vw,52px); } }
 .duo .v small { font-size:16px; color:var(--muted); font-weight:500; margin-left:2px; }
 .duo .yoy, .duo .sex { font-size:14px; color:var(--muted); }
 .duo .yoy b { font-weight:500; color:var(--fg); }
 .sex { display:flex; flex-wrap:wrap; gap:2px 10px; }
 .sex span { display:inline-flex; align-items:center; gap:4px; }
-.bd .line.b { stroke:var(--birth); }
-.bd .line.d { stroke:var(--death); }
-/* 前兩年：去年綠、前年黃（實線） */
+.bd .line.b { stroke:var(--birth-ln); stroke-width:3; }
+.bd .line.d { stroke:var(--death); stroke-width:3; }
+/* 前兩年：去年鼠尾草綠、前年淺棕（實線，比今年細） */
 .bd .line.b1, .bd .line.d1 { stroke:var(--y1); stroke-width:2; }
 .bd .line.b2, .bd .line.d2 { stroke:var(--y2); stroke-width:2; }
-.bd .dot.b { fill:var(--birth); }
+.bd .dot.b { fill:var(--birth-ln); }
 .bd .dot.d { fill:var(--death); }
 .bd .lab { font-size:12px; font-weight:700; fill:var(--fg); }
 .bd .bar.m { fill:var(--male); }
@@ -103,7 +106,7 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .bd .hit { fill:transparent; }
 .bd .hit:hover, .bd .hit:focus { fill:var(--fg); fill-opacity:.06; outline:none; }
 .legend { flex-wrap:wrap; }
-.legend .k.b { border-color:var(--birth); }
+.legend .k.b { border-color:var(--birth-ln); }
 .legend .k.d { border-color:var(--death); }
 .legend .k.b1, .legend .k.d1 { border-color:var(--y1); }
 .legend .k.b2, .legend .k.d2 { border-color:var(--y2); }
@@ -187,7 +190,7 @@ JS = """<script>
 
   // 各縣市地圖：各縣市人口差很多，所以看「每千人」比率（近 12 個月合計 ÷ 人口 × 1000，就是一年的粗出生率／粗死亡率）
   // 顏色：最低到最高平均切 5 級，數字取到 0.5，圖例一看就懂
-  var RAMP = { b: ["#d6e6f7", "#a9cbef", "#6fa6e3", "#3a7fd0", "#1c5aa6"], d: ["#f8dcc8", "#f1b88f", "#e48e55", "#cf6526", "#9c4518"] };
+  var RAMP = { b: ["#e2ded3", "#b6ad90", "#a4ac86", "#656d4a", "#414833"], d: ["#e6e0db", "#cabcb2", "#a58f7d", "#79593e", "#582f0e"] };  // 出生 卡其→橄欖、死亡 淺→深咖啡，淺到深
   var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
   var tipDef = tip.textContent, picked = null;
   function sum12(c, g) {  // 到所選月份為止 12 個月的合計；不足 12 個月就按比例放大
@@ -207,10 +210,10 @@ JS = """<script>
     shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); if (v !== null) vals.push(v); });
     var lo = Math.floor(Math.min.apply(null, vals) * 2) / 2, hi = Math.ceil(Math.max.apply(null, vals) * 2) / 2;
     var ramp, edges, colorOf;
-    if (key === "g") {  // 自然增加率：負的（死亡比出生多）用橘色分 4 級，正的用藍色
+    if (key === "g") {  // 自然增加率：負的（死亡比出生多）用死亡的顏色分 4 級，正的用出生的顏色
       var neg = Math.min(lo, -0.5), st = Math.ceil(-neg / 4 * 2) / 2;
       var O = RAMP.d.slice(0, 4);  // 淺到深：越負越深
-      colorOf = function (v) { return v >= 0 ? "#3a7fd0" : O[Math.min(3, Math.floor(-v / st))]; };
+      colorOf = function (v) { return v >= 0 ? RAMP.b[3] : O[Math.min(3, Math.floor(-v / st))]; };
     } else {
       var step = Math.max(0.5, Math.ceil((hi - lo) / 5 * 2) / 2);
       ramp = RAMP[key];
@@ -222,7 +225,7 @@ JS = """<script>
     var html = "";
     if (key === "g") {
       for (var k = 3; k >= 0; k--) html += '<span><i style="background:' + colorOf(-(k + 0.5) * st) + '"></i>' + sg(-(k + 1) * st) + "～" + sg(-k * st) + "</span>";
-      html += '<span><i style="background:#3a7fd0"></i>' + (EN ? "0 or more" : JA ? "0以上" : KO ? "0 이상" : "0 以上") + "</span>";
+      html += '<span><i style="background:' + RAMP.b[3] + '"></i>' + (EN ? "0 or more" : JA ? "0以上" : KO ? "0 이상" : "0 以上") + "</span>";
     } else {
       html = ramp.map(function (c, k) { return '<span><i style="background:' + c + '"></i>' + r1(edges[k]) + "～" + r1(edges[k + 1]) + "</span>"; }).join("");
     }

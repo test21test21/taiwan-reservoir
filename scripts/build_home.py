@@ -12,6 +12,7 @@ from datetime import datetime
 from html import escape as e
 from pathlib import Path
 
+import theme
 import worldmap
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -304,10 +305,14 @@ def page(lang="zh"):
         ("travel", t["fmt_wan"](v["inbound"]), chip(v["yoy"], t["vs_py"]), bar_chart(v["spark"]), t["when_y"](v["year"])),
     ]
     trs = []
+
+    def row_colors(k):  # 每一列的主題色（scripts/theme.py，第 16 組「大地」）
+        c = theme.SECTION["tourism" if k == "travel" else k]
+        return f"--c:{c};--ig:{theme.on(c)};--cb:{theme.bar_tint(c)}"
     for k, num, change, chart, when in items:
         name, sub, label, cap = t["rows"][k]
         trs.append(
-            f'<a class="row card" href="{URL[k]}"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{ICONS[k]}"/></svg></span>'
+            f'<a class="row card" href="{URL[k]}" style="{row_colors(k)}"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{ICONS[k]}"/></svg></span>'
             f'<span class="nm"><b>{e(name)}</b><span>{e(sub)}</span></span>'
             f'<span class="fig"><span class="num">{num}</span><span class="lbl">{e(label)}</span>{change}</span>'
             f'<span class="viz">{chart}<span class="cap">{e(cap)}</span></span>'
@@ -358,7 +363,7 @@ CSS = """
   --ink:#111111; --text:#333333; --muted:#6b6b6b; --line:#e3e3e3; --line-strong:#c8c8c8; --fill:#f2f2f2;
   --surface:#ffffff; --fg:#111111; --chip:#f2f2f2; /* 頂端列（site_nav）用這三個 */
   --icon:#2b6a66; --up:#1e7a45; --down:#c0392b;
-  --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#2b6a66;
+  --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#582f0e; /* 台灣 = 水庫那一列的深咖啡（theme.SECTION） */
   --gap:16px; --side:clamp(360px, 23vw, 440px); --map-w:38%; }
 /* 黑白灰：底全白、字黑灰。只有地圖、台灣小圖、主題圖示、增減百分比（和官方燈號）有顏色 */
 * { box-sizing:border-box; }
@@ -457,10 +462,12 @@ a { color:inherit; }
   grid-template-columns:40px minmax(0, 1fr) 70px 30px; grid-template-rows:auto auto auto auto auto auto;
   grid-template-areas:"ic t t go" "ic s s s" "n n viz viz" "l l viz viz" "c c viz viz" "w w w w"; transition:border-color .15s; }
 .row:hover { border-color:var(--ink); }
+.row.card:hover { border-left-color:var(--c, var(--ink)); }
 .row:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
 .nm, .fig { display:contents; }
-.ic { grid-area:ic; align-self:center; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--fill); }
-.ic svg { width:20px; height:20px; fill:var(--icon); }
+.ic { grid-area:ic; align-self:center; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--c, var(--fill)); }
+.ic svg { width:20px; height:20px; fill:var(--ig, var(--icon)); }
+.row.card { border-left:8px solid var(--c, var(--line)); } /* 每列左邊一條主題色 */
 .nm b { grid-area:t; align-self:end; font-size:17px; font-weight:700; line-height:1.35; color:var(--ink); letter-spacing:.04em; white-space:nowrap; }
 .nm span { grid-area:s; font-size:13px; color:var(--muted); line-height:1.5; }
 .num { grid-area:n; margin-top:16px; font-size:32px; font-weight:700; line-height:1.05; color:var(--ink); white-space:nowrap; letter-spacing:-.01em; }
@@ -475,10 +482,10 @@ a { color:inherit; }
 .viz .chart { display:block; width:100%; height:0; flex:1 1 auto; min-height:44px; overflow:visible; } /* 高度由卡片的文字決定，圖只填滿 */
 .viz .cap { display:block; font-size:11.5px; line-height:16px; color:var(--muted); margin-top:6px; letter-spacing:.04em; white-space:nowrap; text-align:right; }
 .chart .base { stroke:var(--line-strong); stroke-width:1; vector-effect:non-scaling-stroke; }
-.chart .area { fill:rgba(0,0,0,.05); }
-.chart .ln { fill:none; stroke:var(--ink); stroke-width:1.75; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
-.chart .pt { fill:none; stroke:var(--ink); stroke-width:7; stroke-linecap:round; vector-effect:non-scaling-stroke; }
-.chart .b { fill:#d0d0d0; } .chart .last { fill:var(--ink); }
+.chart .area { fill:none; }
+.chart .ln { fill:none; stroke:var(--c, var(--ink)); stroke-width:3; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.chart .pt { fill:none; stroke:var(--c, var(--ink)); stroke-width:9; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.chart .b { fill:var(--cb, #d0d0d0); } .chart .last { fill:var(--c, var(--ink)); }
 .when { grid-area:w; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12.5px; color:var(--muted); white-space:nowrap; }
 .go { grid-area:go; align-self:center; justify-self:end; width:30px; height:30px; border-radius:50%; border:1px solid var(--line-strong); display:grid; place-items:center; transition:background .15s, border-color .15s; }
 .go svg { width:16px; height:16px; fill:none; stroke:var(--ink); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
