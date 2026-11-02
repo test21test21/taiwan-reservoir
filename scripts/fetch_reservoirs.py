@@ -88,6 +88,22 @@ def num(v):
         return None
 
 
+# 水利署儀器沒回報時，不是留空，而是填 -998、-999 這類代碼（2026-11-02 霧社、日月潭就傳了 -998）。
+# 這些不是真的數字，一律當成「沒有資料」。明湖下池這類抽蓄水庫的進水量真的會是負的，所以只排除這幾個代碼。
+NO_DATA = {-99.0, -998.0, -999.0, -9998.0, -9999.0, -99999.0}
+
+
+def reading(v):
+    x = num(v)
+    return None if x is None or x in NO_DATA else x
+
+
+def good_storage(row):
+    """這一筆每小時資料有沒有合理的有效蓄水量（不是代碼、不是負的）。"""
+    x = reading(row.get("effectivewaterstoragecapacity"))
+    return x is not None and x >= 0
+
+
 def parse_time(v):
     """支援 2023-05-03T13:20:10、2023-05-03t13:20:10、20230503t132010、2023/05/03 13:20 等。"""
     if not v:
@@ -110,8 +126,10 @@ def parse_time(v):
         return None
 
 
-def latest_by_id(rows, time_key):
-    best = {}
+def latest_by_id(rows, time_key, valid=None):
+    """每座水庫取時間最新的一筆。有給 valid 時，優先取「最新而且 valid 的那一筆」：
+    每小時資料一次給近 24 小時，最新一小時壞掉就用前一小時的（觀測時間照實寫）。"""
+    best, good = {}, {}
     for r in rows:
         rid = str(r.get("reservoiridentifier") or "").strip()
         t = parse_time(r.get(time_key))
@@ -119,7 +137,9 @@ def latest_by_id(rows, time_key):
             continue
         if rid not in best or t > best[rid][0]:
             best[rid] = (t, r)
-    return best
+        if valid and valid(r) and (rid not in good or t > good[rid][0]):
+            good[rid] = (t, r)
+    return {**best, **good}
 
 
 def load_info(data_dir):
@@ -149,14 +169,16 @@ def region_of(rid, info):
 def build(daily_rows, hourly_rows, info=None):
     info = info or {}
     daily = latest_by_id([lower_keys(r) for r in daily_rows], "datetime")
-    hourly = latest_by_id([lower_keys(r) for r in hourly_rows], "observationtime")
+    hourly = latest_by_id([lower_keys(r) for r in hourly_rows], "observationtime", good_storage)
 
     out = []
     for rid in sorted(set(daily) | set(hourly)):
         d_t, d = daily.get(rid, (None, {}))
         h_t, h = hourly.get(rid, (None, {}))
-        capacity = num(d.get("capacity"))
-        storage = num(h.get("effectivewaterstoragecapacity"))
+        capacity = reading(d.get("capacity"))
+        capacity = capacity if capacity and capacity > 0 else None
+        storage = reading(h.get("effectivewaterstoragecapacity"))
+        storage = storage if storage is not None and storage >= 0 else None
         percent = round(storage / capacity * 100, 2) if storage is not None and capacity else None
         name = (d.get("reservoirname") or (info.get(rid) or {}).get("水庫名稱") or "").strip()
         out.append({
@@ -169,21 +191,21 @@ def build(daily_rows, hourly_rows, info=None):
             "storage": storage,                       # 有效蓄水量（萬立方公尺）
             "capacity": capacity,                     # 有效容量（萬立方公尺）
             "percent": percent,                       # 蓄水百分比（自己算）
-            "water_level": num(h.get("waterlevel")),  # 水位（公尺）
-            "inflow_cms": num(h.get("inflowdischarge")),
-            "outflow_cms": num(h.get("totaloutflow")),
-            "rainfall_today": num(h.get("accumulaterainfallincatchment")),
+            "water_level": reading(h.get("waterlevel")),  # 水位（公尺）
+            "inflow_cms": reading(h.get("inflowdischarge")),
+            "outflow_cms": reading(h.get("totaloutflow")),
+            "rainfall_today": reading(h.get("accumulaterainfallincatchment")),
             "status": (h.get("statustype") or None),
             # 蓄水率超過 105% 多半是來源資料填錯（例如容量單位不一致），網站上要另外標示
             "suspect": percent is not None and percent > 105,
             # 每日營運（前一日統計）
             "daily_date": d_t.date().isoformat() if d_t else None,
-            "inflow_daily": num(d.get("inflow")),     # 進水量（萬立方公尺）
-            "outflow_daily": num(d.get("outflow")),   # 取用水量（萬立方公尺）
-            "outflow_total_daily": num(d.get("outflowtotal")),
-            "rainfall_daily": num(d.get("basinrainfall")),
-            "dead_level": num(d.get("dwl")),
-            "full_level": num(d.get("nwlmax")),
+            "inflow_daily": reading(d.get("inflow")),     # 進水量（萬立方公尺）
+            "outflow_daily": reading(d.get("outflow")),   # 取用水量（萬立方公尺）
+            "outflow_total_daily": reading(d.get("outflowtotal")),
+            "rainfall_daily": reading(d.get("basinrainfall")),
+            "dead_level": reading(d.get("dwl")),
+            "full_level": reading(d.get("nwlmax")),
         })
     # 有些水庫只出現在每小時資料，沒有名稱和容量，就沒辦法算蓄水率；先保留但排在後面
     out.sort(key=lambda r: (r["name"] is None, r["id"]))
@@ -227,7 +249,7 @@ def add_estimates(reservoirs, history, today):
                 ly = (t - timedelta(days=365 - off)).isoformat()
             row = next((row for d, row in past if d == ly), None)
             p = num(row.get("percent")) if row else None
-            if p is not None and p <= 105:
+            if p is not None and 0 <= p <= 105:
                 r["last_year_percent"], r["last_year_date"] = p, ly
                 break
 
@@ -392,6 +414,19 @@ def update_alert(data_dir):
     return doc
 
 
+STALE_LIMIT = timedelta(hours=24)  # 連續這麼久都抓不到水利署資料，才讓排程失敗
+
+
+def data_age(data_dir):
+    """上一次成功抓到的資料（latest.json）距今多久；沒有檔案就回傳 None。"""
+    try:
+        with open(os.path.join(data_dir, "latest.json"), encoding="utf-8") as f:
+            t = datetime.fromisoformat(json.load(f)["generated_at"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return datetime.now(TW) - t
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw-dir", help="讀本機的 daily.json / hourly.json，不上網")
@@ -399,23 +434,31 @@ def main():
     ap.add_argument("--data-dir", default=os.path.join(os.path.dirname(__file__), "..", "data"))
     a = ap.parse_args()
 
-    if a.raw_dir:
-        with open(os.path.join(a.raw_dir, "daily.json"), encoding="utf-8-sig") as f:
-            daily = json.load(f)
-        with open(os.path.join(a.raw_dir, "hourly.json"), encoding="utf-8-sig") as f:
-            hourly = json.load(f)
-    else:
-        daily, hourly = fetch_json(DAILY_URL), fetch_json(HOURLY_URL)
-        if a.save_raw:
-            os.makedirs(a.save_raw, exist_ok=True)
-            for n, p in (("daily", daily), ("hourly", hourly)):
-                with open(os.path.join(a.save_raw, f"{n}.json"), "w", encoding="utf-8") as f:
-                    json.dump(p, f, ensure_ascii=False)
-
     data_dir = os.path.abspath(a.data_dir)
-    res = build(as_rows(daily), as_rows(hourly), load_info(data_dir))
-    if not res:
-        sys.exit("沒有抓到任何水庫資料")
+    try:
+        if a.raw_dir:
+            with open(os.path.join(a.raw_dir, "daily.json"), encoding="utf-8-sig") as f:
+                daily = json.load(f)
+            with open(os.path.join(a.raw_dir, "hourly.json"), encoding="utf-8-sig") as f:
+                hourly = json.load(f)
+        else:
+            daily, hourly = fetch_json(DAILY_URL), fetch_json(HOURLY_URL)
+            if a.save_raw:
+                os.makedirs(a.save_raw, exist_ok=True)
+                for n, p in (("daily", daily), ("hourly", hourly)):
+                    with open(os.path.join(a.save_raw, f"{n}.json"), "w", encoding="utf-8") as f:
+                        json.dump(p, f, ensure_ascii=False)
+        res = build(as_rows(daily), as_rows(hourly), load_info(data_dir))
+        if not res:
+            raise ValueError("沒有抓到任何水庫資料")
+    except Exception as ex:  # noqa: BLE001
+        # 水利署偶爾逾時、維修或回傳空的：沿用上一次的資料，網站照常更新，這次不算失敗（不寄失敗通知信）。
+        # 但已經超過 STALE_LIMIT 都沒抓到新資料，就真的讓它失敗，提醒有人去看。
+        age = data_age(data_dir)
+        if a.raw_dir or age is None or age > STALE_LIMIT:
+            raise
+        print(f"::warning::水利署資料這次沒抓到，沿用 {age.total_seconds() / 3600:.1f} 小時前的資料：{ex}")
+        return
     write_outputs(res, data_dir, datetime.now(TW))
     if not a.raw_dir:
         try:

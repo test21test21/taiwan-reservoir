@@ -107,7 +107,9 @@ def tw_time(iso):
 
 
 def ok(r):
-    return r.get("percent") is not None and not r.get("suspect")
+    # 蓄水率要是 0 以上的正常數字才顯示（水利署偶爾傳 -998 之類的代碼，算出來會是負的）
+    p = r.get("percent")
+    return isinstance(p, (int, float)) and p >= 0 and not r.get("suspect")
 
 
 def county_of(r, info):
@@ -130,6 +132,11 @@ def load():
     if p.exists():
         with p.open(encoding="utf-8") as f:
             for row in csv.DictReader(f):
+                try:  # 負的蓄水率是水利署的錯誤代碼算出來的，當作那天沒有資料
+                    if float(row.get("percent") or 0) < 0:
+                        row["percent"] = ""
+                except ValueError:
+                    row["percent"] = ""
                 hist[row["id"]].append(row)
     alert = None
     p = ROOT / "data/alert.json"
@@ -407,7 +414,7 @@ def reservoir_page(r, info, hist, alert, peers, updated, lang="zh"):
             cls, arrow = ("up", "▲") if d > 0 else ("down", "▼") if d < 0 else ("flat", "▶")
             change = f'<span class="delta">{L(lang, "比昨天", "vs yesterday", "前日比", "전일 대비")} <b class="{cls}">{arrow} {abs(d):.1f}%</b></span>'
         lvl = max(0, min(100, p))
-        wc = next(c for m, c in TANK if p >= m)
+        wc = next((c for m, c in TANK if p >= m), TANK[-1][1])
         tank = (f'<div class="tank{" deep" if p >= 58 else ""}" style="--p:{lvl:.1f}%;--wc:{wc}">'
                 f'<div class="pct">{p:.1f}<small>%</small></div>{change}</div>')
         if en:
