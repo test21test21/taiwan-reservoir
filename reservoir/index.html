@@ -24,11 +24,11 @@
 <style>
 /* Layout: phone first — 各區燈號與主要水庫（第一面）→ 燈號地圖 → 水庫列表；桌機上地圖在左、各區在右 */
 :root {
-  --bg: #f6f6f4; --surface: #ffffff; --fg: #1d2125; --muted: #676d73; --line: #e4e4e0;
+  --bg: #ffffff; --surface: #ffffff; --fg: #1d2125; --muted: #676d73; --line: #e4e4e0;
   --water: #0a6cc2; --water-soft: #e3eef8; --water-lite: #7fbfec;
   --low: #7a4fc4; --chip: #efefec; --rise: #1f8a4c; --fall: #d13c3c;
   --paper: #f1f1ee; /* 地圖底，兩種主題都用淺色，讓官方縣市線看得清楚 */
-  --shadow: 0 1px 2px rgba(12,30,46,.06), 0 4px 16px rgba(12,30,46,.05);
+  --shadow: none; /* 底色全白，卡片靠框線分開 */
   --f-display: var(--f-body);
   --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   --f-num: var(--f-body);
@@ -84,18 +84,18 @@ a { color: var(--fg); text-underline-offset: 3px; }
 
 .mapbox { padding: 12px; }
 .mapbox h2 { font-size: 15px; margin: 0 0 8px; }
-.mapframe { --sea: #1b1d20; --land: #2b2f33; --border: rgba(255,255,255,.7); --border-w: 1; --dot-op: .6; background: var(--sea); border-radius: 12px; padding: 6px; } /* 地圖固定深灰底，淺色深色主題都一樣 */
+.mapframe { --sea: #ffffff; --land: #e7e2d4; --border: #ffffff; --border-w: 1.5; --dot-op: .8; background: var(--sea); border: 1px solid #e4e4e0; border-radius: 12px; padding: 6px; } /* 地圖固定白海、淺卡其陸地（Shane 2026-11-02 選 C），淺色深色主題都一樣 */
 #map { width: 100%; height: auto; display: block; }
 #map .county { fill: var(--land); stroke: var(--border); stroke-width: var(--border-w); stroke-linejoin: round; }
 #map .county.lit { fill-opacity: .72; }
 #map .dot { fill-opacity: var(--dot-op); }
-#map .maplegend text { font-family: var(--f-body); fill: #e8ebee; dominant-baseline: central; }
+#map .maplegend text { font-family: var(--f-body); fill: #2e2a20; dominant-baseline: central; }
 #map .maplegend .lgt { font-size: 24px; font-weight: 700; dominant-baseline: hanging; }
 #map .maplegend .lgi { font-size: 24px; font-weight: 500; }
 #map .maplegend .dot-sw { fill-opacity: var(--dot-op); }
-#map .wm { font-family: var(--f-body); font-size: 26px; font-weight: 700; fill: #4a4f55; letter-spacing: .02em; pointer-events: none; } /* 深灰網址浮水印 */
+#map .wm { font-family: var(--f-body); font-size: 26px; font-weight: 700; fill: #cfc7b1; letter-spacing: .02em; pointer-events: none; } /* 淺卡其網址浮水印 */
 #map .dot { cursor: pointer; }
-#map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #e8ebee; paint-order: stroke; stroke: rgba(27,29,32,.85); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
+#map .lbl { font-family: var(--f-body); font-size: 30px; font-weight: 700; fill: #2e2a20; paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
 .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
 details.lights { margin-top: 6px; font-size: 13px; }
 details.lights summary { cursor: pointer; padding-block: 8px; color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
@@ -453,7 +453,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     dots.forEach(function (d) {
       var sel = state.sel === d.r.id;
       var c = el("circle", { "class": "dot", cx: d.x.toFixed(1), cy: d.y.toFixed(1), r: d.rad.toFixed(1),
-        fill: ok(d.r) ? binOf(d.r.percent).color : "#8a9299",         stroke: sel ? "#ffffff" : (ok(d.r) ? binOf(d.r.percent).color : "#8a9299"),
+        fill: ok(d.r) ? binOf(d.r.percent).color : "#8a9299",         stroke: sel ? "#1d2125" : (ok(d.r) ? binOf(d.r.percent).color : "#8a9299"),
         "stroke-width": sel ? 4 : 1.5, "data-id": d.r.id });
       c.appendChild(el("title", {}, nm(d.r) + (ok(d.r) ? " " + pf(d.r.percent) + "%" : "")));
       svg.appendChild(c);
