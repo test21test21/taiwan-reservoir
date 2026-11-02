@@ -268,7 +268,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   function setUpdated(t) { document.querySelectorAll(".updated").forEach(function (el) { el.textContent = t; }); }
   function pf(n) { return n == null ? "–" : n.toLocaleString("zh-TW", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); } // 百分比一律一位小數
   function fmt(n, d) { return n == null ? "–" : n.toLocaleString("zh-TW", { maximumFractionDigits: d == null ? 0 : d }); }
-  function ok(r) { return r.percent != null && !r.suspect; }
+  function ok(r) { return r.percent != null && r.percent >= 0 && !r.suspect; }
   function short(r) {
     if (EN) return nm(r).replace(/ (Reservoir|Dam|Weir)$/, "");
     if (JA) return nm(r).replace(/ダム$/, "");
@@ -318,7 +318,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     var iD = head.indexOf("date"), iId = head.indexOf("id"), iP = head.indexOf("percent");
     lines.forEach(function (l) {
       var c = l.split(","); var p = parseFloat(c[iP]);
-      if (!c[iId] || isNaN(p) || p > 105) return;
+      if (!c[iId] || isNaN(p) || p < 0 || p > 105) return;
       (out[c[iId]] = out[c[iId]] || []).push([c[iD], p]);
     });
     return out;
