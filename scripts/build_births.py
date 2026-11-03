@@ -58,10 +58,10 @@ MAP = ROOT / "reservoir/taiwan-map.json"  # 本島縣市界（scripts/build_map.
 ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島畫成左上海面的小方塊（y 座標）
 
 CSS = """
-/* Tableau 10（scripts/theme.py）：出生紅、死亡青綠、男藍女粉、自然增減紫；比年份的兩張圖同一年同一色：今年藍、去年橘、前年綠 */
-:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --ni:#b07aa1; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#c9a0c0; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
-:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#c9a0c0; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
+/* Tableau 10（scripts/theme.py）：出生紅、死亡青綠、男藍女粉、自然增減橘；比年份的兩張圖同一年同一色：今年藍、去年橘、前年綠 */
+:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --ni:#f28e2b; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#f5a05a; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
+:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#f5a05a; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top > .box, .grid > .box { margin-top:12px; min-width:0; }
