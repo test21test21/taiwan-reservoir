@@ -46,7 +46,7 @@ CSS = """
 .wm.world { height:auto; aspect-ratio:1000/386; }
 .wm .sea { fill:#ffffff; }
 .wm .c { fill:#e7e2d4; stroke:rgba(255,255,255,.9); stroke-width:.5; vector-effect:non-scaling-stroke; stroke-linejoin:round; }
-.wm .c.tw { fill:#936639; }
+.wm .c.tw { fill:#9c755f; }
 .wm text { font-family:inherit; fill:#2e2a20; paint-order:stroke; stroke:#ffffff; stroke-width:3px; stroke-linejoin:round; pointer-events:none; }
 .wmleg { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:13px; color:var(--muted); margin-top:6px; align-items:center; }
 .wmleg i { display:inline-block; width:14px; height:10px; border-radius:3px; margin-right:4px; vertical-align:-1px; }

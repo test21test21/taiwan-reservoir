@@ -29,18 +29,18 @@ WEEK_KO = "월화수목금토일"
 WEEK_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 # 發電類別：(代號, 中文, 英文, 日文, 顏色)，圖和長條的順序；韓文見 FUELS_KO
-# 顏色用全站「大地」配色（scripts/theme.py）同一條漸層，再補土黃（太陽）、灰藍（水）、磚紅（核能）讓十類分得開
+# 顏色用 Tableau 10（scripts/theme.py），十類各一色：燃氣橘、燃煤棕、核能紫、太陽黃、風力青綠、水力藍…
 FUELS = [
-    ("lng", "燃氣", "Gas (LNG)", "LNG火力", theme.SECTION["power"]),
-    ("coal", "燃煤", "Coal", "石炭火力", "#414833"),
-    ("nuclear", "核能", "Nuclear", "原子力", "#9c4a3a"),
-    ("cogen", "汽電共生", "Cogeneration", "コージェネ", "#7f4f24"),
-    ("oil", "燃油", "Oil", "石油火力", "#582f0e"),
-    ("solar", "太陽能", "Solar", "太陽光", "#c9a227"),
-    ("wind", "風力", "Wind", "風力", "#a4ac86"),
-    ("hydro", "水力", "Hydro", "水力", "#6b8a99"),
-    ("other", "其他再生能源", "Other renewables", "その他再エネ", "#c2c5aa"),
-    ("storage", "儲能", "Storage", "蓄電（揚水・電池）", "#656d4a"),
+    ("lng", "燃氣", "Gas (LNG)", "LNG火力", "#f28e2b"),
+    ("coal", "燃煤", "Coal", "石炭火力", "#9c755f"),
+    ("nuclear", "核能", "Nuclear", "原子力", "#b07aa1"),
+    ("cogen", "汽電共生", "Cogeneration", "コージェネ", "#bab0ac"),
+    ("oil", "燃油", "Oil", "石油火力", "#e15759"),
+    ("solar", "太陽能", "Solar", "太陽光", "#edc948"),
+    ("wind", "風力", "Wind", "風力", "#76b7b2"),
+    ("hydro", "水力", "Hydro", "水力", "#4e79a7"),
+    ("other", "其他再生能源", "Other renewables", "その他再エネ", "#59a14f"),
+    ("storage", "儲能", "Storage", "蓄電（揚水・電池）", "#ff9da7"),
 ]
 RENEW = {"solar", "wind", "hydro", "other"}
 FUELS_KO = {"lng": "가스(LNG)", "coal": "석탄", "nuclear": "원자력", "cogen": "열병합", "oil": "석유", "solar": "태양광",
@@ -267,12 +267,13 @@ CSS = """
 .hero .sub { font-size:14px; color:var(--muted); }
 .hero .sub b { font-weight:500; color:var(--fg); }
 .chart.bd { max-height:none; }
-:root { --rsv:#414833; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --rsv:#a4ac86; } }
+:root { --rsv:#4e79a7; --y0:#4e79a7; --y1:#f28e2b; --ind:#4e79a7; --home:#f28e2b; }  /* 年份：今年藍、去年橘（跟出生頁一樣） */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --rsv:#7aa6d6; --y0:#7aa6d6; --y1:#f5a05a; --ind:#7aa6d6; --home:#f5a05a; } }
+:root[data-theme="dark"] { --rsv:#7aa6d6; --y0:#7aa6d6; --y1:#f5a05a; --ind:#7aa6d6; --home:#f5a05a; }
 .bd .line.r { stroke:var(--rsv); stroke-width:2; }
-.bd .line.b { stroke:#936639; }
-.bd .line.y1 { stroke:#a4ac86; stroke-width:2; }
-.bd .dot.b { fill:#936639; }
+.bd .line.b { stroke:var(--y0); }
+.bd .line.y1 { stroke:var(--y1); stroke-width:2; }
+.bd .dot.b { fill:var(--y0); }
 .bd .th { stroke-width:1.5; stroke-dasharray:4 4; }
 .bd .thl { font-size:11px; font-weight:500; }
 .bd .hit { fill:transparent; }
@@ -281,8 +282,8 @@ CSS = """
 .legend { flex-wrap:wrap; }
 .legend .sq { width:12px; height:12px; border-radius:3px; display:inline-block; margin-left:8px; }
 .legend .sq:first-child { margin-left:0; }
-.legend .k.b { border-color:#936639; }
-.legend .k.y1 { border-color:#a4ac86; }
+.legend .k.b { border-color:var(--y0); }
+.legend .k.y1 { border-color:var(--y1); }
 .legend .k.r { border-color:var(--rsv); }
 .tip { font-size:13px; color:var(--muted); margin:2px 0 0; min-height:1.6em; }
 .note { font-size:13px; color:var(--muted); margin:8px 0 0; }
@@ -441,8 +442,8 @@ def month_use(daily):
     for i, k in enumerate(months):
         ind, home = m[k][0] / 100, m[k][1] / 100
         x = X(i) - bw / 2
-        svg += (f'<rect x="{x:.1f}" y="{Y(ind):.1f}" width="{bw:.1f}" height="{Y(0) - Y(ind):.1f}" fill="#414833"/>'
-                f'<rect x="{x:.1f}" y="{Y(ind + home):.1f}" width="{bw:.1f}" height="{max(0, Y(ind) - Y(ind + home) - 1):.1f}" rx="2" fill="#936639"/>')
+        svg += (f'<rect x="{x:.1f}" y="{Y(ind):.1f}" width="{bw:.1f}" height="{Y(0) - Y(ind):.1f}" fill="var(--ind)"/>'
+                f'<rect x="{x:.1f}" y="{Y(ind + home):.1f}" width="{bw:.1f}" height="{max(0, Y(ind) - Y(ind + home) - 1):.1f}" rx="2" fill="var(--home)"/>')
     labels = [(i, f"{int(k[:4])}/{int(k[5:])}") for i, k in enumerate(months) if i in (0, n - 1) or (k[5:] == "01" and 2 <= i <= n - 3)]
     svg += bb.xlabels(X, labels)
 
@@ -583,8 +584,8 @@ def page(out, head, nav, latest, reserve, daily, forecast, hourly):
         mu, mlast = month_use(daily)
         if mu:
             blocks.append(f'<section class="box"><h2>{tr("每月用電量", "Electricity used each month")}</h2>'
-                          f'<p class="legend"><span class="sq" style="background:#414833"></span>{tr("工業", "Industry")}'
-                          f'<span class="sq" style="background:#936639"></span>{tr("民生（住宅、商業）", "Homes and businesses")}</p>'
+                          f'<p class="legend"><span class="sq" style="background:var(--ind)"></span>{tr("工業", "Industry")}'
+                          f'<span class="sq" style="background:var(--home)"></span>{tr("民生（住宅、商業）", "Homes and businesses")}</p>'
                           f'<p class="tip">{tr("滑過或點長條看每月數字（單位：億度）", "Hover or tap a bar for each month (TWh)")}</p>'
                           f'<svg class="chart bd" viewBox="0 0 {W} {H}" role="img" aria-label="{e(tr("每月工業與民生用電", "Monthly industrial and residential use"))}">{mu}</svg>'
                           f'<p class="note">{tr("台電每日工業、民生用電加總，只列資料完整的月份。", "Sum of Taipower daily industrial and residential use; complete months only.")}</p></section>')
