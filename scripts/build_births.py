@@ -202,7 +202,13 @@ JS = """<script>
 
   // 各縣市地圖：各縣市人口差很多，所以看「每千人」比率（近 12 個月合計 ÷ 人口 × 1000，就是一年的粗出生率／粗死亡率）
   // 顏色：最低到最高平均切 5 級，數字取到 0.5，圖例一看就懂
-  var RAMP = { b: ["#fde3df", "#f6b2aa", "#ec8580", "#e15759", "#b0333f"], d: ["#e0f0ee", "#b5dbd7", "#8ec7c2", "#5fa39d", "#3a7872"], p: "#e15759" };  // 出生 淺→深紅、死亡 淺→深青綠，淺到深；p：自然增加率 0 以上
+  // 顏色都從網站的 10 Tableau 調出來（Shane 2026-11-03 選 A）：出生 黃 f1ce63 → 橘 f28e2b → 紅 e15759 → 加深；
+  // 死亡 青綠 76b7b2 → 藍 4e79a7，深淺拉開、彩度略提高，深色模式也分得出來。淺到深；p：自然增加率 0 以上
+  var RAMP = { b: ["#f1ce63", "#f28e2b", "#e15759", "#b4343a", "#901221"], d: ["#bdede5", "#73c9c0", "#37a19e", "#3a73a6", "#2a4f86"], p: "#e15759" };
+  function ink(h) {  // 離島方塊上的字：底色亮用深字，底色暗用白字
+    var n = parseInt(h.slice(1), 16), y = 0.299 * (n >> 16) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255);
+    return y > 150 ? "#1d2125" : "#ffffff";
+  }
   var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
   var tipDef = tip.textContent, picked = null;
   function sum12(c, g) {  // 到所選月份為止 12 個月的合計；不足 12 個月就按比例放大
@@ -232,7 +238,11 @@ JS = """<script>
       edges = [0, 1, 2, 3, 4, 5].map(function (k) { return lo + k * step; });
       colorOf = function (v) { return ramp[Math.min(4, Math.floor((v - lo) / step))]; };
     }
-    shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); s.style.fill = v === null ? "" : colorOf(v); });
+    shapes.forEach(function (s) {
+      var v = val(s.getAttribute("data-c")), c = v === null ? "" : colorOf(v);
+      s.style.fill = c;
+      if (s.tagName.toLowerCase() === "rect" && s.nextElementSibling) s.nextElementSibling.style.fill = c ? ink(c) : "";
+    });
     function sg(v) { return (v < 0 ? "−" : "") + r1(Math.abs(v)); }
     var html = "";
     if (key === "g") {
