@@ -59,9 +59,9 @@ ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島�
 
 CSS = """
 /* Tableau 10（scripts/theme.py）：出生紅、死亡青綠、男藍女粉、自然增減橘；比年份的兩張圖同一年同一色：今年藍、去年橘、前年綠 */
-:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --ni:#f28e2b; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#f5a05a; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
-:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#f5a05a; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
+:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --ni:#f28e2b; --ni-op:.5; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#f5a05a; --ni-op:.72; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
+:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#f5a05a; --ni-op:.72; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top > .box, .grid > .box { margin-top:12px; min-width:0; }
@@ -102,7 +102,7 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .bd .dot.b { fill:var(--birth-ln); }
 .bd .dot.d { fill:var(--death); }
 .bd .lab { font-size:12px; font-weight:700; fill:var(--fg); }
-.bd .bar.ni { fill:var(--ni); }
+.bd .bar.ni { fill:var(--ni); fill-opacity:var(--ni-op); }
 .bd .z { stroke:var(--muted); stroke-width:1; }
 .chart.bd text.rax { fill:var(--ni); font-weight:700; }
 .bd .ref { stroke:var(--muted); stroke-width:1.5; stroke-dasharray:4 4; }
@@ -202,7 +202,7 @@ JS = """<script>
 
   // 各縣市地圖：各縣市人口差很多，所以看「每千人」比率（近 12 個月合計 ÷ 人口 × 1000，就是一年的粗出生率／粗死亡率）
   // 顏色：最低到最高平均切 5 級，數字取到 0.5，圖例一看就懂
-  var RAMP = { b: ["#fde3df", "#f6b2aa", "#ec8580", "#e15759", "#b0333f"], d: ["#e0f0ee", "#b5dbd7", "#8ec7c2", "#5fa39d", "#3a7872"] };  // 出生 淺→深紅、死亡 淺→深青綠，淺到深
+  var RAMP = { b: ["#fde3df", "#f6b2aa", "#ec8580", "#e15759", "#b0333f"], d: ["#e0f0ee", "#b5dbd7", "#8ec7c2", "#5fa39d", "#3a7872"], p: "#e15759" };  // 出生 淺→深紅、死亡 淺→深青綠，淺到深；p：自然增加率 0 以上
   var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
   var tipDef = tip.textContent, picked = null;
   function sum12(c, g) {  // 到所選月份為止 12 個月的合計；不足 12 個月就按比例放大
@@ -225,7 +225,7 @@ JS = """<script>
     if (key === "g") {  // 自然增加率：負的（死亡比出生多）用死亡的顏色分 4 級，正的用出生的顏色
       var neg = Math.min(lo, -0.5), st = Math.ceil(-neg / 4 * 2) / 2;
       var O = RAMP.d.slice(0, 4);  // 淺到深：越負越深
-      colorOf = function (v) { return v >= 0 ? RAMP.b[3] : O[Math.min(3, Math.floor(-v / st))]; };
+      colorOf = function (v) { return v >= 0 ? RAMP.p : O[Math.min(3, Math.floor(-v / st))]; };
     } else {
       var step = Math.max(0.5, Math.ceil((hi - lo) / 5 * 2) / 2);
       ramp = RAMP[key];
@@ -237,7 +237,7 @@ JS = """<script>
     var html = "";
     if (key === "g") {
       for (var k = 3; k >= 0; k--) html += '<span><i style="background:' + colorOf(-(k + 0.5) * st) + '"></i>' + sg(-(k + 1) * st) + "～" + sg(-k * st) + "</span>";
-      html += '<span><i style="background:' + RAMP.b[3] + '"></i>' + (EN ? "0 or more" : JA ? "0以上" : KO ? "0 이상" : "0 以上") + "</span>";
+      html += '<span><i style="background:' + RAMP.p + '"></i>' + (EN ? "0 or more" : JA ? "0以上" : KO ? "0 이상" : "0 以上") + "</span>";
     } else {
       html = ramp.map(function (c, k) { return '<span><i style="background:' + c + '"></i>' + r1(edges[k]) + "～" + r1(edges[k + 1]) + "</span>"; }).join("");
     }
@@ -424,45 +424,47 @@ def signed(v, wan=False):
     return "0" if v == 0 else ("−" if v < 0 else "+") + short(abs(v), wan).replace(" ", "")
 
 
-def bd_chart(months, b, d, labels, tips, end_labels):
-    """出生、死亡兩條線（上段，左軸）＋自然增減長條（下段，右軸，出生減死亡）。"""
+def right_scale(neg, pos, nint):
+    """右軸：跟左軸共用同一組格線（nint 格），0 落在其中一條格線上；回傳 (每格多少, 0 以上有幾格)。"""
+    for e in range(0, 8):
+        for m in (1, 2, 2.5, 5):
+            st = m * 10 ** e
+            if nint * st >= 10000 and st % 1000:  # 寫成「x.x 萬」時每格要是 1,000 的倍數
+                continue
+            j = math.ceil(pos / st) if pos else 0
+            if j <= nint and neg <= (nint - j) * st:
+                return st, j
+    return max(neg, pos, 1), 0
+
+
+def bd_chart(months, b, d, labels, tips):
+    """出生、死亡兩條線（左軸）和自然增減長條（右軸，出生減死亡）疊在同一張圖；兩邊的刻度用同一組格線。"""
     ni = [x - y for x, y in zip(b, d)]
-    P = H - T - B
-    UP, GAP = round(P * 0.6), 14
-    LOW = P - UP - GAP
     lo, hi, step = nice_scale(min(b + d), max(b + d))
+    nint = max(1, round((hi - lo) / step))
+    st2, j = right_scale(-min(ni + [0]), max(ni + [0]), nint)
+    hi2 = j * st2
+    lo2 = hi2 - nint * st2
     k = max(1, len(months) - 1)
-    X = lambda i: L + 4 + (W - L - 4 - 50) * i / k
-    Y = lambda v: T + UP * (hi - v) / (hi - lo)
-    svg = frame(lo, hi, step, Y)
-    ends = []
+    PR = W - 50  # 圖的右緣；右邊留給右軸的數字
+    X = lambda i: L + 6 + (PR - L - 12) * i / k
+    Y = lambda v: T + (H - T - B) * (hi - v) / (hi - lo)
+    Y2 = lambda v: T + (H - T - B) * (hi2 - v) / (hi2 - lo2)
+    wan, wan2 = hi >= 10000, max(abs(lo2), abs(hi2)) >= 10000
+    svg = ""
+    for i in range(nint + 1):
+        g, g2 = lo + i * step, lo2 + i * st2
+        y = Y(g)
+        svg += (f'<line x1="{L}" x2="{PR}" y1="{y:.1f}" y2="{y:.1f}" class="{"z" if g2 == 0 else "g"}"/>'
+                f'<text x="{L - 5}" y="{y + 4:.1f}" text-anchor="end">{short(g, wan)}</text>'
+                f'<text x="{PR + 5}" y="{y + 4:.1f}" class="rax">{signed(g2, wan2)}</text>')
+    slot = (X(1) - X(0)) if k else PR - L
+    bw = max(2, slot * 0.66)
+    svg += "".join(f'<rect x="{X(i) - bw / 2:.1f}" y="{min(Y2(0), Y2(v)):.1f}" width="{bw:.1f}" height="{abs(Y2(v) - Y2(0)):.1f}" class="bar ni"/>'
+                   for i, v in enumerate(ni))
     for cls, ser in (("b", b), ("d", d)):
         svg += f'<path d="{" ".join(f"{"M" if i == 0 else "L"}{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(ser))}" class="line {cls}"/>'
         svg += f'<circle cx="{X(k):.1f}" cy="{Y(ser[-1]):.1f}" r="4" class="dot {cls}"/>'
-        ends.append([Y(ser[-1]), end_labels[cls]])
-    ends.sort()
-    for i in range(1, len(ends)):
-        ends[i][0] = max(ends[i][0], ends[i - 1][0] + 15)
-    svg += "".join(f'<text x="{X(k) + 8:.1f}" y="{y + 4:.1f}" class="lab">{t}</text>' for y, t in ends)
-    # 下段：自然增減（右軸）
-    mag = max(-min(ni + [0]), max(ni + [0])) or 1
-    _, _, st = nice_scale(0, mag, ticks=3, zero=True)
-    lo2 = -math.ceil(-min(ni + [0]) / st) * st  # 負數往下取整到一格
-    hi2 = math.ceil(max(ni + [0]) / st) * st
-    if lo2 == hi2:
-        lo2 -= st
-    top = T + UP + GAP
-    Y2 = lambda v: top + LOW * (hi2 - v) / (hi2 - lo2)
-    wan = mag >= 10000
-    g = hi2
-    while g >= lo2 - 1e-9:
-        svg += (f'<line x1="{L}" x2="{X(k) + 4:.1f}" y1="{Y2(g):.1f}" y2="{Y2(g):.1f}" class="{"z" if g == 0 else "g"}"/>'
-                f'<text x="{X(k) + 8:.1f}" y="{Y2(g) + 4:.1f}" class="rax">{signed(g, wan)}</text>')
-        g -= st
-    slot = (X(1) - X(0)) if k else W - L - R
-    bw = max(2, slot * 0.7)
-    svg += "".join(f'<rect x="{X(i) - bw / 2:.1f}" y="{min(Y2(0), Y2(v)):.1f}" width="{bw:.1f}" height="{abs(Y2(v) - Y2(0)):.1f}" class="bar ni"/>'
-                   for i, v in enumerate(ni))
     svg += xlabels(X, labels)
     svg += "".join(
         f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="{e(t)}"/>'
@@ -617,8 +619,7 @@ def page_body(name, d):
                f"{ym_label(mm)}: {n(x)} births, {n(z)} deaths, natural change {signed(x - z)}",
                f"{ym_label(mm)}：出生 {n(x)}、死亡 {n(z)}、自然増減 {signed(x - z)}",
                f"{ym_label(mm)}: 출생 {n(x)}, 사망 {n(z)}, 자연 증감 {signed(x - z)}") for mm, x, z in zip(recent, bs, ds)]
-    svg, _ = bd_chart(recent, bs, ds, month_ticks(recent), tips,
-                      {"b": tr("出生", "Births", "出生", "출생"), "d": tr("死亡", "Deaths", "死亡", "사망")})
+    svg, _ = bd_chart(recent, bs, ds, month_ticks(recent), tips)
     gap, negs, K = nis[-1], sum(1 for v in nis if v < 0), len(nis)
     first = (tr(f"{ym_label(last)}死亡比出生多 <b>{n(-gap)}</b> 人", f"In {ym_label(last)}, deaths exceeded births by <b>{n(-gap)}</b>", f"{ym_label(last)}は死亡が出生を <b>{n(-gap)}</b>人上回りました", f"{ym_label(last)}에는 사망이 출생보다 <b>{n(-gap)}</b>명 많았습니다") if gap < 0
              else tr(f"{ym_label(last)}出生比死亡多 <b>{n(gap)}</b> 人", f"In {ym_label(last)}, births exceeded deaths by <b>{n(gap)}</b>", f"{ym_label(last)}は出生が死亡を <b>{n(gap)}</b>人上回りました", f"{ym_label(last)}에는 출생이 사망보다 <b>{n(gap)}</b>명 많았습니다") if gap > 0
