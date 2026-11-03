@@ -425,22 +425,23 @@ def signed(v, wan=False):
 
 
 def right_scale(neg, pos, nint):
-    """右軸：跟左軸共用同一組格線（nint 格），0 落在其中一條格線上；回傳 (每格多少, 0 以上有幾格)。"""
+    """右軸：跟左軸共用同一組格線（nint 格），0 落在其中一條格線上，而且盡量往下放，長條往下長到底；
+    回傳 (每格多少, 0 以上有幾格)。全台：左軸 0～2.5 萬，右軸 0 對齊 1.5 萬那條線。"""
     for e in range(0, 8):
         for m in (1, 2, 2.5, 5):
             st = m * 10 ** e
             if nint * st >= 10000 and st % 1000:  # 寫成「x.x 萬」時每格要是 1,000 的倍數
                 continue
-            j = math.ceil(pos / st) if pos else 0
-            if j <= nint and neg <= (nint - j) * st:
-                return st, j
+            up, down = (math.ceil(pos / st) if pos else 0), (math.ceil(neg / st) if neg else 0)
+            if up + down <= nint:
+                return st, nint - down
     return max(neg, pos, 1), 0
 
 
 def bd_chart(months, b, d, labels, tips):
     """出生、死亡兩條線（左軸）和自然增減長條（右軸，出生減死亡）疊在同一張圖；兩邊的刻度用同一組格線。"""
     ni = [x - y for x, y in zip(b, d)]
-    lo, hi, step = nice_scale(min(b + d), max(b + d))
+    lo, hi, step = nice_scale(0, max(b + d), ticks=5, zero=True)  # 左軸從 0 開始，全台 0～2.5 萬
     nint = max(1, round((hi - lo) / step))
     st2, j = right_scale(-min(ni + [0]), max(ni + [0]), nint)
     hi2 = j * st2
