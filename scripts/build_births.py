@@ -59,10 +59,10 @@ ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島�
 # 出生藍、死亡橘；男藍、女粉（色盲也分得出來；深色模式另一組）
 CSS = """
 /* 全站「大地」配色（scripts/theme.py）：出生 卡其（畫線用深一階）、死亡 深咖啡、男 深橄欖、女 銅褐；跟前兩年比：去年 鼠尾草綠、前年 淺棕，今年線最粗 */
-:root { --birth:#656d4a; --birth-ln:#656d4a; --death:#582f0e; --male:#414833; --female:#936639; --y1:#c5b39a; --y2:#ddd3c0; }
-/* 出生線用橄欖綠、死亡線用深咖啡；前兩年的線用淡卡其，今年那條最顯眼 */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#a4ac86; --birth-ln:#a4ac86; --death:#b89a82; --male:#969a8f; --female:#ae8c6a; --y1:#7d705c; --y2:#544b3f; } }
-:root[data-theme="dark"] { --birth:#a4ac86; --birth-ln:#a4ac86; --death:#b89a82; --male:#969a8f; --female:#ae8c6a; --y1:#7d705c; --y2:#544b3f; }
+:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
+/* Tableau 10（scripts/theme.py）：出生紅、死亡青綠、男藍女粉；比年份的兩張圖同一年同一色：今年藍、去年橘、前年綠 */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
+:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top > .box, .grid > .box { margin-top:12px; min-width:0; }
@@ -95,9 +95,11 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .sex span { display:inline-flex; align-items:center; gap:4px; }
 .bd .line.b { stroke:var(--birth-ln); stroke-width:3; }
 .bd .line.d { stroke:var(--death); stroke-width:3; }
-/* 前兩年：去年鼠尾草綠、前年淺棕（實線，比今年細） */
-.bd .line.b1, .bd .line.d1 { stroke:var(--y1); stroke-width:2; }
-.bd .line.b2, .bd .line.d2 { stroke:var(--y2); stroke-width:2; }
+/* 跟前兩年比：今年藍（粗）、去年橘、前年綠（細），出生、死亡兩張圖一樣 */
+.bd .line.y0 { stroke:var(--y0); stroke-width:3; }
+.bd .line.y1 { stroke:var(--y1); stroke-width:2; }
+.bd .line.y2 { stroke:var(--y2); stroke-width:2; }
+.bd .dot.y0 { fill:var(--y0); }
 .bd .dot.b { fill:var(--birth-ln); }
 .bd .dot.d { fill:var(--death); }
 .bd .lab { font-size:12px; font-weight:700; fill:var(--fg); }
@@ -108,8 +110,9 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .legend { flex-wrap:wrap; }
 .legend .k.b { border-color:var(--birth-ln); }
 .legend .k.d { border-color:var(--death); }
-.legend .k.b1, .legend .k.d1 { border-color:var(--y1); }
-.legend .k.b2, .legend .k.d2 { border-color:var(--y2); }
+.legend .k.y0 { border-color:var(--y0); }
+.legend .k.y1 { border-color:var(--y1); }
+.legend .k.y2 { border-color:var(--y2); }
 .legend .sq { width:12px; height:12px; border-radius:3px; display:inline-block; margin-left:8px; }
 .legend .sq:first-child { margin-left:0; }
 .tw .neg { color:var(--muted); }
@@ -190,7 +193,7 @@ JS = """<script>
 
   // 各縣市地圖：各縣市人口差很多，所以看「每千人」比率（近 12 個月合計 ÷ 人口 × 1000，就是一年的粗出生率／粗死亡率）
   // 顏色：最低到最高平均切 5 級，數字取到 0.5，圖例一看就懂
-  var RAMP = { b: ["#e2ded3", "#b6ad90", "#a4ac86", "#656d4a", "#414833"], d: ["#e6e0db", "#cabcb2", "#a58f7d", "#79593e", "#582f0e"] };  // 出生 卡其→橄欖、死亡 淺→深咖啡，淺到深
+  var RAMP = { b: ["#fde3df", "#f6b2aa", "#ec8580", "#e15759", "#b0333f"], d: ["#e0f0ee", "#b5dbd7", "#8ec7c2", "#5fa39d", "#3a7872"] };  // 出生 淺→深紅、死亡 淺→深青綠，淺到深
   var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
   var tipDef = tip.textContent, picked = null;
   function sum12(c, g) {  // 到所選月份為止 12 個月的合計；不足 12 個月就按比例放大
@@ -391,7 +394,7 @@ def lines_chart(n_x, series, labels, tips, zero=False, end_labels=None):
             pen = "L"
         svg += f'<path d="{" ".join(pts)}" class="line {cls}"/>'
         last = max((i for i, v in enumerate(s) if v is not None), default=None)
-        if last is not None and cls in ("b", "d"):
+        if last is not None and cls in ("b", "d", "y0"):
             svg += f'<circle cx="{X(last):.1f}" cy="{Y(s[last]):.1f}" r="4" class="dot {cls}"/>'
         if end_labels and last is not None and cls in end_labels:
             ends.append([Y(s[last]), X(last), end_labels[cls]])
@@ -485,7 +488,7 @@ def page_body(name, d):
     def yoy_chart(title, fn, cls, word):
         yrs = [yy for yy in (y, y - 1, y - 2) if any(f"{yy}-{i:02d}" in d for i in range(1, 13))]
         series = []
-        cs = (cls, cls + "1", cls + "2")
+        cs = ("y0", "y1", "y2")  # 同一年在出生、死亡兩張圖用同一個顏色
         for yy, c in zip(yrs, cs):
             series.append((c, [fn(d[f"{yy}-{i:02d}"]) if f"{yy}-{i:02d}" in d else None for i in range(1, 13)]))
         legend = '<p class="legend">' + "".join(

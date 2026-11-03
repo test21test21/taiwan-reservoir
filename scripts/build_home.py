@@ -326,11 +326,15 @@ def page(lang="zh"):
         f'<dt>{e(t["f_tz"][0])}</dt><dd>{e(t["f_tz"][1])}</dd>'
         f'<dt>{e(t["f_div"][0])}</dt><dd>{e(t["f_div"][1])}</dd></div></dl>')
     upd = dt(d["generated_at"]) if d.get("generated_at") else ""
+    tw = json.loads((ROOT / "reservoir/taiwan-map.json").read_text(encoding="utf-8"))
+    isle = (f'<svg class="isle" viewBox="0 0 {tw["width"]} {tw["height"]}" aria-hidden="true">'
+            + "".join(f'<path d="{p}"/>' for p in tw["counties"].values()) + "</svg>")  # 手機才顯示
     return f"""<body>
 <!--SITE_NAV-->
 <main class="w home">
   <div class="side">
     <header class="hero">
+      {isle}
       <p class="eyebrow">{e(t["eyebrow"])}</p>
       <h1>{e(t["h1"])}</h1>
       <p class="lead">{e(t["lead"])}</p>
@@ -363,7 +367,7 @@ CSS = """
   --ink:#111111; --text:#333333; --muted:#6b6b6b; --line:#e3e3e3; --line-strong:#c8c8c8; --fill:#f2f2f2;
   --surface:#ffffff; --fg:#111111; --chip:#f2f2f2; /* 頂端列（site_nav）用這三個 */
   --icon:#2b6a66; --up:#1e7a45; --down:#c0392b;
-  --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#582f0e; /* 台灣 = 水庫那一列的深咖啡（theme.SECTION） */
+  --sea:#e9f0f5; --land:#ffffff; --land-line:#c5cfd7; --grat:#d3dde5; --maplab:#5f6b73; --tw:#4e79a7; /* 台灣 = 水庫那一列的藍（theme.SECTION） */
   --gap:16px; --side:clamp(360px, 23vw, 440px); --map-w:38%; }
 /* 黑白灰：底全白、字黑灰。只有地圖、台灣小圖、主題圖示、增減百分比（和官方燈號）有顏色 */
 * { box-sizing:border-box; }
@@ -412,6 +416,22 @@ a { color:inherit; }
 .facts .big { display:block; font-size:28px; line-height:34px; font-weight:700; color:var(--ink); }
 .facts .big small { font-size:14px; font-weight:500; color:var(--muted); margin-left:3px; }
 .facts .note { display:block; font-size:12.5px; line-height:20px; color:var(--muted); }
+.isle { display:none; }
+/* 手機：標題右邊放台灣本島，不留一大片空白；人口和位置、時區、行政區左右兩欄 */
+@media (max-width:760px) {
+  .hero { display:grid; grid-template-columns:minmax(0, 1fr) auto; grid-template-rows:auto auto auto 1fr auto; column-gap:12px; }
+  .hero > :not(.isle) { grid-column:1; }
+  .hero h1 { font-size:min(34px, calc((100vw - 44px - var(--isle-w)) / var(--h1-n))); text-wrap:balance; }
+  .isle { display:block; grid-column:2; grid-row:1 / span 4; align-self:center; width:var(--isle-w); height:auto; }
+  .isle path { fill:var(--tw); stroke:#ffffff; stroke-width:.8; vector-effect:non-scaling-stroke; }
+  .hero .meta { align-self:start; }
+  .hero .facts { grid-column:1 / -1; } }
+/* 兩欄要排得下才用：中文、韓文都可以；日文 360 以上、英文 440 以上（字比較長） */
+@media (max-width:760px) { html[lang^="zh"] .hero .facts { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:16px; } html[lang^="zh"] .facts .pop { padding-bottom:0; border-bottom:0; } html[lang^="zh"] .facts .big { font-size:clamp(22px, 7vw, 28px); } html[lang^="zh"] .facts .kv { display:block; padding:0 0 0 16px; border-left:1px solid var(--line); } html[lang^="zh"] .facts .kv dd { margin:0 0 6px; } html[lang^="zh"] .facts .kv dd:last-child { margin-bottom:0; } html[lang="ko"] .hero .facts { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:16px; } html[lang="ko"] .facts .pop { padding-bottom:0; border-bottom:0; } html[lang="ko"] .facts .big { font-size:clamp(22px, 7vw, 28px); } html[lang="ko"] .facts .kv { display:block; padding:0 0 0 16px; border-left:1px solid var(--line); } html[lang="ko"] .facts .kv dd { margin:0 0 6px; } html[lang="ko"] .facts .kv dd:last-child { margin-bottom:0; } }
+@media (min-width:360px) and (max-width:760px) { html[lang="ja"] .hero .facts { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:16px; } html[lang="ja"] .facts .pop { padding-bottom:0; border-bottom:0; } html[lang="ja"] .facts .big { font-size:clamp(22px, 7vw, 28px); } html[lang="ja"] .facts .kv { display:block; padding:0 0 0 16px; border-left:1px solid var(--line); } html[lang="ja"] .facts .kv dd { margin:0 0 6px; } html[lang="ja"] .facts .kv dd:last-child { margin-bottom:0; } }
+@media (min-width:440px) and (max-width:760px) { html[lang="en"] .hero .facts { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:16px; } html[lang="en"] .facts .pop { padding-bottom:0; border-bottom:0; } html[lang="en"] .facts .big { font-size:clamp(22px, 7vw, 28px); } html[lang="en"] .facts .kv { display:block; padding:0 0 0 16px; border-left:1px solid var(--line); } html[lang="en"] .facts .kv dd { margin:0 0 6px; } html[lang="en"] .facts .kv dd:last-child { margin-bottom:0; } }
+:root { --isle-w:clamp(64px, 24vw, 110px); --h1-n:6.5; }  /* --h1-n：標題有幾個字寬（量過），手機上標題縮到一行排得下 */
+html[lang="en"] { --h1-n:9.2; } html[lang="ja"] { --h1-n:8.4; } html[lang="ko"] { --h1-n:8.8; }
 @media (min-width:761px) {
   .hero { background:#ffffff; border:1px solid var(--line); border-radius:16px; padding:24px; display:flex; flex-direction:column; }
   .hero h1 { font-size:clamp(32px, 2.3vw, 42px); }

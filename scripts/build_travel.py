@@ -35,7 +35,7 @@ EN_FIX = {"HongKong. Macao": "Hong Kong & Macau", "U.K.": "UK", "USA": "USA", "U
           "Russian Federation": "Russia", "Macao": "Macau"}
 ZH_FIX = {"阿拉伯聯合大公國": "阿聯", "香港.澳門": "港澳"}
 # 前五名國家的線：全站「大地」配色（scripts/theme.py）裡最分得開的五色
-TOP5 = ["#414833", "#936639", "#a4ac86", "#c9a227", "#6b8a99"]
+TOP5 = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f"]
 
 
 def set_lang(lang):
@@ -124,9 +124,9 @@ def load():
 
 CSS = """
 /* 全站「大地」配色：來台 深橄欖（旅客主色）、出國 銅褐；國際／兩岸／國內 同航班頁 */
-:root { --in:#414833; --out:#936639; --intl:#a4ac86; --cross:#582f0e; --dom:#936639; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --in:#969a8f; --out:#ae8c6a; --intl:#a4ac86; --cross:#a38d7a; --dom:#ae8c6a; } }
-:root[data-theme="dark"] { --in:#969a8f; --out:#ae8c6a; --intl:#a4ac86; --cross:#a38d7a; --dom:#ae8c6a; }
+:root { --in:#4e79a7; --out:#f28e2b; --intl:#4e79a7; --cross:#e15759; --dom:#59a14f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --in:#7aa6d6; --out:#f5a05a; --intl:#7aa6d6; --cross:#ee7a7c; --dom:#7cc26f; } }
+:root[data-theme="dark"] { --in:#7aa6d6; --out:#f5a05a; --intl:#7aa6d6; --cross:#ee7a7c; --dom:#7cc26f; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top { align-items:stretch; }
@@ -246,7 +246,7 @@ JS = """<script>
   var svg = document.getElementById("tm-map"), ov = svg.querySelector(".ov"), info = document.getElementById("tm-info");
   var slider = document.getElementById("tm-slider"), playB = document.getElementById("tm-play"), yl = document.getElementById("tm-year");
   var BINS = [1e6, 3e5, 1e5, 3e4, 1e4, 1];
-  var PAL = { "in": ["#333d29", "#4f583c", "#6f7856", "#949b78", "#b9bd9f", "#d6d8c6"], out: ["#4a2709", "#6f4420", "#8f6235", "#ad855a", "#c8ab86", "#e0d0b8"] };  // 淺色地圖：人越多越深；來台橄欖、出國咖啡
+  var PAL = { "in": ["#1f3f66", "#2f5b8f", "#4e79a7", "#7fa3c8", "#aec7e0", "#d6e3f0"], out: ["#7a3a07", "#b0560f", "#e0761c", "#f28e2b", "#f7b778", "#fbdcbc"] };  // 淺色地圖：人越多越深；來台藍、出國橘
   var M = { dir: "in", year: +slider.value, sel: null, timer: null };
   var paths = {}; svg.querySelectorAll(".land .c").forEach(function (p) { paths[p.getAttribute("data-id")] = p; });
   function color(v) { for (var i = 0; i < BINS.length; i++) if (v >= BINS[i]) return PAL[M.dir][i]; return null; }
@@ -480,7 +480,7 @@ def page(out, head, nav, inbound, outbound, totals, purpose, port, seg, airports
                 dot[p] = worldmap.xy(*geo.SMALL[zh])
     bins = [(1e6, tr("100 萬以上", "1M+", "100万以上", "100만 이상")), (3e5, tr("30～100 萬", "300k–1M", "30～100万", "30만~100만")), (1e5, tr("10～30 萬", "100k–300k", "10～30万", "10만~30만")),
             (3e4, tr("3～10 萬", "30k–100k", "3～10万", "3만~10만")), (1e4, tr("1～3 萬", "10k–30k", "1～3万", "1만~3만")), (1, tr("1 萬以下", "under 10k", "1万未満", "1만 미만"))]
-    pal_in = ["#333d29", "#4f583c", "#6f7856", "#949b78", "#b9bd9f", "#d6d8c6"]
+    pal_in = ["#1f3f66", "#2f5b8f", "#4e79a7", "#7fa3c8", "#aec7e0", "#d6e3f0"]
     tmap = (f'<section class="box" id="tmap"><h2>{tr("世界地圖：來台旅客來源與出國目的地", "World map: visitor origins and destinations abroad", "世界地図：訪台客の居住国と台湾からの渡航先", "세계 지도: 대만 방문객 거주국과 대만인 출국 목적지")}</h2>'
             + bf.seg_buttons('data-tmdir aria-label="' + tr("方向", "Direction", "方向", "방향") + '"', [("in", tr("來台旅客來源", "Visitor origins", "訪台客の居住国", "방문객 거주국")), ("out", tr("出國目的地", "Destinations abroad", "台湾からの渡航先", "출국 목적지"))], "in")
             + bf.seg_buttons('data-wmview aria-label="' + tr("地圖範圍", "Map view", "地図の範囲", "지도 범위") + '"', [("asia", tr("亞洲", "Asia", "アジア", "아시아")), ("world", tr("全球", "World", "世界", "세계"))], "asia")
