@@ -311,6 +311,9 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     ]);
   }
 
+  // 蓄水率最高顯示 100%：水位超過滿水位時算出來會是 100.3% 之類（Shane 2026-11-04：上限應該是 100）
+  function cap(p) { return p > 100 ? 100 : p; }
+
   function parseHistory(text) {
     var out = {};
     var lines = text.trim().split(/\r?\n/);
@@ -319,7 +322,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
     lines.forEach(function (l) {
       var c = l.split(","); var p = parseFloat(c[iP]);
       if (!c[iId] || isNaN(p) || p < 0 || p > 105) return;
-      (out[c[iId]] = out[c[iId]] || []).push([c[iD], p]);
+      (out[c[iId]] = out[c[iId]] || []).push([c[iD], cap(p)]);
     });
     return out;
   }
@@ -592,6 +595,10 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); display: grid; 
   loadAll().then(function (res) {
     var doc = res[0];
     state.data = doc.reservoirs || [];
+    state.data.forEach(function (r) {
+      if (r.percent != null && !r.suspect) r.percent = cap(r.percent);
+      if (r.last_year_percent != null) r.last_year_percent = cap(r.last_year_percent);
+    });
     state.hist = parseHistory(res[1] || "");
     state.today = doc.generated_at ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Taipei" }).format(new Date(doc.generated_at)) : "";
     state.alert = res[2];

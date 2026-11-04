@@ -34,12 +34,16 @@ def data():
     lat = json.loads((D / "latest.json").read_text(encoding="utf-8"))
     maj = [r for r in lat["reservoirs"] if r["id"] in MAJOR and r.get("percent") is not None
            and r["percent"] >= 0 and not r.get("suspect") and r.get("capacity")]
+    for r in maj:  # 蓄水率最高算 100%（Shane 2026-11-04）
+        r["percent"] = min(r["percent"], 100.0)
+        if r.get("last_year_percent") is not None:
+            r["last_year_percent"] = min(r["last_year_percent"], 100.0)
     cap = sum(r["capacity"] for r in maj)
     ly = [r for r in maj if r.get("last_year_percent") is not None]
     daily = defaultdict(lambda: [0.0, 0.0])
     for r in rows("history.csv"):
         if r["id"] in MAJOR and r["percent"] and r["capacity"] and float(r["percent"]) >= 0:
-            daily[r["date"]][0] += float(r["percent"]) * float(r["capacity"])
+            daily[r["date"]][0] += min(float(r["percent"]), 100.0) * float(r["capacity"])
             daily[r["date"]][1] += float(r["capacity"])
     days = sorted(daily)[-30:]
     out["reservoir"] = dict(
