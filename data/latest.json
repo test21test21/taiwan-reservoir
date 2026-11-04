@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-04T09:24:23+08:00",
+ "generated_at": "2026-11-04T11:04:22+08:00",
  "count": 56,
  "reservoirs": [
   {
@@ -485,14 +485,14 @@
    "rainfall_today": 0.0,
    "status": null,
    "suspect": false,
-   "daily_date": "2026-11-02",
-   "inflow_daily": 535.49,
+   "daily_date": "2026-11-03",
+   "inflow_daily": 515.87,
    "outflow_daily": null,
-   "outflow_total_daily": 47.68,
+   "outflow_total_daily": 42.12,
    "rainfall_daily": 0.0,
    "dead_level": 205.25,
    "full_level": 214.75,
-   "use_daily": 47.68,
+   "use_daily": 42.12,
    "last_year_percent": 11.51,
    "last_year_date": "2025-11-04"
   },
