@@ -122,6 +122,11 @@ def county_of(r, info):
 
 def load():
     latest = json.loads((ROOT / "data/latest.json").read_text(encoding="utf-8"))
+    for r in latest["reservoirs"]:  # 蓄水率最高顯示 100%（水位超過滿水位會算出 100.3% 之類；Shane 2026-11-04）
+        if isinstance(r.get("percent"), (int, float)) and not r.get("suspect"):
+            r["percent"] = min(r["percent"], 100.0)
+        if isinstance(r.get("last_year_percent"), (int, float)):
+            r["last_year_percent"] = min(r["last_year_percent"], 100.0)
     info = {}
     p = ROOT / "data/reservoir_info.json"
     if p.exists():
@@ -132,9 +137,12 @@ def load():
     if p.exists():
         with p.open(encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                try:  # 負的蓄水率是水利署的錯誤代碼算出來的，當作那天沒有資料
-                    if float(row.get("percent") or 0) < 0:
+                try:  # 負的蓄水率是水利署的錯誤代碼算出來的、超過 105% 多半是資料填錯，都當作那天沒有資料；100～105% 顯示 100
+                    v = float(row.get("percent") or 0)
+                    if v < 0 or v > 105:
                         row["percent"] = ""
+                    elif v > 100:
+                        row["percent"] = "100"
                 except ValueError:
                     row["percent"] = ""
                 hist[row["id"]].append(row)
