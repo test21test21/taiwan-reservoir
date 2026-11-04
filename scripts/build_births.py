@@ -4,6 +4,7 @@
 build_pages.py 部署時呼叫 build(out, head, nav)。
 """
 import csv
+import math
 import html
 import json
 from collections import defaultdict
@@ -56,13 +57,11 @@ def cname(c):
 MAP = ROOT / "reservoir/taiwan-map.json"  # 本島縣市界（scripts/build_map.py 產生，和水庫地圖同一份）
 ISLANDS = [("連江縣", 24), ("金門縣", 134), ("澎湖縣", 244)]  # 離島畫成左上海面的小方塊（y 座標）
 
-# 出生藍、死亡橘；男藍、女粉（色盲也分得出來；深色模式另一組）
 CSS = """
-/* 全站「大地」配色（scripts/theme.py）：出生 卡其（畫線用深一階）、死亡 深咖啡、男 深橄欖、女 銅褐；跟前兩年比：去年 鼠尾草綠、前年 淺棕，今年線最粗 */
-:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
-/* Tableau 10（scripts/theme.py）：出生紅、死亡青綠、男藍女粉；比年份的兩張圖同一年同一色：今年藍、去年橘、前年綠 */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
-:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
+/* Tableau 10（scripts/theme.py）：出生紅、死亡青綠、男藍女粉、自然增減藍（橘色跟出生的紅線在深色模式太像，Shane 2026-11-03）；比年份的兩張圖同一年同一色：今年藍、去年橘、前年綠 */
+:root { --birth:#e15759; --birth-ln:#e15759; --death:#76b7b2; --male:#4e79a7; --female:#ff9da7; --ni:#4e79a7; --ni-op:.42; --y0:#4e79a7; --y1:#f28e2b; --y2:#59a14f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#7aa6d6; --ni-op:.55; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; } }
+:root[data-theme="dark"] { --birth:#ee7a7c; --birth-ln:#ee7a7c; --death:#8ccbc6; --male:#7aa6d6; --female:#ffb3bb; --ni:#7aa6d6; --ni-op:.55; --y0:#7aa6d6; --y1:#f5a05a; --y2:#7cc26f; }
 .wrap { max-width:1840px; padding-inline:max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
 .top, .grid { display:grid; gap:12px; align-items:start; }
 .top > .box, .grid > .box { margin-top:12px; min-width:0; }
@@ -103,8 +102,14 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .bd .dot.b { fill:var(--birth-ln); }
 .bd .dot.d { fill:var(--death); }
 .bd .lab { font-size:12px; font-weight:700; fill:var(--fg); }
-.bd .bar.m { fill:var(--male); }
-.bd .bar.f { fill:var(--female); }
+.bd .bar.ni { fill:var(--ni); fill-opacity:var(--ni-op); }
+.bd .z { stroke:var(--muted); stroke-width:1; }
+.chart.bd text.rax { fill:var(--ni); font-weight:700; }
+.bd .ref { stroke:var(--muted); stroke-width:1.5; stroke-dasharray:4 4; }
+.legend .li { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.legend .li { margin-right:8px; }
+.lead { font-size:15px; line-height:1.5; margin:4px 0 6px; color:var(--fg); }
+.lead b { font-weight:700; }
 .bd .hit { fill:transparent; }
 .bd .hit:hover, .bd .hit:focus { fill:var(--fg); fill-opacity:.06; outline:none; }
 .legend { flex-wrap:wrap; }
@@ -113,6 +118,7 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .legend .k.y0 { border-color:var(--y0); }
 .legend .k.y1 { border-color:var(--y1); }
 .legend .k.y2 { border-color:var(--y2); }
+.legend .k.ref { border-top:2px dashed var(--muted); }
 .legend .sq { width:12px; height:12px; border-radius:3px; display:inline-block; margin-left:8px; }
 .legend .sq:first-child { margin-left:0; }
 .tw .neg { color:var(--muted); }
@@ -135,7 +141,10 @@ html[lang="en"] .pickpanel a { font-size:14px; padding:8px 4px; }
 .mleg i { width:14px; height:14px; border-radius:3px; display:inline-block; }
 .bd .xs { display:none; }
 @media (max-width:600px) { .bd .xl { display:none; } .bd .xs { display:inline; } }
-@media (min-width:1360px) { .grid { align-items:stretch; } .grid > .mapbox { grid-row:span 2; } .tmap { max-height:600px; } }
+@media (min-width:860px) { .grid { align-items:stretch; } .grid > .box:not(.mapbox) { display:flex; flex-direction:column; } .grid > .box:not(.mapbox) > svg.bd { margin-top:auto; } }
+/* 寬螢幕：地圖卡跨兩列，地圖自己長到填滿卡片（高度由右邊兩張圖決定） */
+@media (min-width:860px) { .grid > .mapbox { grid-row:span 2; display:flex; flex-direction:column; } .grid > .mapbox .tmap { flex:1 1 0; min-height:320px; max-height:none; } }
+
 .tip a { color:var(--fg); font-weight:500; }
 .tip { font-size:13px; color:var(--muted); margin:2px 0 0; min-height:1.6em; }
 """
@@ -193,7 +202,13 @@ JS = """<script>
 
   // 各縣市地圖：各縣市人口差很多，所以看「每千人」比率（近 12 個月合計 ÷ 人口 × 1000，就是一年的粗出生率／粗死亡率）
   // 顏色：最低到最高平均切 5 級，數字取到 0.5，圖例一看就懂
-  var RAMP = { b: ["#fde3df", "#f6b2aa", "#ec8580", "#e15759", "#b0333f"], d: ["#e0f0ee", "#b5dbd7", "#8ec7c2", "#5fa39d", "#3a7872"] };  // 出生 淺→深紅、死亡 淺→深青綠，淺到深
+  // 顏色都從網站的 10 Tableau 調出來（Shane 2026-11-03 選 A）：出生 黃 f1ce63 → 橘 f28e2b → 紅 e15759 → 加深；
+  // 死亡 淺青 → 青綠 76b7b2 → 深青 499894 → 藍 4e79a7 → 加深。淺到深；p：自然增加率 0 以上
+  var RAMP = { b: ["#f1ce63", "#f28e2b", "#e15759", "#b4343a", "#901221"], d: ["#b8d9d6", "#76b7b2", "#499894", "#4e79a7", "#335b85"], p: "#e15759" };
+  function ink(h) {  // 離島方塊上的字：底色亮用深字，底色暗用白字
+    var n = parseInt(h.slice(1), 16), y = 0.299 * (n >> 16) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255);
+    return y > 150 ? "#1d2125" : "#ffffff";
+  }
   var shapes = document.querySelectorAll(".tmap [data-c]"), tip = document.getElementById("maptip"), leg = document.getElementById("mapleg");
   var tipDef = tip.textContent, picked = null;
   function sum12(c, g) {  // 到所選月份為止 12 個月的合計；不足 12 個月就按比例放大
@@ -216,19 +231,23 @@ JS = """<script>
     if (key === "g") {  // 自然增加率：負的（死亡比出生多）用死亡的顏色分 4 級，正的用出生的顏色
       var neg = Math.min(lo, -0.5), st = Math.ceil(-neg / 4 * 2) / 2;
       var O = RAMP.d.slice(0, 4);  // 淺到深：越負越深
-      colorOf = function (v) { return v >= 0 ? RAMP.b[3] : O[Math.min(3, Math.floor(-v / st))]; };
+      colorOf = function (v) { return v >= 0 ? RAMP.p : O[Math.min(3, Math.floor(-v / st))]; };
     } else {
       var step = Math.max(0.5, Math.ceil((hi - lo) / 5 * 2) / 2);
       ramp = RAMP[key];
       edges = [0, 1, 2, 3, 4, 5].map(function (k) { return lo + k * step; });
       colorOf = function (v) { return ramp[Math.min(4, Math.floor((v - lo) / step))]; };
     }
-    shapes.forEach(function (s) { var v = val(s.getAttribute("data-c")); s.style.fill = v === null ? "" : colorOf(v); });
+    shapes.forEach(function (s) {
+      var v = val(s.getAttribute("data-c")), c = v === null ? "" : colorOf(v);
+      s.style.fill = c;
+      if (s.tagName.toLowerCase() === "rect" && s.nextElementSibling) s.nextElementSibling.style.fill = c ? ink(c) : "";
+    });
     function sg(v) { return (v < 0 ? "−" : "") + r1(Math.abs(v)); }
     var html = "";
     if (key === "g") {
       for (var k = 3; k >= 0; k--) html += '<span><i style="background:' + colorOf(-(k + 0.5) * st) + '"></i>' + sg(-(k + 1) * st) + "～" + sg(-k * st) + "</span>";
-      html += '<span><i style="background:' + RAMP.b[3] + '"></i>' + (EN ? "0 or more" : JA ? "0以上" : KO ? "0 이상" : "0 以上") + "</span>";
+      html += '<span><i style="background:' + RAMP.p + '"></i>' + (EN ? "0 or more" : JA ? "0以上" : KO ? "0 이상" : "0 以上") + "</span>";
     } else {
       html = ramp.map(function (c, k) { return '<span><i style="background:' + c + '"></i>' + r1(edges[k]) + "～" + r1(edges[k + 1]) + "</span>"; }).join("");
     }
@@ -345,7 +364,7 @@ def short(v, wan=False):
     return n(v)
 
 
-W, H, L, R, T, B = 420, 230, 50, 14, 12, 26
+W, H, L, R, T, B = 420, 280, 50, 14, 12, 26
 
 
 def frame(lo, hi, step, Y):
@@ -410,28 +429,112 @@ def lines_chart(n_x, series, labels, tips, zero=False, end_labels=None):
     return svg
 
 
-def stacked_bars(months, a_of, labels):
-    """每月出生：男（下）＋女（上）堆疊長條。"""
-    tot = [births(a_of(m)) for m in months]
-    lo, hi, step = nice_scale(0, max(tot), zero=True)
-    k = len(months)
-    slot = (W - L - R) / k
-    bw = max(2, slot - 2)
-    X = lambda i: L + slot * (i + 0.5)
+def signed(v, wan=False):
+    """右軸數字：負數用真正的減號，正數加 +。"""
+    return "0" if v == 0 else ("−" if v < 0 else "+") + short(abs(v), wan).replace(" ", "")
+
+
+def right_scale(neg, pos, nint):
+    """右軸：跟左軸共用同一組格線（nint 格），0 落在其中一條格線上，而且盡量往下放，長條往下長到底；
+    回傳 (每格多少, 0 以上有幾格)。全台：左軸 0～2.5 萬，右軸 0 對齊 1.5 萬那條線。"""
+    for e in range(0, 8):
+        for m in (1, 2, 2.5, 5):
+            st = m * 10 ** e
+            if nint * st >= 10000 and st % 1000:  # 寫成「x.x 萬」時每格要是 1,000 的倍數
+                continue
+            up, down = (math.ceil(pos / st) if pos else 0), (math.ceil(neg / st) if neg else 0)
+            if up + down <= nint:
+                return st, nint - down
+    return max(neg, pos, 1), 0
+
+
+def bd_chart(months, b, d, labels, tips):
+    """出生、死亡兩條線（左軸）和自然增減長條（右軸，出生減死亡）疊在同一張圖；兩邊的刻度用同一組格線。"""
+    ni = [x - y for x, y in zip(b, d)]
+    lo, hi, step = nice_scale(0, max(b + d), ticks=5, zero=True)  # 左軸從 0 開始，全台 0～2.5 萬
+    nint = max(1, round((hi - lo) / step))
+    st2, j = right_scale(-min(ni + [0]), max(ni + [0]), nint)
+    hi2 = j * st2
+    lo2 = hi2 - nint * st2
+    k = max(1, len(months) - 1)
+    PR = W - 50  # 圖的右緣；右邊留給右軸的數字
+    X = lambda i: L + 6 + (PR - L - 12) * i / k
     Y = lambda v: T + (H - T - B) * (hi - v) / (hi - lo)
-    svg = frame(lo, hi, step, Y)
-    for i, mm in enumerate(months):
-        a = a_of(mm)
-        y0, ym, yf = Y(0), Y(a[0]), Y(a[0] + a[1])
-        x = X(i) - bw / 2
-        svg += (f'<rect x="{x:.1f}" y="{ym:.1f}" width="{bw:.1f}" height="{max(0, y0 - ym):.1f}" class="bar m"/>'
-                f'<rect x="{x:.1f}" y="{yf:.1f}" width="{bw:.1f}" height="{max(0, ym - yf - 1):.1f}" rx="2" class="bar f"/>')
+    Y2 = lambda v: T + (H - T - B) * (hi2 - v) / (hi2 - lo2)
+    wan, wan2 = hi >= 10000, max(abs(lo2), abs(hi2)) >= 10000
+    svg = ""
+    for i in range(nint + 1):
+        g, g2 = lo + i * step, lo2 + i * st2
+        y = Y(g)
+        svg += (f'<line x1="{L}" x2="{PR}" y1="{y:.1f}" y2="{y:.1f}" class="{"z" if g2 == 0 else "g"}"/>'
+                f'<text x="{L - 5}" y="{y + 4:.1f}" text-anchor="end">{short(g, wan)}</text>'
+                f'<text x="{PR + 5}" y="{y + 4:.1f}" class="rax">{signed(g2, wan2)}</text>')
+    slot = (X(1) - X(0)) if k else PR - L
+    bw = max(2, slot * 0.66)
+    svg += "".join(f'<rect x="{X(i) - bw / 2:.1f}" y="{min(Y2(0), Y2(v)):.1f}" width="{bw:.1f}" height="{abs(Y2(v) - Y2(0)):.1f}" class="bar ni"/>'
+                   for i, v in enumerate(ni))
+    for cls, ser in (("b", b), ("d", d)):
+        svg += f'<path d="{" ".join(f"{"M" if i == 0 else "L"}{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(ser))}" class="line {cls}"/>'
+        svg += f'<circle cx="{X(k):.1f}" cy="{Y(ser[-1]):.1f}" r="4" class="dot {cls}"/>'
     svg += xlabels(X, labels)
     svg += "".join(
-        f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" '
-        f'data-tip="{ym_label(mm)}{tr("：出生 ", ": ", "：出生 ", ": 출생 ")}{n(births(a_of(mm)))}{tr(" 人（男 ", " births (", "人（男児 ", "명(남아 ")}{n(a_of(mm)[0])}'
-        f'{tr("、女 ", " boys, ", "、女児 ", ", 여아 ")}{n(a_of(mm)[1])}{tr("）", " girls)", "）", ")")}"/>'
-        for i, mm in enumerate(months))
+        f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="{e(t)}"/>'
+        for i, t in enumerate(tips))
+    return svg, ni
+
+
+def sr_rows(d, last):
+    """每年的男女比：出生（每 100 個女嬰的男嬰數）、死亡（每 100 位女性死亡的男性數）；今年算到最新月。"""
+    months = sorted(d)
+    rows = []
+    for yy in sorted({int(mm[:4]) for mm in months}):
+        ms = [mm for mm in months if mm.startswith(f"{yy}-")]
+        t = [sum(d[mm][j] for mm in ms) for j in range(4)]
+        if t[1] and t[3]:
+            miss = [] if yy == int(last[:4]) else [i for i in range(1, 13) if f"{yy}-{i:02d}" not in d]
+            rows.append((yy, t, round(t[0] / t[1] * 100, 1), round(t[2] / t[3] * 100, 1), miss))
+    return rows
+
+
+def sr_chart(rows):
+    """男女比折線：出生、死亡各一條，每年一點；虛線是 100（男女一樣多）。"""
+    vals = [r[2] for r in rows] + [r[3] for r in rows]
+    lo, hi = min(100, min(vals)), max(100, max(vals))
+    step = next(s for s in (1, 2, 5, 10, 20, 25, 50, 100) if (hi - lo) / s <= 5)
+    lo, hi = (lo // step) * step, -(-hi // step) * step
+    if hi - max(vals) < step * 0.2:
+        hi += step
+    k = max(1, len(rows) - 1)
+    X = lambda i: L + 18 + (W - L - 18 - 46) * i / k
+    Y = lambda v: T + (H - T - B) * (hi - v) / (hi - lo)
+    svg, g = "", lo
+    while g <= hi + 1e-9:
+        svg += (f'<line x1="{L}" x2="{W - R}" y1="{Y(g):.1f}" y2="{Y(g):.1f}" class="g"/>'
+                f'<text x="{L - 5}" y="{Y(g) + 4:.1f}" text-anchor="end">{g:g}</text>')
+        g += step
+    svg += f'<line x1="{L}" x2="{W - R}" y1="{Y(100):.1f}" y2="{Y(100):.1f}" class="ref"/>'
+    ends = []
+    for cls, j in (("b", 2), ("d", 3)):
+        svg += f'<path d="{" ".join(f"{"M" if i == 0 else "L"}{X(i):.1f},{Y(r[j]):.1f}" for i, r in enumerate(rows))}" class="line {cls}"/>'
+        svg += "".join(f'<circle cx="{X(i):.1f}" cy="{Y(r[j]):.1f}" r="{4.5 if i == k else 3}" class="dot {cls}"/>' for i, r in enumerate(rows))
+        ends.append([Y(rows[-1][j]), f"{rows[-1][j]:.1f}"])
+    ends.sort()
+    for i in range(1, len(ends)):
+        ends[i][0] = max(ends[i][0], ends[i - 1][0] + 15)
+    svg += "".join(f'<text x="{X(k) + 9:.1f}" y="{y + 4:.1f}" class="lab">{t}</text>' for y, t in ends)
+    svg += xlabels(X, [(i, str(r[0])) for i, r in enumerate(rows)])
+    slot = (X(1) - X(0)) if len(rows) > 1 else W - L - R
+
+    def tip(r):
+        miss = (tr(f"（缺 {'、'.join(map(str, r[4]))} 月資料）", f" (no data for {', '.join(MON[i - 1] for i in r[4])})",
+                   f"（{'・'.join(map(str, r[4]))}月のデータなし）", f" ({', '.join(map(str, r[4]))}월 자료 없음)") if r[4] else "")
+        return tr(f"{r[0]} 年：出生 男 {n(r[1][0])}、女 {n(r[1][1])}（{r[2]:.1f}）；死亡 男 {n(r[1][2])}、女 {n(r[1][3])}（{r[3]:.1f}）",
+                  f"{r[0]}: births {n(r[1][0])} boys, {n(r[1][1])} girls ({r[2]:.1f}); deaths {n(r[1][2])} men, {n(r[1][3])} women ({r[3]:.1f})",
+                  f"{r[0]}年：出生 男 {n(r[1][0])}・女 {n(r[1][1])}（{r[2]:.1f}）、死亡 男 {n(r[1][2])}・女 {n(r[1][3])}（{r[3]:.1f}）",
+                  f"{r[0]}년: 출생 남 {n(r[1][0])}, 여 {n(r[1][1])}({r[2]:.1f}), 사망 남 {n(r[1][2])}, 여 {n(r[1][3])}({r[3]:.1f})") + miss
+    svg += "".join(
+        f'<rect x="{X(i) - slot / 2:.1f}" y="{T}" width="{slot:.1f}" height="{H - T - B}" class="hit" tabindex="0" data-tip="{e(tip(r))}"/>'
+        for i, r in enumerate(rows))
     return svg
 
 
@@ -474,15 +577,33 @@ def page_body(name, d):
         out.append(f'<section class="box"><h2>{tr("今年累計", f"{y} YTD (Jan–{MON[m - 1]})", f"{y}年1～{m}月の累計", f"{y}년 1~{m}월 누계")}</h2>'
                    f'{duo(cy, ly, tr("去年同期", "YoY", "前年同期比", "전년 동기 대비"))}</section>')
 
-    # 1. 每月出生（男女）
-    recent = months[-24:]
-    out.append(box(
-        tr("每月出生人數（男女）", "Monthly births by sex", "月別出生数（男女別）", "월별 출생아 수(남녀별)"),
-        f'<p class="legend"><i class="sq" style="background:var(--male)"></i>{tr("男", "Boys", "男児", "남아")}'
-        f'<i class="sq" style="background:var(--female)"></i>{tr("女", "Girls", "女児", "여아")}</p>',
-        stacked_bars(recent, get, month_ticks(recent)),
-        tr(f"{where}最近 {len(recent)} 個月每月出生人數，分男女", f"{where}monthly births by sex, last {len(recent)} months", f"{where}直近{len(recent)}か月の月別出生数（男女別）", f"{where}최근 {len(recent)}개월 월별 출생아 수(남녀별)"),
-        tr("滑過或點長條看當月數字", "Hover or tap a bar to see that month", "棒にカーソルを合わせるかタップすると、その月の数値を表示", "막대에 마우스를 올리거나 탭하면 해당 월의 수치를 볼 수 있습니다")))
+    # 1. 男女比（每年）：出生每 100 個女嬰的男嬰數、死亡每 100 位女性的男性數
+    rows = sr_rows(d, last)
+    if rows:
+        ry, rb, rd = rows[-1][0], rows[-1][2], rows[-1][3]
+        fy, d0 = rows[0][0], rows[0][3]
+        span = (tr(f"{ry} 年 1～{m} 月", f"Jan–{MON[m - 1]} {ry}", f"{ry}年1～{m}月", f"{ry}년 1~{m}월") if ry == y and m < 12
+                else tr(f"{ry} 年", str(ry), f"{ry}年", f"{ry}년"))
+        place = "" if name == "全台" else cname(name)
+        lead = tr(f"{place + ' ' if place else ''}{span}，每 100 個女嬰有 <b>{rb:.1f}</b> 個男嬰；每 100 位女性過世，男性有 <b>{rd:.1f}</b> 位。",
+                  f"{span}{' in ' + place if place else ''}: <b>{rb:.1f}</b> boys were born for every 100 girls, and <b>{rd:.1f}</b> men died for every 100 women.",
+                  f"{place + 'の' if place else ''}{span}は、女児100人に対して男児 <b>{rb:.1f}</b>人、女性の死亡100人に対して男性 <b>{rd:.1f}</b>人。",
+                  f"{place + ' ' if place else ''}{span}에는 여아 100명당 남아 <b>{rb:.1f}</b>명이 태어났고, 여성 사망 100명당 남성 <b>{rd:.1f}</b>명이 사망했습니다.")
+        if len(rows) > 1 and abs(rd - d0) >= 1:
+            up = rd > d0
+            lead += tr(f"死亡的男女比從 {fy} 年的 {d0:.1f} {'升' if up else '降'}到 {rd:.1f}。",
+                       f" The death ratio has {'risen' if up else 'fallen'} from {d0:.1f} in {fy}.",
+                       f"死亡の男女比は{fy}年の{d0:.1f}から{'上がって' if up else '下がって'}います。",
+                       f" 사망 성비는 {fy}년 {d0:.1f}에서 {'높아졌습니다' if up else '낮아졌습니다'}.")
+        out.append(box(
+            tr("出生與死亡的男女比", "Sex ratio of births and deaths", "出生と死亡の男女比", "출생·사망 성비"),
+            f'<p class="lead">{lead}</p>'
+            f'<p class="legend"><span class="li"><span class="k b"></span>{tr("出生：每 100 個女嬰的男嬰數", "Births: boys per 100 girls", "出生：女児100人あたりの男児数", "출생: 여아 100명당 남아 수")}</span>'
+            f'<span class="li"><span class="k d"></span>{tr("死亡：每 100 位女性的男性數", "Deaths: men per 100 women", "死亡：女性100人あたりの男性数", "사망: 여성 100명당 남성 수")}</span>'
+            f'<span class="li"><span class="k ref"></span>{tr("100 = 男女一樣多", "100 = equal numbers", "100 = 男女同数", "100 = 남녀 동수")}</span></p>',
+            sr_chart(rows),
+            tr(f"{where}每年出生與死亡的男女比折線圖", f"{where}sex ratio of births and deaths by year", f"{where}年別の出生・死亡の男女比の折れ線グラフ", f"{where}연도별 출생·사망 성비 꺾은선 그래프"),
+            tr("滑過或點圖看每年男女人數", "Hover or tap the chart to see each year", "グラフにカーソルを合わせるかタップすると、各年の男女別の数を表示", "그래프에 마우스를 올리거나 탭하면 연도별 남녀 수를 볼 수 있습니다")))
 
     # 2、3. 今年 vs 去年 vs 前年（1～12 月）
     def yoy_chart(title, fn, cls, word):
@@ -501,18 +622,28 @@ def page_body(name, d):
         return box(title, legend, lines_chart(12, series[::-1], labels, tips), tr(f"{where}{title}折線圖", f"{where}{title}", f"{where}{title}の折れ線グラフ", f"{where}{title} 꺾은선 그래프"),
                    tr("滑過或點圖看每月數字", "Hover or tap the chart to see each month", "グラフにカーソルを合わせるかタップすると、各月の数値を表示", "그래프에 마우스를 올리거나 탭하면 월별 수치를 볼 수 있습니다"))
 
-    # 2. 最近 36 個月出生 vs 死亡（寬螢幕排在右上）
+    # 2. 最近 36 個月出生 vs 死亡；下段是自然增減（出生減死亡，右軸）
     recent = months[-36:]
+    bs, ds = [births(get(mm)) for mm in recent], [deaths(get(mm)) for mm in recent]
+    nis = [x - z for x, z in zip(bs, ds)]
+    tips = [tr(f"{ym_label(mm)}：出生 {n(x)}、死亡 {n(z)}、自然增減 {signed(x - z)}",
+               f"{ym_label(mm)}: {n(x)} births, {n(z)} deaths, natural change {signed(x - z)}",
+               f"{ym_label(mm)}：出生 {n(x)}、死亡 {n(z)}、自然増減 {signed(x - z)}",
+               f"{ym_label(mm)}: 출생 {n(x)}, 사망 {n(z)}, 자연 증감 {signed(x - z)}") for mm, x, z in zip(recent, bs, ds)]
+    svg, _ = bd_chart(recent, bs, ds, month_ticks(recent), tips)
+    gap, negs, K = nis[-1], sum(1 for v in nis if v < 0), len(nis)
+    first = (tr(f"{ym_label(last)}死亡比出生多 <b>{n(-gap)}</b> 人", f"In {ym_label(last)}, deaths exceeded births by <b>{n(-gap)}</b>", f"{ym_label(last)}は死亡が出生を <b>{n(-gap)}</b>人上回りました", f"{ym_label(last)}에는 사망이 출생보다 <b>{n(-gap)}</b>명 많았습니다") if gap < 0
+             else tr(f"{ym_label(last)}出生比死亡多 <b>{n(gap)}</b> 人", f"In {ym_label(last)}, births exceeded deaths by <b>{n(gap)}</b>", f"{ym_label(last)}は出生が死亡を <b>{n(gap)}</b>人上回りました", f"{ym_label(last)}에는 출생이 사망보다 <b>{n(gap)}</b>명 많았습니다") if gap > 0
+             else tr(f"{ym_label(last)}出生和死亡一樣多", f"In {ym_label(last)}, births and deaths were equal", f"{ym_label(last)}は出生と死亡が同数でした", f"{ym_label(last)}에는 출생과 사망이 같았습니다"))
+    rest = (tr(f"，最近 {K} 個月每個月都是死亡比較多。", f"; deaths have outnumbered births in every one of the last {K} months.", f"。直近{K}か月はすべての月で死亡が出生を上回っています。", f". 최근 {K}개월 동안 매달 사망이 출생보다 많았습니다.") if negs == K
+            else tr(f"，最近 {K} 個月有 {negs} 個月死亡比出生多。", f"; deaths outnumbered births in {negs} of the last {K} months.", f"。直近{K}か月のうち{negs}か月で死亡が出生を上回りました。", f". 최근 {K}개월 중 {negs}개월은 사망이 출생보다 많았습니다."))
     out.append(box(
         tr(f"出生與死亡：最近 {len(recent)} 個月", f"Births and deaths: last {len(recent)} months", f"出生と死亡：直近{len(recent)}か月", f"출생과 사망: 최근 {len(recent)}개월"),
-        f'<p class="legend"><span class="k b"></span>{tr("出生", "Births", "出生", "출생")}<span class="k d"></span>{tr("死亡", "Deaths", "死亡", "사망")}</p>',
-        lines_chart(len(recent), [("b", [births(get(mm)) for mm in recent]), ("d", [deaths(get(mm)) for mm in recent])],
-                    month_ticks(recent),
-                    [tr(f"{ym_label(mm)}：出生 {n(births(get(mm)))}、死亡 {n(deaths(get(mm)))}",
-                       f"{ym_label(mm)}: {n(births(get(mm)))} births, {n(deaths(get(mm)))} deaths",
-                       f"{ym_label(mm)}：出生 {n(births(get(mm)))}、死亡 {n(deaths(get(mm)))}", f"{ym_label(mm)}: 출생 {n(births(get(mm)))}, 사망 {n(deaths(get(mm)))}") for mm in recent],
-                    end_labels={"b": tr("出生", "Births", "出生", "출생"), "d": tr("死亡", "Deaths", "死亡", "사망")}),
-        tr(f"{where}最近 {len(recent)} 個月每月出生與死亡人數折線圖", f"{where}monthly births and deaths, last {len(recent)} months", f"{where}直近{len(recent)}か月の月別出生数・死亡数の折れ線グラフ", f"{where}최근 {len(recent)}개월 월별 출생·사망 꺾은선 그래프"),
+        f'<p class="lead">{first}{rest}</p>'
+        f'<p class="legend"><span class="li"><span class="k b"></span>{tr("出生", "Births", "出生", "출생")}</span><span class="li"><span class="k d"></span>{tr("死亡", "Deaths", "死亡", "사망")}</span>'
+        f'<span class="li"><i class="sq" style="background:var(--ni)"></i>{tr("自然增減（出生減死亡，右軸）", "Natural change (births − deaths, right axis)", "自然増減（出生－死亡、右軸）", "자연 증감(출생−사망, 오른쪽 축)")}</span></p>',
+        svg,
+        tr(f"{where}最近 {len(recent)} 個月每月出生、死亡人數折線圖，以及自然增減長條圖", f"{where}monthly births and deaths, last {len(recent)} months, with natural change as bars", f"{where}直近{len(recent)}か月の月別出生数・死亡数の折れ線グラフと自然増減の棒グラフ", f"{where}최근 {len(recent)}개월 월별 출생·사망 꺾은선 그래프와 자연 증감 막대그래프"),
         tr("滑過或點圖看每月數字", "Hover or tap the chart to see each month", "グラフにカーソルを合わせるかタップすると、各月の数値を表示", "그래프에 마우스를 올리거나 탭하면 월별 수치를 볼 수 있습니다")))
     out.append(yoy_chart(tr("每月出生：跟前兩年比", "Monthly births vs the past two years", "月別出生数：過去2年との比較", "월별 출생아 수: 최근 2년과 비교"), births, "b", tr("出生", "births", "出生数", "출생아 수")))
     out.append(yoy_chart(tr("每月死亡：跟前兩年比", "Monthly deaths vs the past two years", "月別死亡数：過去2年との比較", "월별 사망자 수: 최근 2년과 비교"), deaths, "d", tr("死亡", "deaths", "死亡数", "사망자 수")))
@@ -615,7 +746,7 @@ def page(out, head, nav, data, name, slug):
                  f" | Taiwan Vital Statistics")
         desc = (f"Taiwan vital statistics from the Ministry of the Interior: {where} recorded {n(births(a))} births and {n(deaths(a))} deaths "
                 f"in {ym_label(last)}." + (f" Jan–{MON[m - 1]} {y}: {n(births(cy))} births, {n(deaths(cy))} deaths." if cy else "")
-                + " Monthly births by sex, comparison with the past two years, and a county map.")
+                + " Sex ratio of births and deaths, natural change, comparison with the past two years, and a county map.")
         foot = ("<div>Source: Department of Household Registration, Ministry of the Interior, open data (monthly births and deaths "
                 "by village, added up here by county and for all of Taiwan). Figures are by month of registration, not the month "
                 "of birth or death. Checked daily; usually published early in the following month.</div>\n"
@@ -625,7 +756,7 @@ def page(out, head, nav, data, name, slug):
         title = f"{where}の出生数・死亡数：{ym_label(last)}は出生 {n(births(a))}人、死亡 {n(deaths(a))}人｜台湾の人口動態統計"
         desc = (f"内政部戸政司の最新統計：{ym_label(last)}の{where}の出生数は {n(births(a))}人、死亡数は {n(deaths(a))}人。"
                 + (f"{y}年1～{m}月の累計は出生 {n(births(cy))}人、死亡 {n(deaths(cy))}人。" if cy else "")
-                + "男女別の月別出生数、過去2年との比較、県・市別の地図。")
+                + "出生・死亡の男女比、自然増減、過去2年との比較、県・市別の地図。")
         foot = ("<div>出典：内政部戸政司オープンデータ「動態資料統計表」（村里別の毎月の出生数・死亡数を、本サイトで県・市別と台湾全体に集計）。"
                 "数値は戸籍登録の月によるもので、実際に出生・死亡した月ではありません。毎日確認しており、通常は翌月上旬に前月分が発表されます。</div>\n"
                 f"    <div>{i18n_ja.FOOT}</div>")
@@ -634,7 +765,7 @@ def page(out, head, nav, data, name, slug):
         title = f"{where} 출생·사망자 수: {ym_label(last)} 출생 {n(births(a))}명, 사망 {n(deaths(a))}명 | 대만 인구 동태 통계"
         desc = (f"내정부 호정사 최신 통계: {ym_label(last)} {where}의 출생아 수는 {n(births(a))}명, 사망자 수는 {n(deaths(a))}명."
                 + (f" {y}년 1~{m}월 누계는 출생 {n(births(cy))}명, 사망 {n(deaths(cy))}명." if cy else "")
-                + " 남녀별 월별 출생아 수, 최근 2년과의 비교, 시·현별 지도.")
+                + " 출생·사망 성비, 자연 증감, 최근 2년과의 비교, 시·현별 지도.")
         foot = ("<div>출처: 내정부 호정사 공공데이터 「동태자료통계표」(촌리별 월간 출생·사망자 수를 이 사이트에서 시·현별과 대만 전체로 합산). "
                 "수치는 호적 등록 월 기준이며 실제 출생·사망 월이 아닙니다. 매일 확인하며, 보통 다음 달 초에 전월분이 발표됩니다.</div>\n"
                 f"    <div>{i18n_ko.FOOT}</div>")
@@ -643,7 +774,7 @@ def page(out, head, nav, data, name, slug):
         title = f"{where}出生與死亡人數：{ym_label(last)}出生 {n(births(a))} 人、死亡 {n(deaths(a))} 人｜Taiwan Data 台灣數據"
         desc = (f"內政部戶政司最新統計：{ym_label(last)}{'全台' if name == '全台' else name}出生 {n(births(a))} 人、"
                 f"死亡 {n(deaths(a))} 人。" + (f"{y} 年 1～{m} 月累計出生 {n(births(cy))} 人、死亡 {n(deaths(cy))} 人。" if cy else "")
-                + "每月出生男女、跟前兩年比較、各縣市地圖。")
+                + "出生與死亡的男女比、自然增減、跟前兩年比較、各縣市地圖。")
         foot = ("<div>資料來源：內政部戶政司開放資料「動態資料統計表」（各村里每月出生、死亡數，本站加總成縣市與全台）。"
                 "數字依戶籍登記月份計算，不是實際出生或死亡的月份；每天檢查一次，通常每月上旬公布上個月。</div>\n"
                 "    <div>本站為個人經營，非政府網站；所有數據皆來自政府開放資料。</div>")
